@@ -46,152 +46,152 @@ Arguments vl_clos {var loc lang}.
 
 (* open the bound location i with ℓ *)
 Fixpoint open_loc_wvl {var loc lang} (i : nat) (ℓ : loc) (w : wvl var loc lang) :=
-match w with
-| wvl_v v => wvl_v (open_loc_vl i ℓ v)
-| wvl_recv v => wvl_recv (open_loc_vl (S i) ℓ v)
-end
+  match w with
+  | wvl_v v => wvl_v (open_loc_vl i ℓ v)
+  | wvl_recv v => wvl_recv (open_loc_vl (S i) ℓ v)
+  end
 
 with open_loc_nv {var loc lang} (i : nat) (ℓ : loc) (σ : nv var loc lang) :=
-match σ with
-| nv_mt => nv_mt
-| nv_bloc x n σ' =>
-  if i =? n
-  then nv_floc x ℓ (open_loc_nv i ℓ σ')
-  else nv_bloc x n (open_loc_nv i ℓ σ')
-| nv_floc x ℓ' σ' =>
-  nv_floc x ℓ' (open_loc_nv i ℓ σ')
-| nv_bval x w σ' =>
-  nv_bval x (open_loc_wvl i ℓ w) (open_loc_nv i ℓ σ')
-end
+  match σ with
+  | nv_mt => nv_mt
+  | nv_bloc x n σ' =>
+    if i =? n
+    then nv_floc x ℓ (open_loc_nv i ℓ σ')
+    else nv_bloc x n (open_loc_nv i ℓ σ')
+  | nv_floc x ℓ' σ' =>
+    nv_floc x ℓ' (open_loc_nv i ℓ σ')
+  | nv_bval x w σ' =>
+    nv_bval x (open_loc_wvl i ℓ w) (open_loc_nv i ℓ σ')
+  end
 
 with open_loc_vl {var loc lang} (i : nat) (ℓ : loc) (v : vl var loc lang) :=
-match v with
-| vl_exp σ => vl_exp (open_loc_nv i ℓ σ)
-| vl_clos e σ => vl_clos e (open_loc_nv i ℓ σ)
-end.
+  match v with
+  | vl_exp σ => vl_exp (open_loc_nv i ℓ σ)
+  | vl_clos e σ => vl_clos e (open_loc_nv i ℓ σ)
+  end.
 
 (* close the free location ℓ with the binding depth i *)
 Fixpoint close_wvl {var loc lang} `{Eq loc} (i : nat) (ℓ : loc) (w : wvl var loc lang) :=
-match w with
-| wvl_v v => wvl_v (close_vl i ℓ v)
-| wvl_recv v => wvl_recv (close_vl (S i) ℓ v)
-end
+  match w with
+  | wvl_v v => wvl_v (close_vl i ℓ v)
+  | wvl_recv v => wvl_recv (close_vl (S i) ℓ v)
+  end
 
 with close_nv {var loc lang} `{Eq loc} (i : nat) (ℓ : loc) (σ : nv var loc lang) :=
-match σ with
-| nv_mt => nv_mt
-| nv_bloc x n σ' =>
-  nv_bloc x n (close_nv i ℓ σ')
-| nv_floc x ℓ' σ' =>
-  if eqb ℓ ℓ'
-  then nv_bloc x i (close_nv i ℓ σ')
-  else nv_floc x ℓ' (close_nv i ℓ σ')
-| nv_bval x w σ' =>
-  nv_bval x (close_wvl i ℓ w) (close_nv i ℓ σ')
-end
+  match σ with
+  | nv_mt => nv_mt
+  | nv_bloc x n σ' =>
+    nv_bloc x n (close_nv i ℓ σ')
+  | nv_floc x ℓ' σ' =>
+    if eqb ℓ ℓ'
+    then nv_bloc x i (close_nv i ℓ σ')
+    else nv_floc x ℓ' (close_nv i ℓ σ')
+  | nv_bval x w σ' =>
+    nv_bval x (close_wvl i ℓ w) (close_nv i ℓ σ')
+  end
 
 with close_vl {var loc lang} `{Eq loc} (i : nat) (ℓ : loc) (v : vl var loc lang) :=
-match v with
-| vl_exp σ => vl_exp (close_nv i ℓ σ)
-| vl_clos e σ => vl_clos e (close_nv i ℓ σ)
-end.
+  match v with
+  | vl_exp σ => vl_exp (close_nv i ℓ σ)
+  | vl_clos e σ => vl_clos e (close_nv i ℓ σ)
+  end.
 
 (* open the bound location i with u *)
 Fixpoint open_wvl_wvl {var loc lang} (i : nat) (u : wvl var loc lang) (w : wvl var loc lang) :=
-match w with
-| wvl_v v => wvl_v (open_wvl_vl i u v)
-| wvl_recv v => wvl_recv (open_wvl_vl (S i) u v)
-end
+  match w with
+  | wvl_v v => wvl_v (open_wvl_vl i u v)
+  | wvl_recv v => wvl_recv (open_wvl_vl (S i) u v)
+  end
 
 with open_wvl_nv {var loc lang} (i : nat) (u : wvl var loc lang) (σ : nv var loc lang) :=
-match σ with
-| nv_mt => nv_mt
-| nv_bloc x n σ' =>
-  if i =? n
-  then nv_bval x u (open_wvl_nv i u σ')
-  else nv_bloc x n (open_wvl_nv i u σ')
-| nv_floc x ℓ' σ' =>
-  nv_floc x ℓ' (open_wvl_nv i u σ')
-| nv_bval x w σ' =>
-  nv_bval x (open_wvl_wvl i u w) (open_wvl_nv i u σ')
-end
+  match σ with
+  | nv_mt => nv_mt
+  | nv_bloc x n σ' =>
+    if i =? n
+    then nv_bval x u (open_wvl_nv i u σ')
+    else nv_bloc x n (open_wvl_nv i u σ')
+  | nv_floc x ℓ' σ' =>
+    nv_floc x ℓ' (open_wvl_nv i u σ')
+  | nv_bval x w σ' =>
+    nv_bval x (open_wvl_wvl i u w) (open_wvl_nv i u σ')
+  end
 
 with open_wvl_vl {var loc lang} (i : nat) (u : wvl var loc lang) (v : vl var loc lang) :=
-match v with
-| vl_exp σ => vl_exp (open_wvl_nv i u σ)
-| vl_clos e σ => vl_clos e (open_wvl_nv i u σ)
-end.
+  match v with
+  | vl_exp σ => vl_exp (open_wvl_nv i u σ)
+  | vl_clos e σ => vl_clos e (open_wvl_nv i u σ)
+  end.
 
 (* substitute the free location ℓ for ℓ' *)
 Fixpoint subst_loc_wvl {var loc lang} `{Eq loc} (ν ℓ : loc) (w : wvl var loc lang) :=
-match w with
-| wvl_v v => wvl_v (subst_loc_vl ν ℓ v)
-| wvl_recv v => wvl_recv (subst_loc_vl ν ℓ v)
-end
+  match w with
+  | wvl_v v => wvl_v (subst_loc_vl ν ℓ v)
+  | wvl_recv v => wvl_recv (subst_loc_vl ν ℓ v)
+  end
 
 with subst_loc_nv {var loc lang} `{Eq loc} (ν ℓ : loc) (σ : nv var loc lang) :=
-match σ with
-| nv_mt => nv_mt
-| nv_bloc x n σ' =>
-  nv_bloc x n (subst_loc_nv ν ℓ σ')
-| nv_floc x ℓ' σ' =>
-  if eqb ℓ ℓ'
-  then nv_floc x ν (subst_loc_nv ν ℓ σ')
-  else nv_floc x ℓ' (subst_loc_nv ν ℓ σ')
-| nv_bval x w σ' =>
-  nv_bval x (subst_loc_wvl ν ℓ w) (subst_loc_nv ν ℓ σ')
-end
+  match σ with
+  | nv_mt => nv_mt
+  | nv_bloc x n σ' =>
+    nv_bloc x n (subst_loc_nv ν ℓ σ')
+  | nv_floc x ℓ' σ' =>
+    if eqb ℓ ℓ'
+    then nv_floc x ν (subst_loc_nv ν ℓ σ')
+    else nv_floc x ℓ' (subst_loc_nv ν ℓ σ')
+  | nv_bval x w σ' =>
+    nv_bval x (subst_loc_wvl ν ℓ w) (subst_loc_nv ν ℓ σ')
+  end
 
 with subst_loc_vl {var loc lang} `{Eq loc} (ν ℓ : loc) (v : vl var loc lang) :=
-match v with
-| vl_exp σ => vl_exp (subst_loc_nv ν ℓ σ)
-| vl_clos e σ => vl_clos e (subst_loc_nv ν ℓ σ)
-end.
+  match v with
+  | vl_exp σ => vl_exp (subst_loc_nv ν ℓ σ)
+  | vl_clos e σ => vl_clos e (subst_loc_nv ν ℓ σ)
+  end.
 
 (* substitute the free location ℓ for u *)
 Fixpoint subst_wvl_wvl {var loc lang} `{Eq loc} (u : wvl var loc lang) (ℓ : loc) (w : wvl var loc lang) :=
-match w with
-| wvl_v v => wvl_v (subst_wvl_vl u ℓ v)
-| wvl_recv v => wvl_recv (subst_wvl_vl u ℓ v)
-end
+  match w with
+  | wvl_v v => wvl_v (subst_wvl_vl u ℓ v)
+  | wvl_recv v => wvl_recv (subst_wvl_vl u ℓ v)
+  end
 
 with subst_wvl_nv {var loc lang} `{Eq loc} (u : wvl var loc lang) (ℓ : loc) (σ : nv var loc lang) :=
-match σ with
-| nv_mt => nv_mt
-| nv_bloc x n σ' =>
-  nv_bloc x n (subst_wvl_nv u ℓ σ')
-| nv_floc x ℓ' σ' =>
-  if eqb ℓ ℓ'
-  then nv_bval x u (subst_wvl_nv u ℓ σ')
-  else nv_floc x ℓ' (subst_wvl_nv u ℓ σ')
-| nv_bval x w σ' =>
-  nv_bval x (subst_wvl_wvl u ℓ w) (subst_wvl_nv u ℓ σ')
-end
+  match σ with
+  | nv_mt => nv_mt
+  | nv_bloc x n σ' =>
+    nv_bloc x n (subst_wvl_nv u ℓ σ')
+  | nv_floc x ℓ' σ' =>
+    if eqb ℓ ℓ'
+    then nv_bval x u (subst_wvl_nv u ℓ σ')
+    else nv_floc x ℓ' (subst_wvl_nv u ℓ σ')
+  | nv_bval x w σ' =>
+    nv_bval x (subst_wvl_wvl u ℓ w) (subst_wvl_nv u ℓ σ')
+  end
 
 with subst_wvl_vl {var loc lang} `{Eq loc} (u : wvl var loc lang) (ℓ : loc) (v : vl var loc lang) :=
-match v with
-| vl_exp σ => vl_exp (subst_wvl_nv u ℓ σ)
-| vl_clos e σ => vl_clos e (subst_wvl_nv u ℓ σ)
-end.
+  match v with
+  | vl_exp σ => vl_exp (subst_wvl_nv u ℓ σ)
+  | vl_clos e σ => vl_clos e (subst_wvl_nv u ℓ σ)
+  end.
 
 (* free locations *)
 Fixpoint floc_wvl {var loc lang} (w : wvl var loc lang) :=
-match w with
-| wvl_v v | wvl_recv v => floc_vl v
-end
+  match w with
+  | wvl_v v | wvl_recv v => floc_vl v
+  end
 
 with floc_nv {var loc lang} (σ : nv var loc lang) :=
-match σ with
-| nv_mt => []
-| nv_bloc _ _ σ' => floc_nv σ'
-| nv_floc _ ℓ σ' => ℓ :: floc_nv σ'
-| nv_bval _ w σ' => floc_wvl w ++ floc_nv σ'
-end
+  match σ with
+  | nv_mt => []
+  | nv_bloc _ _ σ' => floc_nv σ'
+  | nv_floc _ ℓ σ' => ℓ :: floc_nv σ'
+  | nv_bval _ w σ' => floc_wvl w ++ floc_nv σ'
+  end
 
 with floc_vl {var loc lang} (v : vl var loc lang) :=
-match v with
-| vl_exp σ | vl_clos _ σ => floc_nv σ
-end.
+  match v with
+  | vl_exp σ | vl_clos _ σ => floc_nv σ
+  end.
 
 Section LCDefs.
   Variable var : Set.
@@ -248,7 +248,7 @@ Lemma update_ext {loc T} `{Eq loc} L (f f' : loc -> option T) ℓ ℓ' :
   (forall x, x = ℓ \/ In x L -> (ℓ !-> ℓ' ; f) x = (ℓ !-> ℓ' ; f') x).
 Proof. ii; unfold update; des_goal; repeat rw; eauto. eqb2eq loc; des; clarify. Qed.
 
-Lemma update_switch {loc T} `{Eq loc} (f : loc -> option T) ℓ ℓ' ν ν' x :
+Lemma update_comm {loc T} `{Eq loc} (f : loc -> option T) ℓ ℓ' ν ν' x :
   ℓ <> ν ->
   (ℓ !-> ℓ' ; ν !-> ν' ; f) x = (ν !-> ν' ; ℓ !-> ℓ' ; f) x.
 Proof.
@@ -256,16 +256,36 @@ Proof.
   des_ifs; eqb2eq loc; clarify.
 Qed.
 
-Definition remove {loc T} `{Eq loc} (m : loc -> option T) ℓ ℓ_param :=
-  if eqb ℓ ℓ_param then None else m ℓ_param.
+Definition remove {loc T} `{Eq loc} (f : loc -> option T) ℓ ℓ_param :=
+  if eqb ℓ ℓ_param then None else f ℓ_param.
 
-Notation "m '!!' ℓ" := (remove m ℓ)
+Notation "f '!!' ℓ" := (remove f ℓ)
   (at level 100, ℓ at next level, right associativity).
 
-Lemma remove_switch {loc T} `{Eq loc} (m : loc -> option T) ℓ ℓ' x :
-  ((m !! ℓ) !! ℓ') x = ((m !! ℓ') !! ℓ) x.
+Lemma remove_assoc {loc T} `{Eq loc} (f : loc -> option T) ℓ ℓ' x :
+  ((f !! ℓ) !! ℓ') x = ((f !! ℓ') !! ℓ) x.
 Proof.
   ii. unfold remove. des_ifs.
+Qed.
+
+Lemma remove_update_assoc {loc T} `{Eq loc} (f : loc -> option T) ℓ ν ℓ' x :
+  ℓ <> ν ->
+  ((ℓ !-> ℓ' ; f) !! ν) x = (ℓ !-> ℓ' ; f !! ν) x.
+Proof.
+  ii. unfold remove, update.
+  des_ifs. eqb2eq loc. clarify.
+Qed.
+
+Definition switch {loc T} `{Eq loc} (f : loc -> option T) ℓ ν x :=
+  if eqb x ℓ then f ν else if eqb x ν then f ℓ else f x.
+
+Lemma switch_update_assoc {loc T} `{Eq loc} (f : loc -> option T) ℓ' ℓ ν x :
+  x <> ν -> x <> ℓ ->
+  forall y,
+    switch (x !-> ℓ'; f) ν ℓ y = (x !-> ℓ'; switch f ν ℓ) y.
+Proof.
+  ii. unfold switch, update.
+  des_ifs; eqb2eq loc; clarify.
 Qed.
 
 Section EquivDefs.
@@ -916,8 +936,73 @@ Section EquivFacts.
       instantiate (1 := u').
       ii.
       eapply equiv_f_ext; eauto.
-      ii. erewrite update_switch; eauto.
+      ii. erewrite update_comm; eauto.
     - econstructor; eauto.
   Qed.
-End EquivFacts.
 
+  Lemma reduce_f_bloc `{Name loc} (w : wvl var loc lang) f v' m (EQUIV : equiv w f v' m) :
+    forall ℓ ℓ' u u'
+      (BOUNDf : f ℓ = Some ℓ')
+      (BOUNDm : m ℓ' = Some u')
+      (EQUIVu : equiv u (f !! ℓ) u' m),
+    equiv (subst_wvl_wvl u ℓ w) (f !! ℓ) v' m.
+  Proof.
+    induction EQUIV; ii; ss.
+    - econstructor.
+    - des_goal; eqb2eq loc; clarify.
+      + econstructor; eauto.
+      + econstructor; eauto.
+        unfold remove. des_goal; eqb2eq loc; clarify.
+    - des_goal; eqb2eq loc; clarify.
+      eapply equiv_floc; eauto.
+      unfold remove. des_goal; eqb2eq loc; clarify.
+    - econstructor; eauto.
+    - econstructor; eauto.
+      instantiate (1 := ℓ :: L ++ floc_wvl u).
+      ii. ss. rewrite in_app_iff in FREE. split_nIn.
+      exploit (H1 ℓ0 FREE0 ℓ _ u); eauto.
+      unfold update. des_goal; eqb2eq loc; clarify.
+      eapply equiv_f_ext; eauto.
+      ii. unfold update, remove.
+      repeat des_goal; eqb2eq loc; clarify.
+      assert (open_loc_subst_wvl_vl _ _ _ v) as RR.
+      eapply open_loc_subst_wvl; eauto.
+      rewrite RR; eauto.
+      ii. eapply equiv_f_ext; eauto.
+      ii. apply remove_update_assoc; eauto.
+      eapply equiv_lc_wvl; eauto.
+    - econstructor; eauto.
+  Qed.
+
+  Lemma equiv_loc_subst `{Eq loc} (w : wvl var loc lang) f v' m (EQUIV : equiv w f v' m) :
+    forall ℓ ν
+      (FRESH : ~ In ν (floc_wvl w))
+      (DOMf : f ℓ <> None),
+    equiv (subst_loc_wvl ν ℓ w) (switch f ν ℓ) v' m.
+  Proof.
+    induction EQUIV; ii; ss;
+    try solve [econstructor; eauto].
+    - split_nIn. des_goal; eqb2eq loc; clarify.
+      + econstructor; eauto. unfold switch. rewrite eqb_refl. auto.
+      + econstructor; eauto. unfold switch.
+        repeat (des_goal; eqb2eq loc; clarify).
+    - split_nIn. des_goal; eqb2eq loc; clarify.
+      eapply equiv_floc; eauto. unfold switch.
+      repeat (des_goal; eqb2eq loc; clarify).
+    - rewrite in_app_iff in FRESH. split_nIn.
+      econstructor; eauto.
+    - econstructor; eauto.
+      instantiate (1 := ℓ :: ν :: L ++ floc_vl v).
+      ii. ss. rewrite in_app_iff in FREE. split_nIn.
+      assert (open_loc_subst_loc_vl _ _ _ v) as RR.
+      eapply open_loc_subst_loc; eauto.
+      specialize (RR 0 ℓ ℓ0 ν).
+      des_hyp; eqb2eq loc; clarify. rrw.
+      exploit (H0 ℓ0 _ ℓ ν); eauto.
+      ii. eapply open_floc in H1.
+      des; clarify.
+      unfold update. des_goal; eqb2eq loc; ii; clarify.
+      ii. eapply equiv_f_ext; eauto.
+      ii. eapply switch_update_assoc; eauto.
+  Qed.
+End EquivFacts.
