@@ -1,0 +1,554 @@
+%! TEX program = xelatex
+\documentclass{article}
+\input{preamble.tex}
+
+\title{Modular Analysis}
+\author{Joonhyup Lee}
+\begin{document}
+\maketitle
+\section{Syntax and Semantics}
+\subsection{Abstract Syntax}
+\begin{figure}[htb]
+  \centering
+  \begin{tabular}{rrcll}
+    Identifiers & $x$ & $\in$         & $\ExprVar$                                                     \\
+    Expression  & $e$ & $\rightarrow$ & $x$ $\vbar$ $\lambda x.e$ $\vbar$ $e$ $e$ & $\lambda$-calculus \\
+                &     & $\vbar$       & $\link{e}{e}$                             & linked expression  \\
+                &     & $\vbar$       & $\varepsilon$                             & empty module       \\
+                &     & $\vbar$       & $x=e$ ; $e$                               & binding
+  \end{tabular}
+  \caption{Abstract syntax of the language.}
+  \label{fig:syntax}
+\end{figure}
+\subsection{Operational Semantics}
+\begin{figure}[h!]
+  \centering
+  \begin{tabular}{rrcll}
+    Environment     & $\ctx$ & $\in$         & $\Ctx$                                                                         \\
+    Location        & $\ell$ & $\in$         & $\Loc$                                                                         \\
+    de Bruijn Index & $n$    & $\in$         & $\mathbb{N}$                                                                   \\
+    Value           & $v$    & $\in$         & $\Value \triangleq\Ctx+\ExprVar\times\Expr\times\Ctx$                          \\
+    Weak Value      & $w$    & $\in$         & $\Walue\triangleq\Value+\underline\Value$                                      \\
+    Environment     & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack            \\
+                    &        & $\vbar$       & $(x,w)\cons \ctx$                                     & weak value binding     \\
+                    &        & $\vbar$       & $(x,\ell)\cons\ctx$                                   & free location binding  \\
+                    &        & $\vbar$       & $(x,n)\cons\ctx$                                      & bound location binding \\
+    Value           & $v$    & $\rightarrow$ & $\ctx$                                                & exported environment   \\
+                    &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure                \\
+    Weak Value      & $w$    & $\rightarrow$ & $v$                                                   & value                  \\
+                    &        & $\vbar$       & $\mu.v$                                               & recursive value
+  \end{tabular}
+  \caption{Definition of the semantic domains.}
+  \label{fig:domain}
+\end{figure}
+\begin{figure}[h!]
+  \begin{flushright}
+    \fbox{$(e,\ctx)\Downarrow v$}
+  \end{flushright}
+  \centering
+  \vspace{0pt} % -0.75em}
+  \[
+    \begin{InfRule}{Id}
+      \hypo{v=\ctx(x)}
+      \infer1{
+        (x, \ctx)
+        \Downarrow
+        v
+      }
+    \end{InfRule}\:
+    \begin{InfRule}{RecId}
+      \hypo{\mu.v=\ctx(x)}
+      \infer1{
+        (x, \ctx)
+        \Downarrow
+        \openloc{v}{\mu.v}
+      }
+    \end{InfRule}\:
+    \begin{InfRule}{Fn}
+      \infer0{
+        (\lambda x.e, \ctx)
+        \Downarrow
+        \langle\lambda x.e, \ctx\rangle
+      }
+    \end{InfRule}\:
+    \begin{InfRule}{App}
+      \hypo{
+        (e_{1}, \ctx)
+        \Downarrow
+        \langle\lambda x.e, \ctx_1\rangle
+      }
+      \hypo{
+        (e_{2}, \ctx)
+        \Downarrow
+        v_2
+      }
+      \hypo{
+        (e, (x, v_2)\cons \ctx_1)
+        \Downarrow
+        v
+      }
+      \infer3{
+        (e_{1}\:e_{2}, \ctx)
+        \Downarrow
+        v
+      }
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{Link}
+      \hypo{
+        (e_{1}, \ctx)
+        \Downarrow
+        \ctx_1
+      }
+      \hypo{
+        (e_{2}, \ctx_1)
+        \Downarrow
+        v
+      }
+      \infer2{
+        (\link{e_{1}}{e_{2}}, \ctx)
+        \Downarrow
+        v
+      }
+    \end{InfRule}\quad
+    \begin{InfRule}{Empty}
+      \infer0{
+        (\varepsilon, \ctx)
+        \Downarrow
+        \bullet
+      }
+    \end{InfRule}\quad
+    \begin{InfRule}{Bind}
+      \hypo{
+        \ell\not\in\FLoc(\ctx)
+      }
+      \hypo{
+        (e_{1}, (x,\ell)\cons\ctx)
+        \Downarrow
+        v_1
+      }
+      \hypo{
+        (e_{2}, (x, \mu.\closeloc{\ell}{v_1})\cons \ctx)
+        \Downarrow
+        \ctx_2
+      }
+      \infer3{
+        (x=e_1; e_2, \ctx)
+        \Downarrow
+        (x,\mu.\closeloc{\ell}{v_1})\cons\ctx_2
+      }
+    \end{InfRule}
+  \]
+  \caption{The big-step operational semantics.}
+  \label{fig:bigstep}
+\end{figure}
+We use the locally nameless representation, and enforce that all values be \emph{locally closed}.
+As a consequence, the big-step operational semantics will be \emph{deterministic}, no matter what $\ell$ is chosen in the Bind rule.
+
+\begin{figure}[h!]
+  \centering
+  \begin{tabular}{rclr}
+    \fbox{$e,\ctx,K\rightarrow e,\ctx,K$}                     &               &                                                                                   &                          \\
+    $e_1\:e_2,\ctx,K$                                         & $\rightarrow$ & $e_1,\ctx,K\circ(\_\:(e_2,\ctx))$                                                                            \\
+    $\link{e_1}{e_2},\ctx,K$                                  & $\rightarrow$ & $e_1,\ctx,K\circ(\link{\_}{e_2})$                                                                            \\
+    $x=e_1;e_2,\ctx,K$                                        & $\rightarrow$ & $e_1,(x,\ell)\cons\ctx,K\circ(x=\ell;(e_2,\ctx))$                                 & $\ell\not\in\FLoc(\ctx)$ \\
+    \\
+    \fbox{$v,K\rightarrow e,\ctx,K$}                          &               &                                                                                   &                          \\
+    $\langle\lambda x.e,\ctx_1\rangle,K\circ(\_\:(e_2,\ctx))$ & $\rightarrow$ & $e_2,\ctx,K\circ(\langle\lambda x.e,\ctx_1\rangle\:\_)$                                                      \\
+    $\ctx_1,K\circ(\link{\_}{e_2})$                           & $\rightarrow$ & $e_2,\ctx_1,K$                                                                                               \\
+    $v_1,K\circ(x=\ell;(e_2,\ctx))$                           & $\rightarrow$ & $e_2,(x,\mu.\closeloc{\ell}{v_1})\cons\ctx,K\circ(x=\mu.\closeloc{\ell}{v_1};\_)$                            \\
+    $v_2,K\circ(\langle\lambda x.e,\ctx_1\rangle\:\_)$        & $\rightarrow$ & $e,(x,v_2)\cons\ctx_1,K$                                                                                     \\
+    \\
+    \fbox{$v,K\rightarrow v,K$}                               &               &                                                                                   &                          \\
+    $\ctx_2,K\circ(x=w_1;\_)$                                 & $\rightarrow$ & $(x,w_1)\cons\ctx_2,K$                                                                                       \\
+    \\
+    \fbox{$e,\ctx,K\rightarrow v,K$}                          &               &                                                                                   &                          \\
+    $x,\ctx,K$                                                & $\rightarrow$ & $v,K$                                                                             & $v=\ctx(x)$              \\
+    $x,\ctx,K$                                                & $\rightarrow$ & $v^{\mu.v},K$                                                                     & $\mu.v=\ctx(x)$          \\
+    $\lambda x.e,\ctx,K$                                      & $\rightarrow$ & $\langle\lambda x.e,\ctx\rangle,K$                                                                           \\
+    $\varepsilon,\ctx,K$                                      & $\rightarrow$ & $\bullet,K$
+  \end{tabular}
+  \caption{The equivalent small-step operational semantics.}
+  \label{fig:smallstep}
+\end{figure}
+
+\subsection{Adding Memory}
+
+The first step towards abstraction is reformulating the semantics into a version with memory.
+
+\begin{figure}[h!]
+  \centering
+  \begin{tabular}{rrcll}
+    Environment & $\ctx$ & $\in$         & $\Ctx$                                                                       \\
+    Location    & $\ell$ & $\in$         & $\Loc$                                                                       \\
+    Memory      & $\mem$ & $\in$         & $\Mem\triangleq\fin{\Loc}{\Value}$                                           \\
+    Value       & $v$    & $\in$         & $\Value \triangleq\Ctx+\ExprVar\times\Expr\times\Ctx$                        \\
+    Environment & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack          \\
+                &        & $\vbar$       & $(x,\ell)\cons\ctx$                                   & location binding     \\
+    Value       & $v$    & $\rightarrow$ & $\ctx$                                                & exported environment \\
+                &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure
+  \end{tabular}
+  \caption{Definition of the semantic domains with memory.}
+  \label{fig:memdomain}
+\end{figure}
+\begin{figure}[h!]
+  \centering
+  \begin{tabular}{rclr}
+    \fbox{$e,\ctx,\mem,K\rightarrow e,\ctx,\mem,K$}                &               &                                                                 &                                  \\
+    $e_1\:e_2,\ctx,\mem,K$                                         & $\rightarrow$ & $e_1,\ctx,\mem,K\circ(\_\:(e_2,\ctx))$                                                             \\
+    $\link{e_1}{e_2},\ctx,\mem,K$                                  & $\rightarrow$ & $e_1,\ctx,\mem,K\circ(\link{\_}{e_2})$                                                             \\
+    $x=e_1;e_2,\ctx,\mem,K$                                        & $\rightarrow$ & $e_1,(x,\ell)\cons\ctx,\mem,K\circ(x=\ell;(e_2,\ctx))$          & $\ell\not\in\dom(m)\cup\FLoc(K)$ \\
+    \\
+    \fbox{$v,\mem,K\rightarrow e,\ctx,\mem,K$}                     &               &                                                                 &                                  \\
+    $\langle\lambda x.e,\ctx_1\rangle,\mem,K\circ(\_\:(e_2,\ctx))$ & $\rightarrow$ & $e_2,\ctx,\mem,K\circ(\langle\lambda x.e,\ctx_1\rangle\:\_)$                                       \\
+    $\ctx_1,\mem,K\circ(\link{\_}{e_2})$                           & $\rightarrow$ & $e_2,\ctx_1,\mem,K$                                                                                \\
+    $v_1,\mem,K\circ(x=\ell;(e_2,\ctx))$                           & $\rightarrow$ & $e_2,(x,\ell)\cons\ctx,\mem[\ell\mapsto v_1],K\circ(x=\ell;\_)$                                    \\
+    $v_2,\mem,K\circ(\langle\lambda x.e,\ctx_1\rangle\:\_)$        & $\rightarrow$ & $e,(x,\ell)\cons\ctx_1,\mem[\ell\mapsto v_2],K$                 & $\ell\not\in\dom(m)\cup\FLoc(K)$ \\
+    \\
+    \fbox{$v,\mem,K\rightarrow v,\mem,K$}                          &               &                                                                 &                                  \\
+    $\ctx_2,\mem,K\circ(x=\ell;\_)$                                & $\rightarrow$ & $(x,\ell)\cons\ctx_2,\mem,K$                                                                       \\
+    \\
+    \fbox{$e,\ctx,\mem,K\rightarrow v,\mem,K$}                     &               &                                                                 &                                  \\
+    $x,\ctx,\mem,K$                                                & $\rightarrow$ & $v,\mem,K$                                                      & $\ell=\ctx(x),v=\mem(\ell)$      \\
+    $\lambda x.e,\ctx,\mem,K$                                      & $\rightarrow$ & $\langle\lambda x.e,\ctx\rangle,\mem,K$                                                            \\
+    $\varepsilon,\ctx,\mem,K$                                      & $\rightarrow$ & $\bullet,\mem,K$
+  \end{tabular}
+  \caption{The small-step operational semantics with memory.}
+  \label{fig:memsmallstep}
+\end{figure}
+\subsection{Reconciling the Two Semantics}
+We need to prove that the two semantics simulate each other.
+Thus, we need to define a notion of equivalence between the two semantic domains.
+\begin{figure}[h!]
+  \centering
+  \begin{flushright}
+    \fbox{$w\sim_f v,\mem$}
+  \end{flushright}
+  \[
+    \begin{InfRule}{Eq-Nil}
+      \infer0{\bullet\sim_f\bullet}
+    \end{InfRule}\:
+    \begin{InfRule}{Eq-ConsFree}
+      \hypo{\ell\not\in\dom(f)}
+      \hypo{\ell\not\in\dom(\mem)}
+      \hypo{\ctx\sim_f\ctx'}
+      \infer3{(x,\ell)\cons\ctx\sim_f(x,\ell)\cons\ctx'}
+    \end{InfRule}\:
+    \begin{InfRule}{Eq-ConsBound}
+      \hypo{f(\ell)=\ell'}
+      \hypo{\ell'\in\dom(\mem)}
+      \hypo{\ctx\sim_f\ctx'}
+      \infer3{(x,\ell)\cons\ctx\sim_f(x,\ell')\cons\ctx'}
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{Eq-ConsWVal}
+      \hypo{\mem(\ell')=v'}
+      \hypo{w\sim_f v'}
+      \hypo{\ctx\sim_f\ctx'}
+      \infer3{(x,w)\cons\ctx\sim_f(x,\ell')\cons\ctx'}
+    \end{InfRule}\:
+    \begin{InfRule}{Eq-Clos}
+      \hypo{\ctx\sim_f\ctx'}
+      \infer1{\langle\lambda x.e,\ctx\rangle\sim_f\langle\lambda x.e,\ctx'\rangle}
+    \end{InfRule}\:
+    \begin{InfRule}{Eq-Rec}
+      \hypo{L\text{ finite}}
+      \hypo{\mem(\ell')=v'}
+      \hypo{\forall\ell\not\in L,\:\openloc{v}{\ell}\sim_{f[\ell\mapsto\ell']}v'}
+      \infer3{\mu.v\sim_f v'}
+    \end{InfRule}
+  \]
+  \caption{The equivalence relation between weak values in the original semantics and values in the semantics with memory.
+  $f\in\fin{\Loc}{\Loc}$ tells what the free locations in $w$ should be mapped to in memory.}
+  \label{fig:equivrel}
+\end{figure}
+
+\begin{lem}[Equivalence under Substitution]
+  For all $w_1,w_2,\ell,f,v_1',v_2',\ell',\mem$,
+  \[(w_1\sim_{f[\ell\mapsto\ell']} v_1',\mem-\ell')\land (v_2'=\mem(\ell'))\land(w_2\sim_f v_2',\mem)\Rightarrow w_1[w_2/\ell]\sim_f v_1',\mem\]
+\end{lem}
+
+\section{Typing (Without Recursive Bindings)}
+The definitions for types are in Figure \ref{fig:exttypdom} and the typing rules are in Figure \ref{fig:exttypjudge}.
+The definitions for subtyping are in Figure \ref{fig:subtyping}.
+
+\begin{figure}[h!]
+  \centering
+  \begin{tabular}{rrcll}
+    Types              & $\tau$   & $\rightarrow$ & $\Gamma$               & module type       \\
+                       &          & $\vbar$       & $\tau\rightarrow\tau$  & function type     \\
+    Typing Environment & $\Gamma$ & $\rightarrow$ & $\bullet$              & empty environment \\
+                       &          & $\vbar$       & $(x,\tau)\cons \Gamma$ & type binding
+  \end{tabular}
+  \caption{Definition of types.}
+  \label{fig:exttypdom}
+\end{figure}
+\begin{figure}[h!]
+  \begin{flushright}
+    \fbox{$\Gamma\vdash e:\tau$}
+  \end{flushright}
+  \centering
+  \[
+    \begin{InfRule}{T-Id}
+      \hypo{\tau=\Gamma(x)}
+      \infer1{
+        \Gamma\vdash x:\tau
+      }
+    \end{InfRule}\qquad
+    \begin{InfRule}{T-Fn}
+      \hypo{(x,\tau_1)\cons\Gamma\vdash e:\tau_2}
+      \infer1{
+        \Gamma\vdash\lambda x.e:\tau_1\rightarrow\tau_2
+      }
+    \end{InfRule}\qquad
+    \begin{InfRule}{T-App}
+      \hypo{
+        \Gamma\vdash e_1:\tau_1\rightarrow\tau
+      }
+      \hypo{
+        \Gamma\vdash e_2:\tau_2
+      }
+      \hypo{
+        \tau_1\ge\tau_2
+      }
+      \infer3{
+        \Gamma\vdash e_{1}\:e_{2}:\tau
+      }
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{T-Link}
+      \hypo{
+        \Gamma\vdash e_1:\Gamma_1
+      }
+      \hypo{
+        \Gamma_1\vdash e_2:\tau_2
+      }
+      \infer2{
+        \Gamma\vdash\link{e_{1}}{e_{2}}:\tau_2
+      }
+    \end{InfRule}\qquad
+    \begin{InfRule}{T-Empty}
+      \infer0{
+        \Gamma\vdash\varepsilon:\bullet
+      }
+    \end{InfRule}\qquad
+    \begin{InfRule}{T-Bind}
+      \hypo{
+        \Gamma\vdash e_1:\tau_1
+      }
+      \hypo{
+        (x, \tau_1)\cons\Gamma\vdash e_2:\Gamma_2
+      }
+      \infer2{
+        \Gamma\vdash x=e_1;e_2:(x,\tau_1)\cons\Gamma_2
+      }
+    \end{InfRule}
+  \]
+  \caption{The typing judgment.}
+  \label{fig:exttypjudge}
+\end{figure}
+\begin{figure}[h!]
+  \begin{flushright}
+    \fbox{$\tau\ge\tau$}
+  \end{flushright}
+  \centering
+  \vspace{0pt} % -0.75em}
+  \[
+    \begin{InfRule}{Nil}
+      \infer0{
+        \bullet\ge\bullet
+      }
+    \end{InfRule}\qquad
+    \begin{InfRule}{ConsFree}
+      \hypo{
+        x\not\in\mathsf{dom}(\Gamma)
+      }
+      \hypo{
+        \Gamma\ge\Gamma'
+      }
+      \infer2{
+        \Gamma\ge(x,\tau)\cons\Gamma'
+      }
+    \end{InfRule}\qquad
+    \begin{InfRule}{ConsBound}
+      \hypo{
+        \Gamma(x)\ge\tau
+      }
+      \hypo{
+        \Gamma-x\ge\Gamma'
+      }
+      \infer2{
+        \Gamma\ge(x,\tau)\cons\Gamma'
+      }
+    \end{InfRule}\qquad
+    \begin{InfRule}{Arrow}
+      \hypo{
+        \tau_2\ge\tau_1
+      }
+      \hypo{
+        \tau_1'\ge\tau_2'
+      }
+      \infer2{
+        \tau_1\rightarrow\tau_1'\ge
+        \tau_2\rightarrow\tau_2'
+      }
+    \end{InfRule}
+  \]
+  \caption{The subtype relation.}
+  \label{fig:subtyping}
+\end{figure}
+
+\subsection{Type Safety}
+\begin{clm}[Type Safety]
+  For all $e\in\Expr$, if $\bullet\vdash e:\tau$ for some $\tau$, then there exists some $v\in\Value$ such that $(e,\bullet)\semarrow v$.
+\end{clm}
+\begin{proof}[Proof sketch]
+  We prove this through unary logical relations and induction on the typing judgment.
+
+  \begin{tabular}{rclr}
+    \textbf{Value Relation}            &              &                                                                                                        & \fbox{$\ValRel{\tau}$}       \\
+    $\ValRel{\bullet}$                 & $\triangleq$ & $\Ctx$                                                                                                                                \\
+    $\ValRel{(x,\tau)\cons\Gamma}$     & $\triangleq$ & $\{\ctx|\ctx(x)\in\ValRel{\tau}\land\ctx-x\in\ValRel{\Gamma-x}\}$                                                                     \\
+    $\ValRel{\tau_1\rightarrow\tau_2}$ & $\triangleq$ & $\{\langle\lambda x.e,\ctx\rangle|\forall v\in\ValRel{\tau_1}:(e,(x,v)\cons\ctx)\in\ExprRel{\tau_2}\}$                                \\
+    \\
+    \textbf{Expression Relation}       &              &                                                                                                        & \fbox{$\ExprRel{\tau}$}      \\
+    $\ExprRel{\tau}$                   & $\triangleq$ & $\{(e,\ctx)|\exists v\in\ValRel{\tau}:(e,\ctx)\semarrow v\}$                                                                          \\
+    \\
+    \textbf{Semantic Typing}           &              &                                                                                                        & \fbox{$\Gamma\vDash e:\tau$} \\
+    $\Gamma\vDash e:\tau$              & $\triangleq$ & $\forall\ctx\in\ValRel{\Gamma}:(e,\ctx)\in\ExprRel{\tau}$
+  \end{tabular}
+
+  \vphantom{}
+
+  We want to prove that:
+  \[\Gamma\vdash e:\tau\Rightarrow\Gamma\vDash e:\tau\]
+  by induction on $\vdash$.
+
+  For the base case of $\bullet$, the proof is trivial.
+  For inductive cases, we need to show \emph{compatibility} lemmas.
+  That is, we must show that the typing rules for syntactic typing hold for semantic typing as well.
+  For this, we need the \emph{subtyping} lemma:
+  \[\tau_1\ge\tau_2\Rightarrow\ValRel{\tau_1}\supseteq\ValRel{\tau_2}\]
+  Then by the inductive hypothesis and compatibility, the result follows.
+\end{proof}
+
+\subsection{Type Inference}
+
+When modules are first-class, type variables can go in the place of type environments.
+
+First we define the syntax for type constraints.
+\begin{figure}[h!]
+  \centering
+  \begin{tabular}{rrcll}
+    Type Variable      & $\alpha$ & $\in$         & $\TyVar$                                                               \\
+    Path               & $p$      & $\rightarrow$ & $\epsilon$                       & empty string                        \\
+                       &          & $\vbar$       & $p x$                            & concatenation with identifier       \\
+    Types              & $\tau$   & $\rightarrow$ & $\Gamma$ | $\tau\rightarrow\tau$ & module/function types               \\
+    Type Environment   & $\Gamma$ & $\rightarrow$ & $\bullet$                        & empty environment                   \\
+                       &          & $\vbar$       & $(x,\tau)\cons \Gamma$           & binding                             \\
+                       &          & $\vbar$       & $\alpha.p$                       & type variable                       \\
+                       &          & $\vbar$       & $[].p$                           & types from the external environment \\
+    Type Constraint    & $u$      & $\rightarrow$ & $\tau\A{=}\tau$                  & equality constraint                 \\
+                       &          & $\vbar$       & $\tau\A{\ge}\tau$                & subtyping constraint                \\
+    Set of Constraints & $U$      & $\subseteq$   & $\{u|u\text{ type constraint}\}$
+  \end{tabular}
+  \caption{Definition of type constraints.}
+  \label{fig:typeqdom}
+\end{figure}
+
+Next we define the type access operation $\tau(x)$:
+\begin{align*}
+  \bullet(x)              & \triangleq\bot      &                      &  & (\alpha.p)(x)        & \triangleq\alpha.px \\
+  ((x,\tau)\cons\_)(x)    & \triangleq\tau      &                      &  & ([].p)(x)            & \triangleq[].px     \\
+  ((x',\_)\cons\Gamma)(x) & \triangleq\Gamma(x) & \text{when }x'\neq x &  & (\_\rightarrow\_)(x) & \triangleq\bot
+\end{align*}
+
+Now we can define the constraint generation algorithm $V(\Gamma,e,\alpha)$.
+Note that the \textbf{let} $U$ \texttt{=} $\_$ \textbf{in} $\_$ notation returns $\bot$ if the right hand side is $\bot$.
+Also note that we write $\alpha$ for $\alpha.\epsilon$ as well.
+
+\begin{flushright}\fbox{$V(\Gamma,e,\alpha)=U$}\end{flushright}
+\hspace{-2.5em}
+\begin{tabular}{rclrcl}
+  $V(\Gamma,\varepsilon,\alpha)$ & $\triangleq$ & $\{\alpha\A{=}\bullet\}$                                                             & $V(\Gamma,\link{e_1}{e_2},\alpha)$         & $\triangleq$ & \textbf{let} $\alpha_1$ \texttt{=} \textit{fresh} \textbf{in}                       \\
+  $V(\Gamma,x,\alpha)$           & $\triangleq$ & \textbf{let} $\tau$ \texttt{=} $\Gamma(x)$ \textbf{in}                               &                                            &              & \textbf{let} $U_1$ \texttt{=} $V(\Gamma,e_1,\alpha_1)$ \textbf{in}                  \\
+                                 &              & $\{\alpha\A{=}\tau\}$                                                                &                                            &              & \textbf{let} $U_2$ \texttt{=} $V(\alpha_1,e_2,\alpha)$  \textbf{in}                 \\
+  $V(\Gamma,\lambda x.e,\alpha)$ & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2$ \texttt{=} \textit{fresh} \textbf{in}               &                                            &              & $U_1\cup U_2$                                                                       \\
+                                 &              & \textbf{let} $U$ \texttt{=} $V((x,\alpha_1)\cons\Gamma,e,\alpha_2)$ \textbf{in}      & $V(\Gamma,\Lete\:\modid\:e_1\:e_2,\alpha)$ & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2$ \texttt{=} \textit{fresh} \textbf{in}              \\
+                                 &              & $\{\alpha\A{=}\alpha_1\rightarrow\alpha_2\}\cup U$                                   &                                            &              & \textbf{let} $U_1$ \texttt{=} $V(\Gamma,e_1,\alpha_1)$ \textbf{in}                  \\
+  $V(\Gamma,e_1\:e_2,\alpha)$    & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2,\alpha_3$ \texttt{=} \textit{fresh} \textbf{in}      &                                            &              & \textbf{let} $U_2$ \texttt{=} $V((x,\alpha_1)\cons\Gamma,e_2,\alpha_2)$ \textbf{in} \\
+                                 &              & \textbf{let} $U_1$ \texttt{=} $V(\Gamma,e_1,\alpha_1)$ \textbf{in}                   &                                            &              & $\{\alpha\A{=}(x,\alpha_1)\cons\alpha_2\}\cup U_1\cup U_2$                          \\
+                                 &              & \textbf{let} $U_2$ \texttt{=} $V(\Gamma,e_2,\alpha_2)$ \textbf{in}                                                                                                                                                                     \\
+                                 &              & $\{\alpha_1\A{=}\alpha_3\rightarrow\alpha,\alpha_3\A{\ge}\alpha_2\}\cup U_1\cup U_2$
+\end{tabular}
+
+\vphantom{}
+
+We want to prove that the constraint generation algorithm is correct.
+
+First, for $\tau\in\Type$, define the access operation $\tau.p$ (which may fail):
+\begin{align*}
+  \tau.\epsilon & \triangleq\tau &  &  & \tau.px & \triangleq(\tau.p)(x)
+\end{align*}
+and define the injection operation $\tau[\external]$:
+\begin{align*}
+  (\bullet)[\external]                 & \triangleq\bullet                                       &  &  & ((x,\tau)\cons\Gamma)[\external] & \triangleq(x,\tau[\external])\cons\Gamma[\external] \\
+  (\alpha.p)[\external]                & \triangleq\alpha.p                                      &  &  & ([].p)[\external]                & \triangleq\external.p                               \\
+  (\tau_1\rightarrow\tau_2)[\external] & \triangleq\tau_1[\external]\rightarrow\tau_2[\external]
+\end{align*}
+
+Let $\Subst\triangleq\fin{\TyVar}{\Type}$ be the set of substitutions.
+For $S\in\Subst$, define:
+\begin{align*}
+  S\bullet    & \triangleq\bullet  &                                  &  & S(\tau_1\rightarrow\tau_2) & \triangleq S\tau_1\rightarrow S\tau_2                                      \\
+  S(\alpha.p) & \triangleq\alpha.p & \text{when }\alpha\not\in dom(S) &  & S(\alpha.p)                & \triangleq \tau.p                     & \text{when }\alpha\mapsto\tau\in S \\
+  S([].p)     & \triangleq [].p
+\end{align*}
+Define:
+\begin{align*}
+  (S,\external)\vDash U\triangleq & \forall(\tau_1\A{=}\tau_2)\in U:(S\tau_1)[\external]= (S\tau_2)[\external]\text{ and} \\
+                                  & \forall(\tau_1\A{\ge}\tau_2)\in U:(S\tau_1)[\external]\ge(S\tau_2)[\external]
+\end{align*}
+where subtyping rules are the same as Figure \ref{fig:subtyping} and subtyping between type variables are not defined.
+
+Then we can show that:
+\begin{clm}[Correnctness of $V$]
+  For $e\in\Expr$, $\Gamma,\external\in\TyEnv$, $\alpha\in\TyVar$, $S\in\Subst$:
+  \begin{align*}
+    (S,\external)\vDash V(\Gamma,e,\alpha) \Leftrightarrow & (S\Gamma)[\external]\vdash e:(S\alpha)[\external]
+  \end{align*}
+\end{clm}
+\begin{proof}[Proof sketch]
+  Structural induction on $e$.
+\end{proof}
+
+Note that by including $[].p$ in type environments, we can naturally generate constraints about the external environment $[]$.
+Also, by injection, we can utilize constraints generated \emph{in advance} to obtain constraints generated from a more informed environment.
+We extend injection to the output of the constraint-generating algorithm:
+\begin{align*}
+  \bot[\external] \triangleq & \bot                                                                                                          \\
+  U[\external]    \triangleq & \{\tau_1[\external]\A{=}\tau_2[\external]|(\tau_1\A{=}\tau_2)\in U\}\cup                                      \\
+                             & \{\tau_1[\external]\A{\ge}\tau_2[\external]|(\tau_1\A{\ge}\tau_2)\in U\} & \text{when all injections succeed} \\
+  U[\external]    \triangleq & \bot                                                                     & \text{when injection fails}
+\end{align*}
+Then we can prove:
+\begin{clm}[Advance]
+  For $e\in\Expr$, $\Gamma,\external\in\TyEnv$, $\alpha\in\TyVar$:
+  \[V(\Gamma[\external],e,\alpha)=V(\Gamma,e,\alpha)[\external]\]
+\end{clm}
+\begin{proof}[Proof sketch]
+  Structural induction on $\Gamma$.
+\end{proof}
+
+\end{document}
+%%% Local Variables: 
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-engine: xetex
+%%% End:
