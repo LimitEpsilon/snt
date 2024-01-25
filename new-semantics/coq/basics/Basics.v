@@ -148,6 +148,7 @@ Class Name T `{Eq T} : Type :=
 Proof. tauto. Qed.
 
 Ltac split_nIn :=
+  ss; repeat rewrite in_app_iff in *;
   repeat match goal with
   | H : ~ (?A \/ ?B) |- _ =>
     let H' := fresh H in
@@ -162,7 +163,6 @@ Ltac gensym_tac L ℓ :=
     let x := fresh "GENSYM" in
     pose proof (gensym_spec l) as x;
     rewrite <- RR in *;
-    repeat rewrite in_app_iff in x;
     split_nIn
   end.
 

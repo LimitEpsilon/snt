@@ -1,3 +1,6 @@
 -docroot my-ln-formalization
 -R basics Basics
 basics
+
+-R theories LN
+theories
