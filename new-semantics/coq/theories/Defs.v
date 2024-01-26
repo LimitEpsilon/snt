@@ -1,4 +1,5 @@
 From Basics Require Import Basics.
+
 Section PreDefs.
   Variable var : Set.
   Variable loc : Type.

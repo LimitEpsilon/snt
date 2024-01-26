@@ -1,3 +1,4 @@
 {
-    "coq.coqProjectRoot": "./new-semantics/coq"
+    "coq.coqProjectRoot": "./new-semantics/coq",
+    "editor.tabSize": 2
 }

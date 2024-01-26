@@ -46,7 +46,7 @@ Section EquivFacts.
     - rewrite in_app_iff in *; des; eauto.
     - gensym_tac (L ++ floc_vl v) ν.
       exploit EQUIV; eauto. ii.
-      exploit H1; eauto.
+      match goal with | H : forall _, ~ In _ _ -> _ |- _=> exploit H; eauto end.
       apply open_inc_floc; eauto.
       unfold update. des_goal; eqb2eq loc; clarify.
   Qed.
@@ -208,17 +208,17 @@ Section EquivFacts.
       end.
       des_ifs; eqb2eq loc; clarify. rrw.
       match goal with 
-      | H : forall _, ~ In _ ?L -> _, FREE : ?ℓ <> ?ν, FREE' : ~ In ?ν ?L |- _=>
-        exploit (H ν FREE' ℓ); eauto 
+      | H : forall _, ~ In _ ?L -> _, DOM : _ ?ℓ <> None,
+        FREE : ~ In ?ν ?L, _ : ?ℓ' <> ?ν |- _=>
+        lazymatch ℓ' with ℓ => fail | _ => idtac end;
+        exploit (H ν FREE ℓ ℓ'); eauto; ii
       end.
-      instantiate (1 := ν).
-      ii;
       match goal with
       | H : In _ (floc_vl (open_loc_vl _ _ _)) |- _ => eapply open_floc in H
       end.
       des; clarify.
-      unfold update. des_goal; eqb2eq loc; ii; clarify.
-      ii. eapply equiv_f_ext; eauto.
+      unfold update in *. des_ifs.
+      eapply equiv_f_ext; eauto.
       ii. eapply swap_update_assoc; eauto.
   Qed.
 End EquivFacts.
