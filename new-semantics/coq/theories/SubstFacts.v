@@ -2,7 +2,7 @@ From Basics Require Import Basics.
 From LN Require Import Defs.
 
 Section SubstFacts.
-  Variable var : Set.
+  Variable var : Type.
   Variable loc : Type.
   Variable lang : Type.
 
@@ -26,6 +26,70 @@ Section SubstFacts.
     | H : open_floc_wvl _ |- _ => solve [exploit H; eauto; ii; des; auto]
     | H : open_floc_nv _ |- _ => solve [exploit H; eauto; ii; des; auto]
     | H : open_floc_vl _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | _ => progress (rewrite in_app_iff in *)
+    | _ => progress (des; clarify)
+    | _ => progress (des_ifs)
+    | _ => progress (eqb2eq loc; clarify)
+    | _ => progress (eqb2eq nat; clarify)
+    | _ => progress (ss)
+    end.
+  Qed.
+
+  Definition open_wvl_floc_wvl (w : wvl var loc lang) :=
+    forall i u x, In x (floc_wvl (open_wvl_wvl i u w)) ->
+      In x (floc_wvl u) \/ In x (floc_wvl w).
+
+  Definition open_wvl_floc_nv (σ : nv var loc lang) :=
+    forall i u x, In x (floc_nv (open_wvl_nv i u σ)) ->
+      In x (floc_wvl u) \/ In x (floc_nv σ).
+
+  Definition open_wvl_floc_vl (v : vl var loc lang) :=
+    forall i u x, In x (floc_vl (open_wvl_vl i u v)) ->
+      In x (floc_wvl u) \/ In x (floc_vl v).
+
+  Lemma open_wvl_floc :
+    (forall w, open_wvl_floc_wvl w) /\
+    (forall σ, open_wvl_floc_nv σ) /\
+    (forall v, open_wvl_floc_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss.
+    all: repeat match goal with
+    | _ => solve [eauto]
+    | H : open_wvl_floc_wvl _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | H : open_wvl_floc_nv _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | H : open_wvl_floc_vl _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | _ => progress (rewrite in_app_iff in *)
+    | _ => progress (des; clarify)
+    | _ => progress (des_ifs)
+    | _ => progress (eqb2eq loc; clarify)
+    | _ => progress (eqb2eq nat; clarify)
+    | _ => progress (ss)
+    end.
+  Qed.
+
+  Definition close_floc_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall i ℓ x, In x (floc_wvl (close_wvl i ℓ w)) ->
+      (x <> ℓ /\ In x (floc_wvl w)).
+
+  Definition close_floc_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall i ℓ x, In x (floc_nv (close_nv i ℓ σ)) ->
+      (x <> ℓ /\ In x (floc_nv σ)).
+
+  Definition close_floc_vl `{Eq loc} (v : vl var loc lang) :=
+    forall i ℓ x, In x (floc_vl (close_vl i ℓ v)) ->
+      (x <> ℓ /\ In x (floc_vl v)).
+
+  Lemma close_floc `{Eq loc} :
+    (forall w, close_floc_wvl w) /\
+    (forall σ, close_floc_nv σ) /\
+    (forall v, close_floc_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss.
+    all: repeat match goal with
+    | _ => solve [eauto]
+    | H : close_floc_wvl _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | H : close_floc_nv _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | H : close_floc_vl _ |- _ => solve [exploit H; eauto; ii; des; auto]
     | _ => progress (rewrite in_app_iff in *)
     | _ => progress (des; clarify)
     | _ => progress (des_ifs)
@@ -142,6 +206,58 @@ Section SubstFacts.
     | RR : close_fresh_wvl _ |- _ => erewrite RR; eauto
     | RR : close_fresh_nv _ |- _ => erewrite RR; eauto
     | RR : close_fresh_vl _ |- _ => erewrite RR; eauto
+    end.
+  Qed.
+
+  Definition subst_loc_fresh_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall ν ℓ (FRESH : ~ In ℓ (floc_wvl w)),
+      subst_loc_wvl ν ℓ w = w.
+
+  Definition subst_loc_fresh_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall ν ℓ (FRESH : ~ In ℓ (floc_nv σ)),
+      subst_loc_nv ν ℓ σ = σ.
+
+  Definition subst_loc_fresh_vl `{Eq loc} (v : vl var loc lang) :=
+    forall ν ℓ (FRESH : ~ In ℓ (floc_vl v)),
+      subst_loc_vl ν ℓ v = v.
+
+  Lemma subst_loc_fresh `{Eq loc} :
+    (forall w, subst_loc_fresh_wvl w) /\
+    (forall σ, subst_loc_fresh_nv σ) /\
+    (forall v, subst_loc_fresh_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; split_nIn;
+    try (progress des_ifs; eqb2eq loc; clarify).
+    all: repeat match goal with
+    | RR : subst_loc_fresh_wvl _ |- _ => erewrite RR; eauto
+    | RR : subst_loc_fresh_nv _ |- _ => erewrite RR; eauto
+    | RR : subst_loc_fresh_vl _ |- _ => erewrite RR; eauto
+    end.
+  Qed.
+
+  Definition subst_wvl_fresh_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall ν ℓ (FRESH : ~ In ℓ (floc_wvl w)),
+      subst_wvl_wvl ν ℓ w = w.
+
+  Definition subst_wvl_fresh_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall ν ℓ (FRESH : ~ In ℓ (floc_nv σ)),
+      subst_wvl_nv ν ℓ σ = σ.
+
+  Definition subst_wvl_fresh_vl `{Eq loc} (v : vl var loc lang) :=
+    forall ν ℓ (FRESH : ~ In ℓ (floc_vl v)),
+      subst_wvl_vl ν ℓ v = v.
+
+  Lemma subst_wvl_fresh `{Eq loc} :
+    (forall w, subst_wvl_fresh_wvl w) /\
+    (forall σ, subst_wvl_fresh_nv σ) /\
+    (forall v, subst_wvl_fresh_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; split_nIn;
+    try (progress des_ifs; eqb2eq loc; clarify).
+    all: repeat match goal with
+    | RR : subst_wvl_fresh_wvl _ |- _ => erewrite RR; eauto
+    | RR : subst_wvl_fresh_nv _ |- _ => erewrite RR; eauto
+    | RR : subst_wvl_fresh_vl _ |- _ => erewrite RR; eauto
     end.
   Qed.
 
@@ -310,6 +426,40 @@ Section SubstFacts.
     rw. eauto.
   Qed.
 
+  Definition open_wvl_subst_loc_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall i ℓ u ν,
+      subst_loc_wvl ν ℓ (open_wvl_wvl i u w) =
+      open_wvl_wvl i (subst_loc_wvl ν ℓ u) (subst_loc_wvl ν ℓ w)
+  .
+
+  Definition open_wvl_subst_loc_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall i ℓ u ν,
+      subst_loc_nv ν ℓ (open_wvl_nv i u σ) =
+      open_wvl_nv i (subst_loc_wvl ν ℓ u) (subst_loc_nv ν ℓ σ)
+  .
+
+  Definition open_wvl_subst_loc_vl `{Eq loc} (v : vl var loc lang) :=
+    forall i ℓ u ν,
+      subst_loc_vl ν ℓ (open_wvl_vl i u v) =
+      open_wvl_vl i (subst_loc_wvl ν ℓ u) (subst_loc_vl ν ℓ v)
+  .
+
+  Lemma open_wvl_subst_loc `{Name loc} :
+    (forall w, open_wvl_subst_loc_wvl w) /\
+    (forall σ, open_wvl_subst_loc_nv σ) /\
+    (forall v, open_wvl_subst_loc_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss.
+    all: repeat first [
+      des_goal; eqb2eq loc; clarify|
+      des_goal; eqb2eq nat; clarify].
+    all: repeat match goal with
+    | RR : open_wvl_subst_loc_wvl _ |- _ => erewrite RR; eauto
+    | RR : open_wvl_subst_loc_nv _ |- _ => erewrite RR; eauto
+    | RR : open_wvl_subst_loc_vl _ |- _ => erewrite RR; eauto
+    end.
+  Qed.
+
   Definition open_loc_subst_wvl_wvl `{Eq loc} (w : wvl var loc lang) :=
     forall i ℓ ν u (U : wvalue u) (NEQ : ℓ <> ν),
       subst_wvl_wvl u ℓ (open_loc_wvl i ν w) =
@@ -423,6 +573,44 @@ Section SubstFacts.
     rw; eauto.
   Qed.
 
+  Definition subst_loc_close_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall i ℓ ν u
+      (NEQ : ℓ <> ν)
+      (FRESH : ℓ <> u),
+    close_wvl i ℓ (subst_loc_wvl u ν w) =
+    subst_loc_wvl u ν (close_wvl i ℓ w).
+
+  Definition subst_loc_close_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall i ℓ ν u
+      (NEQ : ℓ <> ν)
+      (FRESH : ℓ <> u),
+    close_nv i ℓ (subst_loc_nv u ν σ) =
+    subst_loc_nv u ν (close_nv i ℓ σ).
+
+  Definition subst_loc_close_vl `{Eq loc} (v : vl var loc lang) :=
+    forall i ℓ ν u
+      (NEQ : ℓ <> ν)
+      (FRESH : ℓ <> u),
+    close_vl i ℓ (subst_loc_vl u ν v) =
+    subst_loc_vl u ν (close_vl i ℓ v).
+
+  Ltac subst_loc_close_tac :=
+    repeat match goal with
+    | H : subst_loc_close_wvl _ |- _ => rewrite H; eauto
+    | H : subst_loc_close_nv _ |- _ => rewrite H; eauto
+    | H : subst_loc_close_vl _ |- _ => rewrite H; eauto
+    end.
+
+  Lemma subst_loc_close `{Eq loc} :
+    (forall w, subst_loc_close_wvl w) /\
+    (forall σ, subst_loc_close_nv σ) /\
+    (forall v, subst_loc_close_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; subst_loc_close_tac.
+    repeat des_goal; repeat eqb2eq loc; clarify;
+    subst_loc_close_tac.
+  Qed.
+
   Definition floc_subst_wvl_wvl `{Eq loc} (w : wvl var loc lang) :=
     forall ℓ u x
       (IN : In x (floc_wvl (subst_wvl_wvl u ℓ w))),
@@ -452,6 +640,179 @@ Section SubstFacts.
     | H : floc_subst_wvl_wvl _ |- _ => solve [exploit H; eauto; ii; des; auto]
     | H : floc_subst_wvl_vl _ |- _ => solve [exploit H; eauto; ii; des; auto]
     end.
+  Qed.
+
+  Definition close_open_loc_eq_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall i ℓ ν,
+      open_loc_wvl i ν (close_wvl i ℓ w) =
+      subst_loc_wvl ν ℓ (open_loc_wvl i ℓ w).
+
+  Definition close_open_loc_eq_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall i ℓ ν,
+      open_loc_nv i ν (close_nv i ℓ σ) =
+      subst_loc_nv ν ℓ (open_loc_nv i ℓ σ).
+
+  Definition close_open_loc_eq_vl `{Eq loc} (v : vl var loc lang) :=
+    forall i ℓ ν,
+      open_loc_vl i ν (close_vl i ℓ v) =
+      subst_loc_vl ν ℓ (open_loc_vl i ℓ v).
+
+  Lemma close_open_loc_eq `{Eq loc} :
+    (forall w, close_open_loc_eq_wvl w) /\
+    (forall σ, close_open_loc_eq_nv σ) /\
+    (forall v, close_open_loc_eq_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; try solve [repeat rw; eauto];
+    des_ifs; first [eqb2eq nat | eqb2eq loc]; clarify.
+    - rw. s. rewrite eqb_refl. eauto.
+    - rw. s. eauto.
+    - s. rewrite Nat.eqb_refl. rw. eauto.
+    - s. rw. eauto.
+  Qed.
+
+  Definition subst_loc_lc_wvl `{Eq loc} (w : wvl var loc lang) (W : wvalue w) :=
+    forall ℓ ν, wvalue (subst_loc_wvl ν ℓ w).
+
+  Definition subst_loc_lc_nv `{Eq loc} (σ : nv var loc lang) (Σ : env σ) :=
+    forall ℓ ν, env (subst_loc_nv ν ℓ σ).
+
+  Definition subst_loc_lc_vl `{Eq loc} (v : vl var loc lang) (V : value v) :=
+    forall ℓ ν, value (subst_loc_vl ν ℓ v).
+
+  Lemma subst_loc_lc `{Eq loc} :
+    (forall w W, subst_loc_lc_wvl w W) /\
+    (forall σ Σ, subst_loc_lc_nv σ Σ) /\
+    (forall v V, subst_loc_lc_vl v V).
+  Proof.
+    apply val_ind; ii; ss;
+    try (des_ifs; eqb2eq loc);
+    try solve [econstructor; eauto].
+    econstructor.
+    instantiate (1 := ℓ :: L). ii. split_nIn.
+    exploit VAL; eauto. ii.
+    match goal with H : forall _, ~ In _ _ -> _ |- _ => exploit H; eauto end.
+    instantiate (1 := ℓ). instantiate (1 := ν).
+    assert (open_loc_subst_loc_vl v) by apply open_loc_subst_loc.
+    rw. des_ifs; eqb2eq loc; clarify.
+  Qed.
+
+  Definition subst_wvl_lc_wvl `{Eq loc} (w : wvl var loc lang) (W : wvalue w) :=
+    forall ℓ u (U : wvalue u), wvalue (subst_wvl_wvl u ℓ w).
+
+  Definition subst_wvl_lc_nv `{Eq loc} (σ : nv var loc lang) (Σ : env σ) :=
+    forall ℓ u (U : wvalue u), env (subst_wvl_nv u ℓ σ).
+
+  Definition subst_wvl_lc_vl `{Eq loc} (v : vl var loc lang) (V : value v) :=
+    forall ℓ u (U : wvalue u), value (subst_wvl_vl u ℓ v).
+
+  Lemma subst_wvl_lc `{Name loc} :
+    (forall w W, subst_wvl_lc_wvl w W) /\
+    (forall σ Σ, subst_wvl_lc_nv σ Σ) /\
+    (forall v V, subst_wvl_lc_vl v V).
+  Proof.
+    apply val_ind; ii; ss;
+    try (des_ifs; eqb2eq loc);
+    try solve [econstructor; eauto].
+    econstructor.
+    instantiate (1 := ℓ :: L). ii. split_nIn.
+    exploit VAL; eauto. ii.
+    match goal with H : forall _, ~ In _ _ -> _ |- _ => exploit H; eauto end.
+    instantiate (1 := ℓ).
+    assert (open_loc_subst_wvl_vl v) by eapply open_loc_subst_wvl.
+    rw; eauto.
+  Qed.
+
+  Definition map_close_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall i ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν),
+      map_wvl φ (close_wvl i ℓ w) = close_wvl i (φ ℓ) (map_wvl φ w).
+
+  Definition map_close_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall i ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν),
+      map_nv φ (close_nv i ℓ σ) = close_nv i (φ ℓ) (map_nv φ σ).
+
+  Definition map_close_vl `{Eq loc} (v : vl var loc lang) :=
+    forall i ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν),
+      map_vl φ (close_vl i ℓ v) = close_vl i (φ ℓ) (map_vl φ v).
+
+  Lemma map_close `{Eq loc} :
+    (forall w, map_close_wvl w) /\
+    (forall σ, map_close_nv σ) /\
+    (forall v, map_close_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; repeat rw; eauto.
+    des_ifs.
+    all: repeat (eqb2eq loc; clarify; ss).
+    all: repeat rw; eauto.
+    apply INJ in Heq0; clarify.
+  Qed.
+
+  Definition map_open_wvl_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall i u φ,
+      map_wvl φ (open_wvl_wvl i u w) = open_wvl_wvl i (map_wvl φ u) (map_wvl φ w).
+
+  Definition map_open_wvl_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall i u φ,
+      map_nv φ (open_wvl_nv i u σ) = open_wvl_nv i (map_wvl φ u) (map_nv φ σ).
+
+  Definition map_open_wvl_vl `{Eq loc} (v : vl var loc lang) :=
+    forall i u φ,
+      map_vl φ (open_wvl_vl i u v) = open_wvl_vl i (map_wvl φ u) (map_vl φ v).
+
+  Lemma map_open_wvl `{Eq loc} :
+    (forall w, map_open_wvl_wvl w) /\
+    (forall σ, map_open_wvl_nv σ) /\
+    (forall v, map_open_wvl_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; repeat rw; eauto.
+    des_ifs.
+    all: repeat (eqb2eq nat; clarify; ss).
+    all: repeat rw; eauto.
+  Qed.
+
+  Definition map_floc_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+      (IN : In (φ ℓ) (floc_wvl (map_wvl φ w))),
+    In ℓ (floc_wvl w).
+
+  Definition map_floc_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+      (IN : In (φ ℓ) (floc_nv (map_nv φ σ))),
+    In ℓ (floc_nv σ).
+
+  Definition map_floc_vl `{Eq loc} (v : vl var loc lang) :=
+    forall ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+      (IN : In (φ ℓ) (floc_vl (map_vl φ v))),
+    In ℓ (floc_vl v).
+
+  Lemma map_floc `{Eq loc} :
+    (forall w, map_floc_wvl w) /\
+    (forall σ, map_floc_nv σ) /\
+    (forall v, map_floc_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; eauto;
+    des; eauto.
+    rewrite in_app_iff in *; ss; des; eauto.
+  Qed.
+
+  Definition swap_is_subst_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall ℓ ν (FRESH : ~ In ℓ (floc_wvl w)),
+      map_wvl (swap id ℓ ν) w = subst_loc_wvl ℓ ν w.
+
+  Definition swap_is_subst_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall ℓ ν (FRESH : ~ In ℓ (floc_nv σ)),
+      map_nv (swap id ℓ ν) σ = subst_loc_nv ℓ ν σ.
+
+  Definition swap_is_subst_vl `{Eq loc} (v : vl var loc lang) :=
+    forall ℓ ν (FRESH : ~ In ℓ (floc_vl v)),
+      map_vl (swap id ℓ ν) v = subst_loc_vl ℓ ν v.
+
+  Lemma swap_is_subst `{Eq loc} :
+    (forall w, swap_is_subst_wvl w) /\
+    (forall σ, swap_is_subst_nv σ) /\
+    (forall v, swap_is_subst_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; repeat rw; split_nIn; eauto.
+    unfold swap; des_ifs; repeat eqb2eq loc; clarify.
   Qed.
 End SubstFacts.
 

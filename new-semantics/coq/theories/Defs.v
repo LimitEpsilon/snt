@@ -1,7 +1,7 @@
 From Basics Require Import Basics.
 
 Section PreDefs.
-  Variable var : Set.
+  Variable var : Type.
   Variable loc : Type.
   Variable lang : Type.
 
@@ -149,6 +149,30 @@ with subst_loc_vl {var loc lang} `{Eq loc} (ν ℓ : loc) (v : vl var loc lang) 
   | vl_clos e σ => vl_clos e (subst_loc_nv ν ℓ σ)
   end.
 
+(* multiple substitutions *)
+Fixpoint map_wvl {var loc lang} `{Eq loc} (φ : loc -> loc) (w : wvl var loc lang) :=
+  match w with
+  | wvl_v v => wvl_v (map_vl φ v)
+  | wvl_recv v => wvl_recv (map_vl φ v)
+  end
+
+with map_nv {var loc lang} `{Eq loc} (φ : loc-> loc) (σ : nv var loc lang) :=
+  match σ with
+  | nv_mt => nv_mt
+  | nv_bloc x n σ' =>
+    nv_bloc x n (map_nv φ σ')
+  | nv_floc x ℓ' σ' =>
+    nv_floc x (φ ℓ') (map_nv φ σ')
+  | nv_bval x w σ' =>
+    nv_bval x (map_wvl φ w) (map_nv φ σ')
+  end
+
+with map_vl {var loc lang} `{Eq loc} (φ : loc -> loc) (v : vl var loc lang) :=
+  match v with
+  | vl_exp σ => vl_exp (map_nv φ σ)
+  | vl_clos e σ => vl_clos e (map_nv φ σ)
+  end.
+
 (* substitute the free location ℓ for u *)
 Fixpoint subst_wvl_wvl {var loc lang} `{Eq loc} (u : wvl var loc lang) (ℓ : loc) (w : wvl var loc lang) :=
   match w with
@@ -195,7 +219,7 @@ with floc_vl {var loc lang} (v : vl var loc lang) :=
   end.
 
 Section LCDefs.
-  Variable var : Set.
+  Variable var : Type.
   Variable loc : Type.
   Variable lang : Type.
   (* locally closed predicates *)
@@ -277,7 +301,7 @@ Proof.
   des_ifs. eqb2eq loc. clarify.
 Qed.
 
-Definition swap {loc T} `{Eq loc} (f : loc -> option T) ℓ ν x :=
+Definition swap {loc T} `{Eq loc} (f : loc -> T) ℓ ν x :=
   if eqb x ℓ then f ν else if eqb x ν then f ℓ else f x.
 
 Lemma swap_update_assoc {loc T} `{Eq loc} (f : loc -> option T) ℓ' ℓ ν x :
@@ -290,7 +314,7 @@ Proof.
 Qed.
 
 Section EquivDefs.
-  Variable var : Set.
+  Variable var : Type.
   Variable loc : Type.
   Variable lang : Type.
 

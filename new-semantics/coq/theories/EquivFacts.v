@@ -3,7 +3,7 @@ From LN Require Import Defs.
 From LN Require Import SubstFacts.
 
 Section EquivFacts.
-  Variable var : Set.
+  Variable var : Type.
   Variable loc : Type.
   Variable lang : Type.
 
