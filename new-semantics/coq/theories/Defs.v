@@ -361,6 +361,8 @@ Section EquivDefs.
   .
 End EquivDefs.
 
+Arguments mvalue_exp {var loc lang}.
+Arguments mvalue_clos {var loc lang}.
 Arguments equiv {var loc lang _}.
 Arguments equiv_mt {var loc lang}.
 Arguments equiv_bloc {var loc lang}.

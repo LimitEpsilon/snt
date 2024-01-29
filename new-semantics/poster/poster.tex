@@ -1,0 +1,333 @@
+% Gemini theme
+% https://github.com/anishathalye/gemini
+
+\documentclass[final]{beamer}
+
+% ====================
+% Packages
+% ====================
+
+\input{preamble.tex}
+
+% ====================
+% Lengths
+% ====================
+
+% If you have N columns, choose \sepwidth and \colwidth such that
+% (N+1)*\sepwidth + N*\colwidth = \paperwidth
+\newlength{\sepwidth}
+\newlength{\colwidth}
+\setlength{\sepwidth}{0.025\paperwidth}
+\setlength{\colwidth}{0.4625\paperwidth}
+
+\newcommand{\separatorcolumn}{\begin{column}{\sepwidth}\end{column}}
+
+% ====================
+% Title
+% ====================
+
+\title{프로그램 따로분석의 이론적 기틀: 재귀적 모듈 지원하기}
+
+\author{이준협 \and 이광근}
+
+\institute[shortinst]{서울대학교 프로그래밍 연구실 (ROPAS)}
+
+% ====================
+% Footer (optional)
+% ====================
+
+%\footercontent{
+%  \hfill
+%  2023년 SIGPL 여름학교 포스터 발표
+%  \hfill
+%}
+% (can be left out to remove footer)
+
+% ====================
+% Logo (optional)
+% ====================
+
+% use this to include logos on the left and/or right side of the header:
+\logoright{\includegraphics[height=5cm]{ropas-symbol.png}}
+\logoleft{\includegraphics[height=5cm]{snu-symbol.png}}
+
+% ====================
+% Body
+% ====================
+
+\begin{document}
+
+\begin{frame}[t]
+  \begin{columns}[t]
+    \separatorcolumn
+
+    \begin{column}{\colwidth}
+      \begin{block}{문제 소개}
+        \heading{무엇을 하고 싶은가?}
+        \begin{itemize}
+          \item 프로그램 외부의 이름을 몰라도 분석하고 싶다.\\
+                \textbf{ex. }\textsf{OCaml}에서 \textsf{C} 함수를 부르는 경우
+          \item 이름이 ``복잡한 방식''으로 알려질 때에도 분석하고 싶다.\\
+                \textbf{ex. }First-class modules, Functors, Recursive modules
+        \end{itemize}
+        \heading{어떻게 할 것인가?}
+        \begin{itemize}
+          \item ``Algebraic Effects'': 환경을 받는 \textbf{함수}를 \textbf{자료구조}로 나타냄.
+          \item 환경과 상호작용을 요약하고, 나중에 환경이 들어오면 풀자!
+        \end{itemize}
+      \end{block}
+
+      \begin{block}{모듈이 있는 언어의 정의}
+        \heading{겉모습 (Untyped $\lambda$+Modules)}
+        \begin{figure}[h!]
+          \large
+          \begin{tabular}{rrcll}
+            Identifiers & $x$ & $\in$         & $\ExprVar$                                                      \\
+            Expression  & $e$ & $\rightarrow$ & $x$ $\vbar$ $\lambda x.e$ $\vbar$ $e$ $e$ & $\lambda$-calculus  \\
+                        &     & $\vbar$       & $\link{e}{e}$                             & linked expression   \\
+                        &     & $\vbar$       & $\varepsilon$                             & empty module        \\
+                        &     & $\vbar$       & $x=e$ ; $e$                               & (recursive) binding
+          \end{tabular}
+        \end{figure}
+        \heading{속내용}
+        \begin{figure}[h!]
+          \centering
+          \large
+          \begin{tabular}{rrcll}
+            Environment & $\ctx$ & $\in$         & $\Ctx$                                                                        \\
+            Location    & $\ell$ & $\in$         & $\Loc$                                                                        \\
+            Value       & $v$    & $\in$         & $\Value \triangleq\Ctx+\ExprVar\times\Expr\times\Ctx$                         \\
+            Weak Value  & $w$    & $\in$         & $\Walue\triangleq\Value+\Loc\times\Value$                                     \\
+            Environment & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack           \\
+                        &        & $\vbar$       & $(x,w)\cons \ctx$                                     & weak value binding    \\
+                        &        & $\vbar$       & $(x,\ell)\cons\ctx$                                   & free location binding \\
+            Value       & $v$    & $\rightarrow$ & $\ctx$                                                & exported environment  \\
+                        &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure               \\
+            Weak Value  & $w$    & $\rightarrow$ & $v$                                                   & value                 \\
+                        &        & $\vbar$       & $\mu\ell.v$                                           & recursive value
+          \end{tabular}
+        \end{figure}
+        \heading{실행의미}
+        \begin{figure}[h!]
+          \centering\large
+          \begin{flushright}
+            \fbox{$(e,\ctx)\Downarrow v$}
+          \end{flushright}
+          \vspace{0pt} % -0.75em}
+          \[
+            \begin{InfRule}{Id}
+              \hypo{\ctx(x)=v}
+              \infer1{
+                (x, \ctx)
+                \Downarrow
+                v
+              }
+            \end{InfRule}\quad
+            \begin{InfRule}{RecId}
+              \hypo{\ctx(x)=\mu\ell.v}
+              \infer1{
+                (x, \ctx)
+                \Downarrow
+                v[\mu\ell.v/\ell]
+              }
+            \end{InfRule}\quad
+            \begin{InfRule}{Fn}
+              \infer0{
+                (\lambda x.e, \ctx)
+                \Downarrow
+                \langle\lambda x.e, \ctx\rangle
+              }
+            \end{InfRule}
+          \]
+
+          \[
+            \begin{InfRule}{App}
+              \hypo{
+                (e_{1}, \ctx)
+                \Downarrow
+                \langle\lambda x.e, \ctx_1\rangle
+              }
+              \hypo{
+                (e_{2}, \ctx)
+                \Downarrow
+                v_2
+              }
+              \hypo{
+                (e, (x, v_2)\cons \ctx_1)
+                \Downarrow
+                v
+              }
+              \infer3{
+                (e_{1}\:e_{2}, \ctx)
+                \Downarrow
+                v
+              }
+            \end{InfRule}
+          \]
+
+          \[
+            \begin{InfRule}{Link}
+              \hypo{
+                (e_{1}, \ctx)
+                \Downarrow
+                \ctx_1
+              }
+              \hypo{
+                (e_{2}, \ctx_1)
+                \Downarrow
+                v
+              }
+              \infer2{
+                (\link{e_{1}}{e_{2}}, \ctx)
+                \Downarrow
+                v
+              }
+            \end{InfRule}\quad
+            \begin{InfRule}{Empty}
+              \infer0{
+                (\varepsilon, \ctx)
+                \Downarrow
+                \bullet
+              }
+            \end{InfRule}
+          \]
+
+          \[
+            \begin{InfRule}{RecBind}
+              \hypo{
+                \ell\not\in\FLoc(\ctx)
+              }
+              \hypo{
+                (e_{1}, (x,\ell)\cons\ctx)
+                \Downarrow
+                v_1
+              }
+              \hypo{
+                (e_{2}, (x, \mu\ell.v_1)\cons \ctx)
+                \Downarrow
+                \ctx_2
+              }
+              \infer3{
+                (x=e_1; e_2, \ctx)
+                \Downarrow
+                (x,\mu\ell.v_1)\cons\ctx_2
+              }
+            \end{InfRule}
+          \]
+        \end{figure}
+      \end{block}
+
+    \end{column}
+
+    \separatorcolumn
+
+    \begin{column}{\colwidth}
+      \begin{block}{상호작용 기록하고 나중에 풀기}
+        \heading{상호작용 기록}
+        \begin{figure}[h!]
+          \centering
+          \large
+          \begin{tabular}{rrcll}
+            Environment & $\ctx$ & $\rightarrow$ & $\cdots$                            \\
+                        &        & $\vbar$       & $[E]$         & answer to an event  \\
+            Value       & $v$    & $\rightarrow$ & $\cdots$                            \\
+                        &        & $\vbar$       & $E$           & answer to an event  \\
+            Event       & $E$    & $\rightarrow$ & $\InitE$      & initial environment \\
+                        &        & $\vbar$       & $\ReadE(E,x)$ & read event          \\
+                        &        & $\vbar$       & $\CallE(E,v)$ & call event
+          \end{tabular}
+
+          \[
+            [E](x)\triangleq\ReadE(E,x)\qquad
+            \begin{InfRule}{AppEvent}
+              \hypo{
+                (e_{1}, \ctx)
+                \Downarrow
+                E
+              }
+              \hypo{
+                (e_{2}, \ctx)
+                \Downarrow
+                v
+              }
+              \infer2{
+                (e_{1}\:e_{2}, \ctx)
+                \Downarrow
+                \CallE(E,v)
+              }
+            \end{InfRule}
+          \]
+        \end{figure}
+
+        \heading{상호작용 풀기 (일부 규칙들)}
+        \begin{figure}[h!]
+          \centering
+          \large
+          \begin{flushright}
+            \fbox{$w\resolve W$}
+          \end{flushright}
+          \vspace{0pt} % -0.75em}
+          \[
+            \begin{InfRule}{R-Init}
+              \infer0{
+                \InitE
+                \downarrow
+                \ctx_0
+              }
+            \end{InfRule}\quad
+            \begin{InfRule}{R-Read}
+              \hypo{E\downarrow\Sigma}
+              \hypo{V=\Sigma(x)}
+              \infer2{
+                \ReadE(E,x)
+                \downarrow
+                V
+              }
+            \end{InfRule}\quad
+            \begin{InfRule}{R-ReadRec}
+              \hypo{E\downarrow\Sigma}
+              \hypo{\mu.V=\Sigma(x)}
+              \infer2{
+                \ReadE(E,x)
+                \downarrow
+                \openloc{V}{\mu.V}
+              }
+            \end{InfRule}
+          \]
+
+          \[
+            \begin{InfRule}{R-CallV}
+              \hypo{E\downarrow\langle\lambda x.e,\Sigma\rangle}
+              \hypo{v\downarrow V}
+              \hypo{(e,(x,V)\cons\Sigma)\semarrow V'}
+              \infer3{
+                \CallE(E,v)
+                \downarrow
+                V'
+              }
+            \end{InfRule}\quad
+            \begin{InfRule}{R-CallE}
+              \hypo{E\downarrow E'}
+              \hypo{v\downarrow V}
+              \infer2{
+                \CallE(E,v)
+                \downarrow
+                \CallE(E',V)
+              }
+            \end{InfRule}
+          \]
+        \end{figure}        
+
+        \heading{Conjecture (Linking)}
+        \[\ctx\resolve\Sigma\text{ and }(e,\ctx)\semarrow v\text{ and }(e,\Sigma)\semarrow V\Rightarrow v\resolve V\]
+      \end{block}
+      \begin{block}{요약하기}
+        \heading{}
+      \end{block}
+    \end{column}
+
+    \separatorcolumn
+  \end{columns}
+\end{frame}
+
+\end{document}

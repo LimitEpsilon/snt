@@ -12,25 +12,29 @@ Fixpoint read_env {var loc lang} `{Eq var} (σ : nv var loc lang) (x : var) :=
     if eqb x x' then Some w else read_env σ' x
   end.
 
-Inductive eval1 {var loc} `{Eq var} `{Eq loc} (σ : nv var loc (@val var)): tm -> (vl var loc val) -> Prop :=
-| ev_id x v (READ : read_env σ x = Some (wvl_v v)) : eval1 σ (tm_var x) v
-| ev_rec x v (READ : read_env σ x = Some (wvl_recv v)) : eval1 σ (tm_var x) (open_wvl_vl 0 (wvl_recv v) v)
-| ev_fn x t : eval1 σ (tm_lam x t) (vl_clos (v_fn x t) σ)
+Inductive eval {var loc} `{Eq var} `{Eq loc} (σ : nv var loc (@val var)): tm -> (vl var loc val) -> Prop :=
+| ev_id x v (READ : read_env σ x = Some (wvl_v v))
+: eval σ (tm_var x) v
+| ev_rec x v (READ : read_env σ x = Some (wvl_recv v))
+: eval σ (tm_var x) (open_wvl_vl 0 (wvl_recv v) v)
+| ev_fn x t
+: eval σ (tm_lam x t) (vl_clos (v_fn x t) σ)
 | ev_app t1 t2 x e σ1 v2 v
-  (FN : eval1 σ t1 (vl_clos (v_fn x e) σ1))
-  (ARG : eval1 σ t2 v2)
-  (BODY : eval1 (nv_bval x (wvl_v v2) σ1) e v)
-: eval1 σ (tm_app t1 t2) v
+  (FN : eval σ t1 (vl_clos (v_fn x e) σ1))
+  (ARG : eval σ t2 v2)
+  (BODY : eval (nv_bval x (wvl_v v2) σ1) e v)
+: eval σ (tm_app t1 t2) v
 | ev_link t1 t2 σ1 v
-  (MOD : eval1 σ t1 (vl_exp σ1))
-  (IMP : eval1 σ1 t2 v)
-: eval1 σ (tm_link t1 t2) v
-| ev_mt : eval1 σ tm_mt (vl_exp nv_mt)
+  (MOD : eval σ t1 (vl_exp σ1))
+  (IMP : eval σ1 t2 v)
+: eval σ (tm_link t1 t2) v
+| ev_mt
+: eval σ tm_mt (vl_exp nv_mt)
 | ev_bind x t1 t2 ℓ v1 σ2
   (FRESH : ~ In ℓ (floc_nv σ))
-  (BIND : eval1 (nv_floc x ℓ σ) t1 v1)
-  (MOD : eval1 (nv_bval x (wvl_recv (close_vl 0 ℓ v1)) σ) t2 (vl_exp σ2))
-: eval1 σ (tm_bind x t1 t2) (vl_exp (nv_bval x (wvl_recv (close_vl 0 ℓ v1)) σ2))
+  (BIND : eval (nv_floc x ℓ σ) t1 v1)
+  (MOD : eval (nv_bval x (wvl_recv (close_vl 0 ℓ v1)) σ) t2 (vl_exp σ2))
+: eval σ (tm_bind x t1 t2) (vl_exp (nv_bval x (wvl_recv (close_vl 0 ℓ v1)) σ2))
 .
 
 Lemma read_env_lc {var loc lang} `{Eq var} (σ : nv var loc lang) (Σ : env σ) :
@@ -41,7 +45,7 @@ Proof.
   inv Σ; eauto.
 Qed.
 
-Lemma eval1_lc {var loc} `{Eq var} `{Name loc} t (σ : nv var loc (@val var)) v (EVAL : eval1 σ t v) :
+Lemma eval_lc {var loc} `{Eq var} `{Name loc} t (σ : nv var loc (@val var)) v (EVAL : eval σ t v) :
   forall (LC : env σ), value v.
 Proof.
   induction EVAL; ii; ss; eauto.
@@ -93,7 +97,7 @@ Proof.
   rewrite in_app_iff; eauto.
 Qed.
 
-Lemma eval1_floc_dec {var loc} `{Eq var} `{Name loc} t (σ : nv var loc (@val var)) v (EVAL : eval1 σ t v) :
+Lemma eval_floc_dec {var loc} `{Eq var} `{Name loc} t (σ : nv var loc (@val var)) v (EVAL : eval σ t v) :
   forall ℓ (IN : In ℓ (floc_vl v)), In ℓ (floc_nv σ).
 Proof.
   induction EVAL; ii; ss; eauto.
@@ -120,9 +124,9 @@ Proof.
     exploit IHEVAL1; eauto. ii; des; clarify.
 Qed.
 
-Lemma eval1_map {var loc} `{Eq var} `{Name loc} t (σ : nv var loc (@val var)) v (EVAL : eval1 σ t v) :
+Lemma eval_map {var loc} `{Eq var} `{Name loc} t (σ : nv var loc (@val var)) v (EVAL : eval σ t v) :
   forall φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν),
-    eval1 (map_nv φ σ) t (map_vl φ v).
+    eval (map_nv φ σ) t (map_vl φ v).
 Proof.
   induction EVAL; ii; ss; try solve [econstructor; eauto].
   - econstructor. exploit (read_env_map σ); eauto.
@@ -136,16 +140,16 @@ Proof.
     rrw; eauto.
 Qed.
 
-Lemma eval1_subst {var loc} `{Eq var} `{Name loc} t (σ : nv var loc (@val var)) v (EVAL : eval1 σ t v) :
+Lemma eval_subst {var loc} `{Eq var} `{Name loc} t (σ : nv var loc (@val var)) v (EVAL : eval σ t v) :
   forall ℓ' ν (FRESH : ~ In ν (floc_nv σ)),
-    eval1 (subst_loc_nv ν ℓ' σ) t (subst_loc_vl ν ℓ' v).
+    eval (subst_loc_nv ν ℓ' σ) t (subst_loc_vl ν ℓ' v).
 Proof.
-  ii. pose proof (eval1_map t σ v EVAL (swap id ν ℓ')) as HINT.
+  ii. pose proof (eval_map t σ v EVAL (swap id ν ℓ')) as HINT.
   assert (swap_is_subst_nv _ _ _ σ) as RR by eapply swap_is_subst.
   assert (swap_is_subst_vl _ _ _ v) as RR' by eapply swap_is_subst.
   rewrite <- RR. rewrite <- RR'.
   apply HINT.
   ii; unfold swap, id in fEQ; des_ifs; repeat eqb2eq loc; clarify.
-  red. intros IN. eapply eval1_floc_dec in EVAL; eauto.
+  red. intros IN. eapply eval_floc_dec in EVAL; eauto.
   eauto.
 Qed.
