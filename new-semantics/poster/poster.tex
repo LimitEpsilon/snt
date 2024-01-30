@@ -65,15 +65,15 @@
       \begin{block}{문제 소개}
         \heading{무엇을 하고 싶은가?}
         \begin{itemize}
-          \item 프로그램 외부의 이름을 몰라도 분석하고 싶다.\\
-                \textbf{ex. }\textsf{OCaml}에서 \textsf{C} 함수를 부르는 경우
+          \item 프로그램 외부의 값을 몰라도 분석하고 싶다.\\
+                \textbf{ex. }외부 라이브러리 함수를 부르는 경우
           \item 이름이 ``복잡한 방식''으로 알려질 때에도 분석하고 싶다.\\
                 \textbf{ex. }First-class modules, Functors, Recursive modules
         \end{itemize}
         \heading{어떻게 할 것인가?}
         \begin{itemize}
           \item ``Algebraic Effects'': 환경을 받는 \textbf{함수}를 \textbf{자료구조}로 나타냄.
-          \item 환경과 상호작용을 요약하고, 나중에 환경이 들어오면 풀자!
+          \item 환경과의 상호작용을 요약하고, 나중에 환경이 들어오면 풀자!
         \end{itemize}
       \end{block}
 
@@ -123,14 +123,15 @@
                 v
               }
             \end{InfRule}\quad
-            \begin{InfRule}{RecId}
-              \hypo{\ctx(x)=\mu\ell.v}
-              \infer1{
-                (x, \ctx)
-                \Downarrow
-                v[\mu\ell.v/\ell]
-              }
-            \end{InfRule}\quad
+            \fbox{
+              \begin{InfRule}{RecId}
+                \hypo{\ctx(x)=\mu\ell.v}
+                \infer1{
+                  (x, \ctx)
+                  \Downarrow
+                  v[\mu\ell.v/\ell]
+                }
+              \end{InfRule}}\quad
             \begin{InfRule}{Fn}
               \infer0{
                 (\lambda x.e, \ctx)
@@ -166,23 +167,24 @@
           \]
 
           \[
-            \begin{InfRule}{Link}
-              \hypo{
-                (e_{1}, \ctx)
-                \Downarrow
-                \ctx_1
-              }
-              \hypo{
-                (e_{2}, \ctx_1)
-                \Downarrow
-                v
-              }
-              \infer2{
-                (\link{e_{1}}{e_{2}}, \ctx)
-                \Downarrow
-                v
-              }
-            \end{InfRule}\quad
+            \fbox{
+              \begin{InfRule}{Link}
+                \hypo{
+                  (e_{1}, \ctx)
+                  \Downarrow
+                  \ctx_1
+                }
+                \hypo{
+                  (e_{2}, \ctx_1)
+                  \Downarrow
+                  v
+                }
+                \infer2{
+                  (\link{e_{1}}{e_{2}}, \ctx)
+                  \Downarrow
+                  v
+                }
+              \end{InfRule}}\quad
             \begin{InfRule}{Empty}
               \infer0{
                 (\varepsilon, \ctx)
@@ -193,26 +195,27 @@
           \]
 
           \[
-            \begin{InfRule}{RecBind}
-              \hypo{
-                \ell\not\in\FLoc(\ctx)
-              }
-              \hypo{
-                (e_{1}, (x,\ell)\cons\ctx)
-                \Downarrow
-                v_1
-              }
-              \hypo{
-                (e_{2}, (x, \mu\ell.v_1)\cons \ctx)
-                \Downarrow
-                \ctx_2
-              }
-              \infer3{
-                (x=e_1; e_2, \ctx)
-                \Downarrow
-                (x,\mu\ell.v_1)\cons\ctx_2
-              }
-            \end{InfRule}
+            \fbox{
+              \begin{InfRule}{RecBind}
+                \hypo{
+                  \ell\not\in\FLoc(\ctx)
+                }
+                \hypo{
+                  (e_{1}, (x,\ell)\cons\ctx)
+                  \Downarrow
+                  v_1
+                }
+                \hypo{
+                  (e_{2}, (x, \mu\ell.v_1)\cons \ctx)
+                  \Downarrow
+                  \ctx_2
+                }
+                \infer3{
+                  (x=e_1; e_2, \ctx)
+                  \Downarrow
+                  (x,\mu\ell.v_1)\cons\ctx_2
+                }
+              \end{InfRule}}
           \]
         \end{figure}
       \end{block}
@@ -277,7 +280,7 @@
             \end{InfRule}\quad
             \begin{InfRule}{R-Read}
               \hypo{E\downarrow\Sigma}
-              \hypo{V=\Sigma(x)}
+              \hypo{\Sigma(x)=V}
               \infer2{
                 \ReadE(E,x)
                 \downarrow
@@ -286,11 +289,11 @@
             \end{InfRule}\quad
             \begin{InfRule}{R-ReadRec}
               \hypo{E\downarrow\Sigma}
-              \hypo{\mu.V=\Sigma(x)}
+              \hypo{\Sigma(x)=\mu\ell.V}
               \infer2{
                 \ReadE(E,x)
                 \downarrow
-                \openloc{V}{\mu.V}
+                V[\mu\ell.V/\ell]
               }
             \end{InfRule}
           \]
@@ -316,13 +319,40 @@
               }
             \end{InfRule}
           \]
-        \end{figure}        
+        \end{figure}
 
-        \heading{Conjecture (Linking)}
+        \heading{Conjecture (상호작용 풀기는 안전하다)}
         \[\ctx\resolve\Sigma\text{ and }(e,\ctx)\semarrow v\text{ and }(e,\Sigma)\semarrow V\Rightarrow v\resolve V\]
+
+        \heading{예시}
+        {\ttfamily
+          \begin{tabular}{rl}
+            (\textcolor{dkviolet}{Top}=          & (\textcolor{dkgreen}{Tree}=(\textcolor{blue}{max}=$\lambda$x.f (Top$\synlink$Forest$\synlink$max) x; \textcolor{blue}{$\varepsilon$}); \\
+                                                 & \textcolor{dkgreen}{Forest}=(\textcolor{red}{max}=$\lambda$x.(Top$\synlink$Tree$\synlink$max) x; \textcolor{red}{$\varepsilon$});      \\
+                                                 & \textcolor{dkgreen}{$\varepsilon$});                                                                                                   \\
+            \textcolor{dkviolet}{$\varepsilon$}) & $\synlink$((\textcolor{dkviolet}{Top}$\synlink$\textcolor{dkgreen}{Tree}$\synlink$\textcolor{blue}{max}) id)
+          \end{tabular}
+        }
+
+        $\semarrow\CallE(\CallE(\ReadE(\InitE,\text{``f''}),\langle\lambda\texttt{x.Top}\synlink\texttt{Tree}\synlink\texttt{max x},\dots\rangle),\texttt{id})$
       \end{block}
       \begin{block}{요약하기}
-        \heading{}
+        \heading{메모리의 등장}
+        \begin{itemize}
+          \item 메모리가 있으면 요약이 편해진다.
+          \item $\Ctx\triangleq\fin{\ExprVar}{\Loc}$, $\Mem\triangleq\fin{\Loc}{\Value}$이면, $\Loc$만 요약.
+          \item 그렇다면 실행의미가 동일하다는 것부터 보여야 한다.
+        \end{itemize}
+        \begin{align*}
+          \ctx\sim\ctx_0,\mem_0\land(e,\ctx)\semarrow v                    & \Rightarrow\exists v_1,\mem_1\sim v:(e,\ctx_0,\mem_0)\semarrow(v_1,\mem_1) \\
+          \ctx\sim\ctx_0,\mem_0\land(e,\ctx_0,\mem_0)\semarrow(v_1,\mem_1) & \Rightarrow\exists v\sim v_1,\mem_1:(e,\ctx)\semarrow v
+        \end{align*}
+        \heading{$\semarrow$와 $\resolve$의 요약 (진행 중)}
+        \begin{itemize}
+          \item 첫번째: $\downarrow$를 메모리가 있을 때 ``안전''하게 정의하기
+                \[\text{``안전'':}w\sim v,\mem\land w\downarrow W\Rightarrow\exists V,M:W\sim V,M\land v,\mem\downarrow V,M\]
+          \item 두번째: 메모리의 요약에 대해 ``안전''하게 $\downarrow$, $\Downarrow$를 요약
+        \end{itemize}
       \end{block}
     \end{column}
 

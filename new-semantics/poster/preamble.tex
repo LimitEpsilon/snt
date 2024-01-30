@@ -28,13 +28,15 @@
 \definecolor{dkviolet}{rgb}{0.3,0,0.5}
 
 %%% lstlisting coq style (inspired from a file of Assia Mahboubi)
-\lstdefinelanguage{Coq}{ 
+\lstdefinelanguage{Coq}{
+    % To insert blank lines, write %
+    escapechar=\%,
     % Anything betweeen $ becomes LaTeX math mode
     mathescape=true,
     % Comments may or not include Latex commands
     texcl=false, 
     % Vernacular commands
-    morekeywords=[1]{Section, Module, End, Require, Import, Export,
+    morekeywords=[1]{Section, Module, End, Require, Import, Export, Include,
         Variable, Variables, Parameter, Parameters, Axiom, Hypothesis,
         Hypotheses, Notation, Local, Tactic, Reserved, Scope, Open, Close,
         Bind, Delimit, Definition, Let, Ltac, Fixpoint, CoFixpoint, Add,
@@ -107,18 +109,18 @@
     literate=
     {\\forall}{{\color{dkgreen}{$\forall\;$}}}1
     {\\exists}{{$\exists\;$}}1
-    {\ge -}{{$\geftarrow\;$}}1
+    {<-}{{$\leftarrow\;$}}1
     {=>}{{$\Rightarrow\;$}}1
     {==}{{\code{==}\;}}1
     {==>}{{\code{==>}\;}}1
     %    {:>}{{\code{:>}\;}}1
     {->}{{$\rightarrow\;$}}1
-    {\ge ->}{{$\geftrightarrow\;$}}1
-    {\ge ==}{{$\geq\;$}}1
+    {<->}{{$\leftrightarrow\;$}}1
+    {<==}{{$\leq\;$}}1
     {\#}{{$^\star$}}1 
     {\\o}{{$\circ\;$}}1 
     {\@}{{$\cdot$}}1 
-    {\/\\}{{$\text{ and }\;$}}1
+    {\/\\}{{$\wedge\;$}}1
     {\\\/}{{$\vee\;$}}1
     {++}{{\code{++}}}1
     {~}{{\ }}1
@@ -138,6 +140,7 @@
 \setmainfont{Libertinus Serif}
 \setmathfont{Libertinus Math} % Before set*hangulfont
 \setmathfont{TeX Gyre Pagella Math}[range={\lbrace,\rbrace},Scale=1.1]
+\setmonofont{JuliaMono}[Scale=MatchLowercase]
 \setmainhangulfont{Noto Serif CJK KR}
 \setsanshangulfont[BoldFont={* Bold}]{KoPubWorldDotum}
 
