@@ -150,13 +150,13 @@ with subst_loc_vl {var loc lang} `{Eq loc} (ν ℓ : loc) (v : vl var loc lang) 
   end.
 
 (* multiple substitutions *)
-Fixpoint map_wvl {var loc lang} `{Eq loc} (φ : loc -> loc) (w : wvl var loc lang) :=
+Fixpoint map_wvl {var loc lang} (φ : loc -> loc) (w : wvl var loc lang) :=
   match w with
   | wvl_v v => wvl_v (map_vl φ v)
   | wvl_recv v => wvl_recv (map_vl φ v)
   end
 
-with map_nv {var loc lang} `{Eq loc} (φ : loc-> loc) (σ : nv var loc lang) :=
+with map_nv {var loc lang} (φ : loc-> loc) (σ : nv var loc lang) :=
   match σ with
   | nv_mt => nv_mt
   | nv_bloc x n σ' =>
@@ -167,7 +167,7 @@ with map_nv {var loc lang} `{Eq loc} (φ : loc-> loc) (σ : nv var loc lang) :=
     nv_bval x (map_wvl φ w) (map_nv φ σ')
   end
 
-with map_vl {var loc lang} `{Eq loc} (φ : loc -> loc) (v : vl var loc lang) :=
+with map_vl {var loc lang} (φ : loc -> loc) (v : vl var loc lang) :=
   match v with
   | vl_exp σ => vl_exp (map_nv φ σ)
   | vl_clos e σ => vl_clos e (map_nv φ σ)
@@ -222,6 +222,7 @@ Section LCDefs.
   Variable var : Type.
   Variable loc : Type.
   Variable lang : Type.
+  
   (* locally closed predicates *)
   Inductive wvalue : wvl var loc lang -> Prop :=
   | wvalue_v v (VAL : value v) : wvalue (wvl_v v)

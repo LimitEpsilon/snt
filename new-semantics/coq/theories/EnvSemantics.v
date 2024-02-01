@@ -147,9 +147,13 @@ Proof.
   ii. pose proof (eval_map t σ v EVAL (swap id ν ℓ')) as HINT.
   assert (swap_is_subst_nv _ _ _ σ) as RR by eapply swap_is_subst.
   assert (swap_is_subst_vl _ _ _ v) as RR' by eapply swap_is_subst.
+  replace ν with (id ν) by reflexivity.
+  replace ℓ' with (id ℓ') by reflexivity.
+  replace σ with (map_nv id σ) by (eapply map_id_is_id).
+  replace v with (map_vl id v) by (eapply map_id_is_id).
   rewrite <- RR. rewrite <- RR'.
   apply HINT.
   ii; unfold swap, id in fEQ; des_ifs; repeat eqb2eq loc; clarify.
+  all:try solve [ii; ss].
   red. intros IN. eapply eval_floc_dec in EVAL; eauto.
-  eauto.
 Qed.

@@ -769,6 +769,29 @@ Section SubstFacts.
     all: repeat rw; eauto.
   Qed.
 
+  Definition map_open_loc_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall i u φ,
+      map_wvl φ (open_loc_wvl i u w) = open_loc_wvl i (φ u) (map_wvl φ w).
+
+  Definition map_open_loc_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall i u φ,
+      map_nv φ (open_loc_nv i u σ) = open_loc_nv i (φ u) (map_nv φ σ).
+
+  Definition map_open_loc_vl `{Eq loc} (v : vl var loc lang) :=
+    forall i u φ,
+      map_vl φ (open_loc_vl i u v) = open_loc_vl i (φ u) (map_vl φ v).
+
+  Lemma map_open_loc `{Eq loc} :
+    (forall w, map_open_loc_wvl w) /\
+    (forall σ, map_open_loc_nv σ) /\
+    (forall v, map_open_loc_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; repeat rw; eauto.
+    des_ifs.
+    all: repeat (eqb2eq nat; clarify; ss).
+    all: repeat rw; eauto.
+  Qed.
+
   Definition map_floc_wvl `{Eq loc} (w : wvl var loc lang) :=
     forall ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
       (IN : In (φ ℓ) (floc_wvl (map_wvl φ w))),
@@ -794,17 +817,37 @@ Section SubstFacts.
     rewrite in_app_iff in *; ss; des; eauto.
   Qed.
 
+  Definition map_id_is_id_wvl (w : wvl var loc lang) :=
+    map_wvl id w = w.
+
+  Definition map_id_is_id_nv (σ : nv var loc lang) :=
+    map_nv id σ = σ.
+
+  Definition map_id_is_id_vl (v : vl var loc lang) :=
+    map_vl id v = v.
+
+  Lemma map_id_is_id :
+    (forall w, map_id_is_id_wvl w) /\
+    (forall σ, map_id_is_id_nv σ) /\
+    (forall v, map_id_is_id_vl v).
+  Proof.
+    apply pre_val_ind; ii; red; s; repeat rw; eauto.
+  Qed.
+
   Definition swap_is_subst_wvl `{Eq loc} (w : wvl var loc lang) :=
-    forall ℓ ν (FRESH : ~ In ℓ (floc_wvl w)),
-      map_wvl (swap id ℓ ν) w = subst_loc_wvl ℓ ν w.
+    forall φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+      ℓ ν (FRESH : ~ In ℓ (floc_wvl w)),
+      map_wvl (swap φ ℓ ν) w = subst_loc_wvl (φ ℓ) (φ ν) (map_wvl φ w).
 
   Definition swap_is_subst_nv `{Eq loc} (σ : nv var loc lang) :=
-    forall ℓ ν (FRESH : ~ In ℓ (floc_nv σ)),
-      map_nv (swap id ℓ ν) σ = subst_loc_nv ℓ ν σ.
+    forall φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+      ℓ ν (FRESH : ~ In ℓ (floc_nv σ)),
+      map_nv (swap φ ℓ ν) σ = subst_loc_nv (φ ℓ) (φ ν) (map_nv φ σ).
 
   Definition swap_is_subst_vl `{Eq loc} (v : vl var loc lang) :=
-    forall ℓ ν (FRESH : ~ In ℓ (floc_vl v)),
-      map_vl (swap id ℓ ν) v = subst_loc_vl ℓ ν v.
+    forall φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+      ℓ ν (FRESH : ~ In ℓ (floc_vl v)),
+      map_vl (swap φ ℓ ν) v = subst_loc_vl (φ ℓ) (φ ν) (map_vl φ v).
 
   Lemma swap_is_subst `{Eq loc} :
     (forall w, swap_is_subst_wvl w) /\
@@ -813,6 +856,82 @@ Section SubstFacts.
   Proof.
     apply pre_val_ind; ii; ss; repeat rw; split_nIn; eauto.
     unfold swap; des_ifs; repeat eqb2eq loc; clarify.
+    exploit INJ; eauto; ii; clarify.
+  Qed.
+
+  Definition subst_loc_close_eq_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall i ℓ ν (FRESH : ~ In ℓ (floc_wvl w)),
+      close_wvl i ℓ (subst_loc_wvl ℓ ν w) = close_wvl i ν w.
+
+  Definition subst_loc_close_eq_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall i ℓ ν (FRESH : ~ In ℓ (floc_nv σ)),
+      close_nv i ℓ (subst_loc_nv ℓ ν σ) = close_nv i ν σ.
+
+  Definition subst_loc_close_eq_vl `{Eq loc} (v : vl var loc lang) :=
+    forall i ℓ ν (FRESH : ~ In ℓ (floc_vl v)),
+      close_vl i ℓ (subst_loc_vl ℓ ν v) = close_vl i ν v.
+
+  Lemma subst_loc_close_eq `{Eq loc} :
+    (forall w, subst_loc_close_eq_wvl w) /\
+    (forall σ, subst_loc_close_eq_nv σ) /\
+    (forall v, subst_loc_close_eq_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; repeat rw; split_nIn; eauto.
+    do 2 (des_ifs; eqb2eq loc; clarify; s);
+    rw; eauto.
+  Qed.
+
+  Definition map_ext_wvl (w : wvl var loc lang) :=
+    forall φ ϕ (EXT : forall ℓ (DOM : In ℓ (floc_wvl w)), φ ℓ = ϕ ℓ),
+      map_wvl φ w = map_wvl ϕ w.
+
+  Definition map_ext_nv (σ : nv var loc lang) :=
+    forall φ ϕ (EXT : forall ℓ (DOM : In ℓ (floc_nv σ)), φ ℓ = ϕ ℓ),
+      map_nv φ σ = map_nv ϕ σ.
+
+  Definition map_ext_vl (v : vl var loc lang) :=
+    forall φ ϕ (EXT : forall ℓ (DOM : In ℓ (floc_vl v)), φ ℓ = ϕ ℓ),
+      map_vl φ v = map_vl ϕ v.
+
+  Lemma map_ext :
+    (forall w, map_ext_wvl w) /\
+    (forall σ, map_ext_nv σ) /\
+    (forall v, map_ext_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss;
+    repeat match goal with
+    | RR : map_ext_wvl _ |- _ => erewrite (RR φ ϕ); eauto
+    | RR : map_ext_nv _ |- _ => erewrite (RR φ ϕ); eauto
+    | RR : map_ext_vl _ |- _ => erewrite (RR φ ϕ); eauto
+    end.
+    erewrite EXT; eauto.
+    all:ii; apply EXT; rewrite in_app_iff; eauto.
+  Qed.
+
+  Definition map_lc_wvl (w : wvl var loc lang) (W : wvalue w) :=
+    forall φ, wvalue (map_wvl φ w).
+
+  Definition map_lc_nv (σ : nv var loc lang) (Σ : env σ) :=
+    forall φ, env (map_nv φ σ).
+
+  Definition map_lc_vl (v : vl var loc lang) (V : value v) :=
+    forall φ, value (map_vl φ v).
+
+  Lemma map_lc `{Name loc} :
+    (forall w W, map_lc_wvl w W) /\
+    (forall σ Σ, map_lc_nv σ Σ) /\
+    (forall v V, map_lc_vl v V).
+  Proof.
+    apply val_ind; ii; ss; econstructor; eauto.
+    instantiate (1 := []).
+    ii. gensym_tac (L ++ floc_vl v) ν.
+    exploit H1; eauto.
+    instantiate (1 := fun x => if eqb x ν then ℓ else φ x).
+    assert (map_open_loc_vl v) by apply map_open_loc.
+    rw. rewrite eqb_refl.
+    assert (map_ext_vl v) as RR by apply map_ext.
+    erewrite RR; eauto.
+    ii. des_ifs; eqb2eq loc; clarify.
   Qed.
 End SubstFacts.
 

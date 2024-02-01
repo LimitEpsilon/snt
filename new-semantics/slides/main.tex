@@ -353,11 +353,11 @@
 \usepackage{adjustbox}
 \newcommand{\cfbox}[1]{\adjustbox{cfbox=#1}}
 
-\title{모듈이 있는 언어에서 타입 안전성 증명}
-\subtitle{Logical Relations and Subtyping}
-\author{이준협}
-\date{2024년 1월 12일}
-\institute{ROPAS{@}SNU}
+\title{프로그램 따로분석의 이론적 기틀}
+\subtitle{재귀적 모듈 지원하기}
+\author{이준협, 이광근}
+\date{2024년 1월 31일}
+\institute{2024년 SIGPL 겨울학교}
 
 \titlegraphic{%
   \begin{tikzpicture}[overlay,remember picture]
@@ -373,458 +373,68 @@
 \begin{document}
 \maketitle
 \begin{frame}[c,fragile]
-  \frametitle{동기: 타입의 안전성 증명}
+  \frametitle{무엇을 하고 싶은가?}
   \begin{itemize}
-    \item 따로분석을 타입분석의 경우로 확장하고 싶다.
-    \item 그 전, \underline{언어에 맞는 타입규칙}을 만들고, \underline{안전성 증명}을 해야한다.
+    \item 따로분석이란,
+    \item 프로그램에서 쓰이는 이름이 어디에서 정의되는지 몰라도,
+    \item 그 프로그램이 할 수 있는 일을 포섭하는 분석이다.
   \end{itemize}
-\end{frame}
-\begin{frame}[c, fragile]
-  \frametitle{문제: 의미구조와 아래타입}
-  \begin{enumerate}
-    \item 의미구조가 초기 상태와 최종 결과를 바로 연관시킨다. (큰 보폭)\\
-          $\rightarrow$ 직관적이지만\dots\\
-          $\rightarrow$ Progress \& Preservation 스타일의 증명 어려움
-    \item 풍부한 타입규칙을 위해 \underline{아래타입} (subtype) 도입\\
-          $\rightarrow$ 예시: \texttt{x}만 쓰는 함수에게 \texttt{x,y}를 내보내는 모듈이 주어져도 안전\\
-          $\rightarrow$ 타입 안전성 증명을 어떻게 해야할까?
-  \end{enumerate}
-\end{frame}
-\begin{frame}[c, fragile]
-  \frametitle{해답: Logical Relations}
-  \begin{itemize}
-    \item Simply Typed $\lambda$의 예시: $\tau,A,B\in\textsf{Type},e\in\textsf{Expr},v\in\textsf{Val}$\\
-          \fbox{$R_\tau\subseteq\textsf{Val}^n$}는 다음과 같을 때 $n$\textbf{-ary logical relation}이다:\\
-          \begin{center}
-            \begin{tabular}{|l|}
-              \hline
-              \textbf{모든} $(v_1,\dots,v_n)\in R_A$에 대해                                              \\
-              \textbf{어떤} $(v_1',\dots,v_n')\in R_B$가 존재해 $e_i[v_i/x_i]\Downarrow v_i'$\textbf{이면이} \\
-              $(\lambda x_1.e_1,\dots,\lambda x_n.e_n)\in R_{A\rightarrow B}$\textbf{이다.}           \\
-              \hline
-            \end{tabular}
-          \end{center}
-    \item ``연관된'' 입력을 ``연관된'' 출력으로 보내는 함수들의 집합.
-    \item $R\in\textsf{Type}\rightarrow \mathcal{P}(\textsf{Val}^n)$: 타입의 ``구체화''로 이해
-  \end{itemize}
-\end{frame}
-\begin{frame}[c, fragile]
-  \frametitle{타입 안전성}
-  \begin{itemize}
-    \item $n=1$인 경우(unary) 사용.\\
-          목표: \fbox{$\vdash e:\tau\Rightarrow\exists v\text{ s.t }e\Downarrow v\text{ and } v\in R_\tau$}
-    \item \textbf{겉모습}만 보고 추론된 타입이 실제로 프로그램의 \textbf{의미}를 포섭한다
-  \end{itemize}
-\end{frame}
-\begin{frame}[c, fragile]
-  \frametitle{모듈이 있는 언어: 겉모습}
-  \begin{figure}[htb]
-    \centering
-    \footnotesize
-    \begin{tabular}{rrcll}
-      Identifiers & $x$ & $\in$         & $\ExprVar$                                                     \\
-      Expression  & $e$ & $\rightarrow$ & $x$ $\vbar$ $\lambda x.e$ $\vbar$ $e$ $e$ & $\lambda$-calculus \\
-                  &     & $\vbar$       & $\link{e}{e}$                             & linked expression  \\
-                  &     & $\vbar$       & $\varepsilon$                             & empty module       \\
-                  &     & $\vbar$       & $x=e$ ; $e$                               & binding
-    \end{tabular}
-  \end{figure}
-\end{frame}
-\begin{frame}[c, fragile]
-  \frametitle{의미공간}
-  \begin{figure}[h!]
-    \centering
-    \footnotesize
-    \begin{tabular}{rrcll}
-      Environment & $\ctx$ & $\in$         & $\Ctx$                                                                       \\
-      Value       & $v$    & $\in$         & $\Value \triangleq\Ctx+\ExprVar\times\Expr\times\Ctx$                        \\
-      Environment & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack          \\
-                  &        & $\vbar$       & $(x,v)\cons\ctx$                                      & value binding        \\
-      Value       & $v$    & $\rightarrow$ & $\ctx$                                                & exported environment \\
-                  &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure
-    \end{tabular}
-  \end{figure}
 \end{frame}
 \begin{frame}[c,fragile]
-  \frametitle{큰 보폭 실행의미}
-  \begin{figure}[h!]
-    \footnotesize
-    \begin{flushright}
-      \fbox{$(e,\ctx)\Downarrow v$}
-    \end{flushright}
-    \centering
-    \vspace{0pt} % -0.75em}
-    \[
-      \begin{InfRule}{Id}
-        \hypo{v=\ctx(x)}
-        \infer1{
-          (x, \ctx)
-          \Downarrow
-          v
-        }
+  \frametitle{왜 필요한가?}
+  \begin{itemize}
+    \item 우리가 분석하는 프로그램은 코드 전체가 알려져있는 일이 드물다.\\
+          \textbf{ex. }외부 라이브러리 함수를 부르는 경우
+    \item 외부 환경과 ``따로'' 분석해야한다
+  \end{itemize}
+\end{frame}
+\begin{frame}[c,fragile]
+  \frametitle{어떻게 할 것인가?}
+  \begin{itemize}
+    \item ``Algebraic Effects'': 환경을 받는 \textbf{함수}를 \textbf{자료구조}로 나타냄.
+    \item ``환경'': 이름을 물어보면, 답을 돌려줌
+    \item 환경과의 상호작용을 요약하고, 나중에 환경이 알려지면 풀자!
+  \end{itemize}
+\end{frame}
+\begin{frame}[c,fragile]
+  \frametitle{왜 어려운가?}
+  \begin{itemize}
+    \item 언어마다 이름을 알아내는 방법이 다 다르다.
+    \item 이름을 알아내는 방법이 복잡할 수도 있다.\\
+          \textbf{ex. }First class modules, Functors, Recursive modules
+    \item 심지어, OCaml에서 링킹은 끝나지 않을 수도 있다!\\
+          \textcolor{gray}{False를 증명할 수 있다 (Girard's paradox)}
+    \item 나중에 풀 때, 어떻게 ``안전하게'' 풀 것인가?
+  \end{itemize}
+\end{frame}
+\begin{frame}[c,fragile]
+  \frametitle{잘 요약하기 위해서는}
+  \begin{itemize}
+    \item 요약해석이 알려주는 사실은,
+    \item 기초가 되는 의미구조만 잘 정의해주면,
+    \item 안전한 요약은 ``자연스럽게'' 가능하다는 것이다.
+  \end{itemize}
+\end{frame}
+\begin{frame}[c,fragile]
+  \frametitle{외부 환경과 상호작용하는 의미구조}
+  \begin{itemize}
+    \item 이름 알아내기 어려운 언어에서
+    \item 외부와의 상호작용을 \textbf{발생}시키고
+    \item 이후 \textbf{푸는} 연산을 최대한 간단하게 표현하는 의미구조?
+  \end{itemize}
 
-      \end{InfRule}\qquad
-      \begin{InfRule}{Fn}
-        \infer0{
-          (\lambda x.e, \ctx)
-          \Downarrow
-          \langle\lambda x.e, \ctx\rangle
-        }
-      \end{InfRule}
-    \]
-
-    \[
-      \begin{InfRule}{App}
-        \hypo{
-          (e_{1}, \ctx)
-          \Downarrow
-          \langle\lambda x.e_{\lambda}, \ctx_{\lambda}\rangle
-        }
-        \hypo{
-          (e_{2}, \ctx)
-          \Downarrow
-          v
-        }
-        \hypo{
-          (e_{\lambda}, (x, v)\cons \ctx_{\lambda})
-          \Downarrow
-          v'
-        }
-        \infer3{
-          (e_{1}\:e_{2}, \ctx)
-          \Downarrow
-          v'
-        }
-      \end{InfRule}
-    \]
-
-    \[
-      \begin{InfRule}{Link}
-        \hypo{
-          (e_{1}, \ctx)
-          \Downarrow
-          \ctx'
-        }
-        \hypo{
-          (e_{2}, \ctx')
-          \Downarrow
-          v
-        }
-        \infer2{
-          (\link{e_{1}}{e_{2}}, \ctx)
-          \Downarrow
-          v
-        }
-      \end{InfRule}\qquad
-      \begin{InfRule}{Empty}
-        \infer0{
-          (\varepsilon, \ctx)
-          \Downarrow
-          \bullet
-        }
-      \end{InfRule}\qquad
-      \begin{InfRule}{Bind}
-        \hypo{
-          (e_{1}, \ctx)
-          \Downarrow
-          v
-        }
-        \hypo{
-          (e_{2}, (x, v)\cons \ctx)
-          \Downarrow
-          \ctx'
-        }
-        \infer2{
-          (x=e_1; e_2, \ctx)
-          \Downarrow
-          (x,v)\cons\ctx'
-        }
-      \end{InfRule}
-    \]
-  \end{figure}
-\end{frame}
-\begin{frame}[c,fragile]
-  \frametitle{타입}
-  \begin{figure}[h!]
-    \centering
-    \footnotesize
-    \begin{tabular}{rrcll}
-      Types            & $\tau$   & $\rightarrow$ & $\Gamma$               & module type       \\
-                       &          & $\vbar$       & $\tau\rightarrow\tau$  & function type     \\
-      Type Environment & $\Gamma$ & $\rightarrow$ & $\bullet$              & empty environment \\
-                       &          & $\vbar$       & $(x,\tau)\cons \Gamma$ & type binding
-    \end{tabular}
-  \end{figure}
-\end{frame}
-\begin{frame}[c,fragile]
-  \frametitle{타입규칙}
-  \begin{figure}[h!]
-    \footnotesize
-    \begin{flushright}
-      \fbox{$\Gamma\vdash e:\tau$}
-    \end{flushright}
-    \centering
-    \footnotesize
-    \[
-      \begin{InfRule}{T-Id}
-        \hypo{\tau=\Gamma(x)}
-        \infer1{
-          \Gamma\vdash x:\tau
-        }
-      \end{InfRule}\qquad
-      \begin{InfRule}{T-Fn}
-        \hypo{(x,\tau_1)\cons\Gamma\vdash e:\tau_2}
-        \infer1{
-          \Gamma\vdash\lambda x.e:\tau_1\rightarrow\tau_2
-        }
-      \end{InfRule}\qquad
-      \begin{InfRule}{T-App}
-        \hypo{
-          \Gamma\vdash e_1:\tau_1\rightarrow\tau
-        }
-        \hypo{
-          \Gamma\vdash e_2:\tau_2
-        }
-        \hypo{
-          \tau_1\ge\tau_2
-        }
-        \infer3{
-          \Gamma\vdash e_{1}\:e_{2}:\tau
-        }
-      \end{InfRule}
-    \]
-
-    \[
-      \begin{InfRule}{T-Link}
-        \hypo{
-          \Gamma\vdash e_1:\Gamma_1
-        }
-        \hypo{
-          \Gamma_1\vdash e_2:\tau_2
-        }
-        \infer2{
-          \Gamma\vdash\link{e_{1}}{e_{2}}:\tau_2
-        }
-      \end{InfRule}\qquad
-      \begin{InfRule}{T-Mt}
-        \infer0{
-          \Gamma\vdash\varepsilon:\bullet
-        }
-      \end{InfRule}\qquad
-      \begin{InfRule}{T-Bind}
-        \hypo{
-          \Gamma\vdash e_1:\tau_1
-        }
-        \hypo{
-          (x, \tau_1)\cons\Gamma\vdash e_2:\Gamma_2
-        }
-        \infer2{
-          \Gamma\vdash x=e_1;e_2:(x,\tau_1)\cons\Gamma_2
-        }
-      \end{InfRule}
-    \]
-  \end{figure}
-\end{frame}
-\begin{frame}[c,fragile]
-  \frametitle{아래타입}
-  \begin{figure}[h!]
-    \footnotesize
-    \begin{flushright}
-      \fbox{$\tau\ge\tau$}
-    \end{flushright}
-    \centering
-    \footnotesize
-    \vspace{0pt} % -0.75em}
-    \[
-      \begin{InfRule}{Nil}
-        \infer0{
-          \bullet\ge\bullet
-        }
-      \end{InfRule}\qquad
-      \begin{InfRule}{ConsFree}
-        \hypo{
-          x\not\in\mathsf{dom}(\Gamma)
-        }
-        \hypo{
-          \Gamma\ge\Gamma'
-        }
-        \infer2{
-          \Gamma\ge(x,\tau)\cons\Gamma'
-        }
-      \end{InfRule}\qquad
-      \begin{InfRule}{ConsBound}
-        \hypo{
-          \Gamma(x)\ge\tau
-        }
-        \hypo{
-          \Gamma-x\ge\Gamma'
-        }
-        \infer2{
-          \Gamma\ge(x,\tau)\cons\Gamma'
-        }
-      \end{InfRule}
-    \]
-
-    \[
-      \begin{InfRule}{Arrow}
-        \hypo{
-          \tau_2\ge\tau_1
-        }
-        \hypo{
-          \tau_1'\ge\tau_2'
-        }
-        \infer2{
-          \tau_1\rightarrow\tau_1'\ge
-          \tau_2\rightarrow\tau_2'
-        }
-      \end{InfRule}
-    \]
-  \end{figure}
-  \begin{itemize}
-    \item $\tau_1\ge\tau_2$: $\tau_1$ 자리에 $\tau_2$를 넣어도 안전하다.
-    \item Reflexivity, Transitivity 만족함을 증명할 수 있음.
-  \end{itemize}
-\end{frame}
-\begin{frame}[c,fragile]
-  \frametitle{(Unary) Logical Relation}
-  \begin{figure}
-    \footnotesize
-    \hspace{-3em}
-    \begin{tabular}{rclr}
-      \textbf{Value Relation}            &              &                                                                                                        & \fbox{$\ValRel{\tau}$}  \\
-      $\ValRel{\bullet}$                 & $\triangleq$ & $\Ctx$                                                                                                                           \\
-      $\ValRel{(x,\tau)\cons\Gamma}$     & $\triangleq$ & $\{\ctx|\ctx(x)\in\ValRel{\tau}\land\ctx-x\in\ValRel{\Gamma-x}\}$                                                                \\
-      $\ValRel{\tau_1\rightarrow\tau_2}$ & $\triangleq$ & $\{\langle\lambda x.e,\ctx\rangle|\forall v\in\ValRel{\tau_1}:(e,(x,v)\cons\ctx)\in\ExprRel{\tau_2}\}$                           \\
-      \\
-      \textbf{Expression Relation}       &              &                                                                                                        & \fbox{$\ExprRel{\tau}$} \\
-      $\ExprRel{\tau}$                   & $\triangleq$ & $\{(e,\ctx)|\exists v\in\ValRel{\tau}:(e,\ctx)\semarrow v\}$
-    \end{tabular}
-  \end{figure}
-  \begin{itemize}
-    \item 타입에 대한 귀납법으로 정의됨(well-founded)
-    \item $\bullet$에 대한 해석: $\ValRel{\bullet}=\Ctx$ vs $\ValRel{\bullet}=\{\bullet\}$
-  \end{itemize}
-\end{frame}
-\begin{frame}[c,fragile]
-  \frametitle{타입 안전성}
-  \begin{figure}
-    \footnotesize
-    \begin{tabular}{rclr}
-      \textbf{Semantic Typing} &              &                                                           & \fbox{$\Gamma\vDash e:\tau$} \\
-      $\Gamma\vDash e:\tau$    & $\triangleq$ & $\forall\ctx\in\ValRel{\Gamma}:(e,\ctx)\in\ExprRel{\tau}$
-    \end{tabular}
-  \end{figure}
-  \begin{theorem*}[Type Safety]
-    \[\Gamma\vdash e:\tau\Rightarrow\Gamma\vDash e:\tau\]
-  \end{theorem*}
-  \begin{itemize}
-    \item 타입규칙에 대한 귀납법으로 증명\\
-          + 보조정리 2개
-  \end{itemize}
-\end{frame}
-\begin{frame}[c,fragile]
-  \frametitle{보조정리: 타입규칙이 잘 정의됨}
-  \begin{itemize}
-    \item $\vdash$를 정의하는 규칙들은 $\vDash$의 경우에도 성립한다
-    \item 즉, $\vdash$는 잘 정의되었다.
-  \end{itemize}
-  예시:
-  \begin{figure}[h!]
-    \footnotesize
-    \centering
-    \footnotesize
-    \[
-      \begin{InfRule}{T-Id}
-        \hypo{\tau=\Gamma(x)}
-        \infer1{
-          \Gamma\vDash x:\tau
-        }
-      \end{InfRule}\qquad
-      \begin{InfRule}{T-Fn}
-        \hypo{(x,\tau_1)\cons\Gamma\vDash e:\tau_2}
-        \infer1{
-          \Gamma\vDash\lambda x.e:\tau_1\rightarrow\tau_2
-        }
-      \end{InfRule}\qquad
-      \begin{InfRule}{T-App}
-        \hypo{
-          \Gamma\vDash e_1:\tau_1\rightarrow\tau
-        }
-        \hypo{
-          \Gamma\vDash e_2:\tau_2
-        }
-        \hypo{
-          \tau_1\ge\tau_2
-        }
-        \infer3{
-          \Gamma\vDash e_{1}\:e_{2}:\tau
-        }
-      \end{InfRule}
-    \]
-  \end{figure}
-\end{frame}
-\begin{frame}[c,fragile]
-  \frametitle{보조정리: 아래타입이 잘 정의됨}
-  \begin{lemma*}[Subtyping is well-defined]
-    \[\tau_1\ge\tau_2\Rightarrow\ValRel{\tau_1}\supseteq\ValRel{\tau_2}\]
-  \end{lemma*}
-  \begin{itemize}
-    \item 성립하는 이유: $\ValRel{\bullet}=\Ctx$로 정의했기 때문
-    \item 모든 $\Gamma$에 대해, $\bullet\ge\Gamma$임.
-  \end{itemize}
-\end{frame}
-\begin{frame}[c,fragile]
-  \frametitle{만약 $\ValRel{\bullet}=\{\bullet\}$이었다면?}
-  \begin{itemize}
-    \item 아래타입 관계를 해석할 수 없게 됨
-    \item $\sigma\in\ValRel{\Gamma}$의 의미가 강력해짐:\\
-          $\Gamma$이상을 내보내는$\rightarrow$정확히 $\Gamma$만큼 내보내는
-    \item 예시: $\sigma_1\in\ValRel{\Gamma_1}\land\sigma_2\in\ValRel{\Gamma_2}\Rightarrow\sigma_1\dblplus\sigma_2\in\ValRel{\Gamma_1\Abs{\dblplus}\Gamma_2}$인 $\Abs\dblplus$?\\
-          \begin{enumerate}
-            \item$\ValRel{\bullet}=\Ctx$일 때: $\Gamma_1\Abs\dblplus\Gamma_2\triangleq\Gamma_1$
-            \item$\ValRel{\bullet}=\{\bullet\}$일 때: $\Gamma_1\Abs\dblplus\Gamma_2\triangleq\Gamma_1\dblplus\Gamma_2$
-          \end{enumerate}
-  \end{itemize}
-\end{frame}
-\begin{frame}[c,fragile]
-  \frametitle{재귀적 모듈을 지원하려면?}
   \begin{center}
-    {\footnotesize
-      \[
-        \begin{InfRule}{T-Bind}
-          \hypo{
-            (x,\tau_1)\cons\Gamma\vdash e_1:\tau_1
-          }
-          \hypo{
-            (x, \tau_1)\cons\Gamma\vdash e_2:\Gamma_2
-          }
-          \infer2{
-            \Gamma\vdash x=e_1;e_2:(x,\tau_1)\cons\Gamma_2
-          }
-        \end{InfRule}
-      \]이면?
-      
-      \[
-        \begin{InfRule}{T-Bind}
-          \hypo{
-            (x,\tau)\cons\Gamma\vdash x:\tau
-          }
-          \hypo{
-            (x, \tau)\cons\Gamma\vdash \varepsilon:\bullet
-          }
-          \infer2{
-            \Gamma\vdash x=x;\varepsilon:(x,\tau)\cons\bullet
-          }
-        \end{InfRule}
-      \]이 모든 $\Gamma$와 $\tau$에 대해 성립}
+    \fbox{특히, \textbf{재귀적 모듈}을 위한 의미구조?}
   \end{center}
+\end{frame}
+\begin{frame}
+  \begin{center}\LARGE
+    의미구조 정의와 이후 로드맵\\
+    \textbf{포스터에} 있습니다.
 
-  \begin{itemize}
-    \item ``어떤 위치''에서 재귀적 정의된 값이 쓰이는지 중요
-    \begin{itemize}
-      \item ``A practical mode system for recursive definitions'', POPL 2021
-    \end{itemize}
-  \end{itemize}
+    \large
+    들어주셔서 감사합니다.
+  \end{center}
 \end{frame}
 \end{document}
 %%% Local Variables:

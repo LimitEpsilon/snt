@@ -2,6 +2,7 @@ From Basics Require Import Basics.
 From LN Require Import Defs.
 From LN Require Import Syntax.
 From LN Require Import SubstFacts.
+From LN Require Import EquivFacts.
 From LN Require Import EnvSemantics.
 
 Fixpoint read_menv {var loc} `{Eq var} (σ : menv var loc) (x : var) :=
@@ -207,18 +208,129 @@ Definition Equiv {var loc} `{Eq var} `{Eq loc} (w : wvl var loc (@val var)) W m 
 #[local] Coercion vl_exp : nv >-> vl.
 #[local] Coercion wvl_v : vl >-> wvl.
 
+Lemma fin_pres {var loc} `{Eq var} `{Eq loc} (σ : menv var loc) m L t v' m' L'
+  (EVAL : meval σ m L t v' m' L') :
+  forall (FIN : fin m), fin m'.
+Proof.
+  induction EVAL; ii; ss; try_all; auto.
+  all: match goal with
+  | H : fin _ -> fin ?m |- fin (?ℓ !-> _ ; ?m) =>
+    exploit H; eauto; intros (dom & FIN');
+    red; exists (ℓ :: dom); ii; split_nIn;
+    unfold update; des_ifs; eqb2eq loc; clarify
+  end.
+  all:auto.
+Qed.
+
+Lemma L_inc {var loc} `{Eq var} `{Eq loc} (σ : menv var loc) m L t v' m' L'
+  (EVAL : meval σ m L t v' m' L') :
+  forall ℓ (IN : In ℓ L), In ℓ L'.
+Proof.
+  induction EVAL; ii; ss; eauto.
+Qed.
+
+Lemma m_pres {var loc} `{Eq var} `{Eq loc} (σ : menv var loc) m L t v' m' L'
+  (EVAL : meval σ m L t v' m' L') :
+  forall ℓ (INℓ : In ℓ L), m' ℓ = m ℓ.
+Proof.
+  induction EVAL; ii; ss; repeat rw; eauto.
+  all: first[eapply (@L_inc var loc); eauto |
+    unfold update; des_ifs; eqb2eq loc; clarify].
+  all: first[solve [s; auto] |
+    eapply (@L_inc var loc); eauto |
+    eapply (@L_inc var loc) in EVAL1; eauto].
+  eapply (@L_inc var loc) in EVAL2; eauto. clarify.
+  repeat rw; eauto.
+Qed.
+
+Lemma m_inc {var loc} `{Eq var} `{Eq loc} (σ : menv var loc) m L t v' m' L'
+  (EVAL : meval σ m L t v' m' L') :
+  forall ℓ (DOM : m ℓ <> None), m' ℓ = m ℓ.
+Proof.
+  induction EVAL; ii; ss; repeat rw; eauto;
+  unfold update; des_ifs; eqb2eq loc;
+  repeat rw; eauto; clarify.
+  exfalso.
+  exploit IHEVAL1; eauto. ii.
+  exploit IHEVAL2; eauto. rw. auto.
+  rewrite DOMm. rw. auto.
+Qed.
+
+Lemma equiv_read_env {var loc} `{Eq var} `{Name loc} (σ : nv var loc (@val var)) :
+  forall σ' m x v
+    (EQUIV : equiv σ bot (mvalue_exp σ') m)
+    (READ : read_env σ x = Some v),
+  exists ℓ v',
+    read_menv σ' x = Some ℓ /\
+    m ℓ = Some v' /\
+    equiv v bot v' m.
+Proof.
+  induction σ; ii; ss; des_ifs; eqb2eq var; clarify;
+  inv EQUIV; ss; clarify.
+  - exploit IHσ; eauto. ii; des.
+    repeat eexists; eauto; des_ifs; eqb2eq var; clarify.
+  - exists ℓ'. exists v'. rewrite eqb_refl. eauto.
+  - exploit IHσ; eauto. ii; des.
+    repeat eexists; eauto; des_ifs; eqb2eq var; clarify.
+Qed.
+
+Lemma equiv_read_menv {var loc} `{Eq var} `{Name loc} (σ' : menv var loc) :
+  forall (σ : nv var loc (@val var)) m x ℓ v'
+    (EQUIV : equiv σ bot (mvalue_exp σ') m)
+    (READσ : read_menv σ' x = Some ℓ)
+    (READm : m ℓ = Some v'),
+  exists v,
+    read_env σ x = Some v /\
+    equiv v bot v' m.
+Proof.
+  induction σ'; ii; ss; des_ifs; eqb2eq var; clarify;
+  inv EQUIV; ss; clarify.
+  - exists w. rewrite eqb_refl. eauto.
+  - exploit IHσ'; eauto. ii; des.
+    repeat eexists; eauto; des_ifs; eqb2eq var; clarify.
+  - exploit IHσ'; eauto. ii; des.
+    repeat eexists; eauto; des_ifs; eqb2eq var; clarify.
+Qed.
+
 Lemma equiv_l {var loc} `{Eq var} `{Name loc} (σ : nv var loc val) t v (EVAL : eval σ t v) :
   forall φ σ' m L
-    (INJ : forall x y (fEQ : φ x = φ y), x = y)
-    (EQUIV : Equiv (map_nv φ σ) (mvalue_exp σ') m L) (FIN : fin m),
+    (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+    (EQUIV : Equiv (map_nv φ σ) (mvalue_exp σ') m L),
     exists v' m' L',
-      (meval σ' m L t v' m' (L' ++ L)) /\
-      (Equiv (map_vl φ v) v' m' (L' ++ L)) /\
-      (fin m') /\
-      (forall ℓ (INℓ : In ℓ L), m' ℓ = m ℓ) /\
-      (forall ℓ (DOM : m ℓ <> None), m' ℓ = m ℓ).
+      (meval σ' m L t v' m' L') /\
+      (Equiv (map_vl φ v) v' m' L').
 Proof.
   induction EVAL; ii; ss.
+  - exploit (@read_env_map var loc); eauto; s.
+    instantiate (1 := φ). ii.
+    exploit (@equiv_read_env var loc); eauto.
+    apply EQUIV. ii. des.
+    exists v'. exists m. exists L.
+    split. econstructor; eauto.
+    split. eauto. ii; ss.
+    exploit (@read_env_floc var loc); eauto.
+    ii; ss. apply EQUIV. ss.
+  - exploit (@read_env_map var loc); eauto; s.
+    instantiate (1 := φ). ii.
+    exploit (@equiv_read_env var loc); eauto.
+    apply EQUIV. ii. des.
+    exists v'. exists m. exists L.
+    assert (map_open_wvl_vl _ _ _ v) by apply map_open_wvl.
+    split. econstructor; eauto.
+    destruct EQUIV as (EQUIV & FLOC). rw. s.
+    split. inversion x3; clarify.
+    assert (subst_intro_vl _ _ _ (map_vl φ v)) by apply subst_intro.
+    gensym_tac (L0 ++ floc_vl (map_vl φ v)) ν.
+    rw; eauto. eapply equiv_f_ext.
+    instantiate (1 := ((ν !-> ℓ' ; bot) !! ν)).
+    eapply (reduce_f_bloc _ _ _ (open_loc_vl 0 ν (map_vl φ v))); eauto.
+    unfold update. rewrite eqb_refl. auto.
+    eapply equiv_f_ext; eauto.
+    all:try solve [ii; ss; unfold update, remove; des_ifs; eqb2eq loc; clarify].
+    ii. apply FLOC.
+    assert (In ℓ0 (floc_wvl (wvl_recv (map_vl φ v))) \/ In ℓ0 (floc_wvl (map_vl φ v))).
+    eapply open_wvl_floc; eauto.
+    des; ss.
+    all:exploit (@read_env_floc var loc); eauto.
+  - 
 Admitted.
-
- 
