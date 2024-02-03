@@ -293,7 +293,7 @@ Proof.
 Qed.
 
 Lemma equiv_l {var loc} `{Eq var} `{Name loc} (σ : nv var loc val) t v (EVAL : eval σ t v) :
-  forall φ σ' m L
+  forall φ σ' m L (FIN : fin m)
     (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
     (EQUIV : Equiv (map_nv φ σ) (mvalue_exp σ') m L),
     exists v' m' L',
@@ -332,5 +332,68 @@ Proof.
     eapply open_wvl_floc; eauto.
     des; ss.
     all:exploit (@read_env_floc var loc); eauto.
+  - repeat eexists; try econstructor; eauto; apply EQUIV.
+  - exploit IHEVAL1; eauto.
+    intros (v1' & m1' & L1' & EVAL1' & EQUIV1).
+    assert (Equiv (map_nv φ σ) (mvalue_exp σ') m1' L1') as EQUIV'.
+    split.
+    eapply equiv_m_ext. apply EQUIV.
+    eapply m_inc; eauto. ii.
+    destruct EQUIV as (A & B).
+    eapply equiv_floc_free in A; eauto.
+    exploit B; eauto.
+    ii. exploit (@m_pres var loc); eauto. rw. eauto.
+    ii. exploit (@L_inc var loc). try_all.
+    instantiate (1 := ℓ). try_all. all:eauto.
+    assert (fin m1') as FIN1 by (eapply fin_pres; eauto).
+    exploit IHEVAL2; eauto.
+    intros (v2' & m2' & L2' & EVAL2' & EQUIV2).
+    destruct EQUIV1 as (EQUIV0 & DOML1).
+    inv EQUIV0. ss.
+    eapply fin_pres in EVAL2' as dom2; eauto.
+    destruct dom2 as (dom2 & DOM2).
+    gensym_tac (dom2 ++ L2') ν. clear Heqν.
+    exploit (IHEVAL3 φ ((x, ν) :: σ'0) (ν !-> v2' ; m2') L2').
+    exists (ν :: dom2).
+    ii; ss; split_nIn; unfold update; des_ifs; eqb2eq loc; clarify; eauto.
+    eauto. split.
+    econstructor. instantiate (1 := v2'). unfold update. rewrite eqb_refl. auto.
+    {
+      eapply equiv_m_ext. apply EQUIV2.
+      - ii. unfold update; des_ifs; eqb2eq loc; clarify. contradict.
+      - ii. destruct EQUIV2 as (EQUIV2 & DOML2).
+        eapply eval_map in EVAL2; eauto.
+        eapply eval_floc_dec in EVAL2; eauto.
+        destruct EQUIV as (EQUIV & DOML).
+        eapply equiv_floc_free in EQUIV; eauto. rrw. clear EQUIV.
+        unfold update; des_ifs; eqb2eq loc; clarify. contradict.
+        eapply m_pres in EVAL1' as M1; eauto.
+        eapply m_pres in EVAL2' as M2; eauto. rewrite M2. eauto.
+        eapply EQUIV'. auto.
+    }
+    {
+      eapply equiv_m_ext. apply EQUIV1.
+      - ii. eapply m_inc in EVAL2'; eauto. rewrite <- EVAL2' in *.
+        unfold update; des_ifs; eqb2eq loc; clarify. contradict.
+      - ii. eapply L_inc in EVAL2' as LINC; eauto.
+        eapply eval_map in EVAL1; eauto.
+        eapply eval_floc_dec in EVAL1; eauto.
+        destruct EQUIV as (EQUIV & DOML).
+        eapply equiv_floc_free in EQUIV; eauto. rrw. clear EQUIV.
+        unfold update; des_ifs; eqb2eq loc; clarify.
+        eapply m_pres in EVAL1' as M1; eauto.
+        eapply m_pres in EVAL2' as M2; eauto. rewrite M2. eauto.
+    }
+    {
+      ii; ss. rewrite in_app_iff in *.
+      des. try_all. auto.
+      eapply L_inc in EVAL2'; eauto.
+    }
+    intros (v' & m' & L' & EVAL' & EQUIV'').
+    exists v'. exists m'. exists L'.
+    split. econstructor; eauto. eauto.
   - 
+
+
+
 Admitted.

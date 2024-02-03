@@ -59,9 +59,52 @@ GPU의 구조를 가장 잘 이용할 수 있으려면, 내 프로그램 특성�
 
 ASM 레벨 dataflow 그래프를 봐서 최적화 가능성을 판단하자!
 \paragraph{LeakPair: 단일페이지 웹 어플리케이션내의 메모리 누수를 고치기 위한 선제적 디버깅 (김동선 (경북대))}
+Memory leak의 refactoring하는 연구를 하겠다! (최근에, OOM 에러로 webpage crash가 많이 일어남)
+일단, 단일페이지(한 페이지 내에서 비동기적으로 필요한 컨텐츠만 가져오는)에서 나타나는 에러에 대한 자동수정 연구를 해보겠다.
+그런데, 디버깅하기 어렵고, 재현하기 어려움, 즉 잘 안 고침.
+그러나, 패턴 파악을 잘 하고, non-intrusive하다는 것을 설득하면?
+
+문제 파악: 브라우저 문제인가?
+아니다. GC로 회수할 수 없는 문제. 무조건 새 주소를 할당하는 방식이니까.
+(\texttt{removeEventListner}같은 것을 쓰지 않음)
+그러면 이런 버그를 어떻게 디버깅할 것인가?
+``Proactive Debugging'' (vs. Classical (reactive) debugging: 먼저 탐지하고, 나중에 고침): 그러지 말고, 일단 고쳐보고, 이후에 검증하자.
+패치 생성을 어떻게 할 것인가?
+패턴 파악. StackOverflow, GitHub PR 바탕. 메모리 사용량으로 검증.
 \paragraph{다중 노드 환경에서 빅데이터 스트리밍 엔진의 성능 평가 방법 (양신형 (연세대))}
+컴퓨터 \textbf{사이}에 소요 시간을 측정하는 방법?
+결국 시간 동기화 문제. NTP: 35[ms] 정도 오차 존재.
+Precision Time Protocol (PTP): 정확하지만, 비쌈.
+Return-trip Measurement Method: ACK으로 시간 확인.
+제안: Cloudprofiler (CP) Duration Measurement Method: Global Clock, `초'단위 없앰.
+그러면 어떤 단위로 시간을 파악할까? CPU에서 측정하는 TSC(timestamp counter).
+내 CPU와 상대 CPU 사이에 comm을 해서, 내 CPU의 TSC와 상대 CPU의 TSC 사이에 어떤 관계가 있는지 알고 싶다.
+RTT 측정을 할 때, 상대 TSC에 대응되는 나의 TSC를 정확히 알 수 없지만, 적어도 내가 보내고 받은 사이에 있음을 알 수 있다.
 \paragraph{소프트 오류로부터의 신뢰성 향상을 위한 비트 단위 정적 분석 기법 (고유선 (연세대))}
+믿을 수 있는 하드웨어를 설계하는 과정에서, 컴파일러 단위에서, 부팅까지 인증받지 않은 코드가 실행되지 않도록 보장할 수 있을까?
+소프트 오류: random bit flip에 의해 코드가 변형되는 경우. CPU에서 이러한 오류가 발견된다면?
+아니면 일부로 물리적으로 해킹을 위해 bit flip을 일으키는 경우가 있음.
+
+이러한 소프트 에러를 컴파일러 관점에서 어떻게 모델링할 수 있을까?
+CPU에 있는, 소프트 에러가 발생 할 수 있는 구조마다 에러 발생에 의한 영향을 모델링해보자.
+Control-flow integrity (PC soft error, iCache), data-flow integrity (register file, iCache), memory-data integrity (memory, iCache).
+Evaluation: 실행 시간이 더 길어지기 때문에 소프트 에러가 발생할 수 있는 가능성이 더 높다 $\rightarrow$ 샘플링을 더 많이 해야한다.
+
+Bit-Level Error Coalescing: 코드가 소프트 에러에 대하여 취약한 부분을 정적 분석을 통해, 비트 단위에서 파악하고 싶다!
+먼저, 각 비트가 가질 수 있는 값을 top-down으로 포섭한 후, bottom-up으로 각 비트 변형이 일어났을 때 어떤 소프트 에러가 일어날 수 있는지 포섭함.
 \paragraph{코드 속성 그래프의 부분 그래프 매칭을 통한 대규모 취약점 탐지 (위성일 (UNIST))}
+프로그램 분석과, 보안 취약점을 드러낼 수 있는 테스트 입력을 생성하여 웹에서 일어날 수 있는 보안 취약점을 없애는 연구를 하고 계심.
+이번 발표에서는, 코드 성질을 정적분석을 통해 그래프로 나타내고, 부분그래프 동일성 매칭을 통해 보안 취약점을 일으킬 수 있는 코드를 파악하는 연구.
+
+코드 성질 그래프(Code Property Graph, CPG)=AST+CFG+PDG(Program Dependency Graph).
+버그 찾는 graph query를 정의해서, PDG traversal을 통해서 버그 탐색을 할 수 있다.
+Traversal: sink function으로부터 역으로 흘러들어가는, sanitization 받지 않은 input을 찾음.
+그러나, sanitization이 안전한지까지 검증하지 못한다.
+
+이미 알려진 취약점들을 바탕으로, CPG의 부분그래프가 그러한 취약점과 유사한지 탐지한다.
+하지만, subgraph isomorphism은 NP-complete 문제여서, 큰 프로그램에 대해 어렵다.
+이를 해결하기 위해, CPG 가지치기 진행. (실제 취약점에 꼭 필요한 간선만 유지)
+또한, 생긴 것이 동등하지 않아도 의미는 같을 수 있다. CPG를 잘 요약해야겠다.
 \end{document}
 %%% Local Variables: 
 %%% coding: utf-8
