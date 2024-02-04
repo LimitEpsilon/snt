@@ -392,8 +392,149 @@ Proof.
     intros (v' & m' & L' & EVAL' & EQUIV'').
     exists v'. exists m'. exists L'.
     split. econstructor; eauto. eauto.
-  - 
-
-
-
-Admitted.
+  - exploit IHEVAL1; eauto.
+    intros (v1' & m1 & L1 & EVAL1' & EQUIV1).
+    eapply fin_pres in EVAL1' as FIN1; eauto.
+    destruct EQUIV1 as (EQUIV0 & DOML1).
+    destruct v1'; try solve [inv EQUIV0].
+    exploit (IHEVAL2 φ σ0 m1 L1); eauto. split; auto.
+    intros (v2' & m2 & L2 & EVAL2' & EQUIV2).
+    exists v2'. exists m2. exists L2.
+    split. econstructor; eauto. eauto.
+  - exists (mvalue_exp []). exists m. exists L.
+    split; econstructor; eauto. econstructor.
+    ii; ss.
+  - destruct FIN as (dom & FIN).
+    exploit (avoid_dom_ran (floc_nv σ) (L ++ dom)); eauto.
+    intros (ν & FREEσ & FREEdom). split_nIn.
+    assert (~ In (φ ν) (floc_nv (map_nv φ σ))) as FREEφσ.
+    { red. intros contra. eapply map_floc in contra; eauto. }
+    exploit (IHEVAL1 (swap φ ℓ ν) ((x, φ ν) :: σ') m (φ ν :: L)); eauto.
+    eexists; eauto.
+    unfold swap. ii.
+    repeat (des_hyp; eqb2eq loc; clarify); eauto;
+    exploit INJ; eauto; ii; clarify.
+    unfold swap at 1. rewrite eqb_refl.
+    assert (map_ext_nv _ _ _ σ) by eapply map_ext.
+    rw. instantiate (1 := φ).
+    destruct EQUIV. split. eapply equiv_floc; eauto.
+    ii; ss; des; clarify; eauto.
+    ii. unfold swap. des_ifs; eqb2eq loc; clarify.
+    intros (v1' & m1 & L1 & EVAL1' & EQUIV1).
+    assert (forall ℓ' (FRESH' : ~ In ℓ' (floc_vl (map_vl (swap φ ℓ ν) v1))),
+      equiv (open_loc_vl 0 ℓ' (close_vl 0 (φ ℓ) (map_vl φ v1))) (ℓ' !-> φ ν ; bot) v1' (φ ν !-> v1' ; m1)) as HINT.
+    {
+      ii.
+      replace (open_loc_vl 0 ℓ' (close_vl 0 (φ ℓ) (map_vl φ v1))) with
+        (subst_loc_vl ℓ' (φ ν) (open_loc_vl 0 (φ ν) (close_vl 0 (φ ℓ) (map_vl φ v1)))).
+      all:cycle 1.
+      assert (open_loc_subst_loc_vl _ _ _ (close_vl 0 (φ ℓ) (map_vl φ v1))) by apply open_loc_subst_loc.
+      rw. rewrite eqb_refl.
+      assert (subst_loc_fresh_vl _ _ _ (close_vl 0 (φ ℓ) (map_vl φ v1))) by apply subst_loc_fresh.
+      rw; eauto.
+      red. intros IN.
+      assert (close_floc_vl _ _ _ (map_vl φ v1)) as HINT by apply close_floc.
+      apply HINT in IN. destruct IN as (IN & IN').
+      eapply eval_map in EVAL1; eauto.
+      eapply eval_floc_dec in EVAL1; eauto.
+      ss. des; clarify; auto.
+      replace (open_loc_vl 0 (φ ν) (close_vl 0 (φ ℓ) (map_vl φ v1))) with
+        (subst_loc_vl (φ ν) (φ ℓ) (map_vl φ v1)).
+      all:cycle 1.
+      assert (close_open_loc_eq_vl _ _ _ (map_vl φ v1)) by apply close_open_loc_eq.
+      rw. f_equal; auto.
+      assert (value (map_vl φ v1)) as VAL.
+      eapply eval_map in EVAL1; eauto.
+      eapply eval_lc; eauto. s.
+      econstructor; eauto.
+      destruct EQUIV. eapply equiv_lc_nv; eauto.
+      assert (open_loc_lc_vl _ _ _ (map_vl φ v1) VAL) by (apply open_loc_lc; auto).
+      auto.
+      replace (subst_loc_vl (φ ν) (φ ℓ) (map_vl φ v1)) with
+        (map_vl (swap φ ℓ ν) v1).
+      all:cycle 1.
+      assert (map_ext_vl _ _ _ v1) as RR by apply map_ext.
+      erewrite RR. instantiate (1 := swap φ ν ℓ).
+      case_eqb ℓ ν.
+      erewrite RR. instantiate (1 := φ).
+      assert (subst_id_vl _ _ _ (map_vl φ v1)) by apply subst_id.
+      rw. eauto.
+      ii. unfold swap; des_ifs; eqb2eq loc; clarify.
+      assert (swap_is_subst_vl _ _ _ v1) by apply swap_is_subst.
+      rw; eauto.
+      red. intros IN. eapply eval_floc_dec in EVAL1; eauto.
+      ss. des; clarify.
+      ii. unfold swap; des_ifs; eqb2eq loc; clarify.
+      eapply equiv_f_ext.
+      instantiate (1 := swap (φ ν !-> φ ν ; bot) ℓ' (φ ν)).
+      all:cycle 1.
+      ii. unfold swap, update; des_ifs; repeat eqb2eq loc; clarify.
+      replace (wvl_v (subst_loc_vl ℓ' (φ ν) (map_vl (swap φ ℓ ν) v1))) with
+        (subst_loc_wvl ℓ' (φ ν) (map_vl (swap φ ℓ ν) v1)) by reflexivity.
+      eapply equiv_loc_subst.
+      eapply extend_m_floc; eauto. try_all.
+      eapply m_pres with (ℓ := φ ν) in EVAL1'; ss; try rw; auto.
+      s. auto. unfold update. rewrite eqb_refl. ii; clarify.
+    }
+    assert (equiv (wvl_recv (close_vl 0 (φ ℓ) (map_vl φ v1))) bot v1' (φ ν !-> v1'; m1)) as EQUIV'.
+    { econstructor; eauto. unfold update. rewrite eqb_refl. auto. }
+    assert (fin (φ ν !-> v1' ; m1)) as FIN1.
+    {
+      eapply fin_pres in EVAL1'; eauto.
+      destruct EVAL1' as (dom1 & DOM1).
+      exists (φ ν :: dom1).
+      ii; split_nIn; unfold update; des_ifs; eqb2eq loc; clarify; auto.
+      eexists; eauto.
+    }
+    exploit (IHEVAL2 φ ((x, φ ν) :: σ') (φ ν !-> v1'; m1) L1); eauto.
+    split.
+    econstructor; eauto. unfold update. rewrite eqb_refl. eauto.
+    assert (map_close_vl _ _ _ v1) by apply map_close.
+    rw; eauto.
+    eapply equiv_m_ext; try apply EQUIV.
+    { ii. eapply m_inc in EVAL1'; eauto. rrw. unfold update; des_ifs; eqb2eq loc; clarify. contradict. }
+    { ii; ss. unfold update; des_ifs; eqb2eq loc; clarify. destruct EQUIV as (EQUIV & DOM').
+      eapply equiv_floc_free in EQUIV; eauto. rrw. eapply m_pres in EVAL1'; eauto. ss. eauto. }
+    { ii; ss. rewrite in_app_iff in IN. des.
+      { assert (map_close_vl _ _ _ v1) as RR by apply map_close. rewrite RR in IN; eauto.
+        eapply close_floc in IN. des. eapply eval_map in EVAL1; eauto; ss.
+        eapply eval_floc_dec in EVAL1; eauto. ss. des; clarify.
+        eapply L_inc in EVAL1'; eauto. ss. destruct EQUIV. eauto. }
+      { eapply L_inc in EVAL1'; eauto. ss. destruct EQUIV. eauto. } }
+    intros (v2' & m2 & L2 & EVAL2' & EQUIV2 & DOML2).
+    destruct v2' as [σ2' | σ2']; try solve [inv EQUIV2].
+    exists (mvalue_exp ((x, φ ν) :: σ2')). exists m2. exists L2.
+    split. econstructor; eauto.
+    assert (map_close_vl _ _ _ v1) by apply map_close.
+    rw; eauto.
+    split. econstructor. instantiate (1 := v1').
+    eapply m_inc in EVAL2'; eauto.
+    2: instantiate (1 := φ ν).
+    unfold update in EVAL2'. rewrite eqb_refl in EVAL2'. auto.
+    unfold update. rewrite eqb_refl. ii; clarify.
+    eapply equiv_m_ext; eauto.
+    ii. eapply m_inc in EVAL2'; eauto.
+    { ii; ss. eapply close_floc in FREEw. des. 
+      eapply eval_map in EVAL1; eauto.
+      eapply eval_floc_dec in EVAL1; eauto.
+      ss; des; clarify.
+      destruct EQUIV as (EQUIV & DOML).
+      eapply equiv_floc_free in EQUIV; eauto.
+      eapply DOML in EVAL1.
+      eapply m_pres in EVAL1' as P1; try instantiate (1 := ℓ0); ss; auto.
+      eapply m_pres in EVAL2' as P2; try instantiate (1 := ℓ0); ss; auto.
+      unfold update in P2. des_hyp; eqb2eq loc; clarify.
+      repeat rw. auto.
+      eapply L_inc in EVAL1'; eauto. ss. auto. }
+    auto.
+    { ii; ss. rewrite in_app_iff in IN. des.
+      { eapply close_floc in IN. des. 
+        eapply eval_map in EVAL1; eauto.
+        eapply eval_floc_dec in EVAL1; eauto.
+        ss; des; clarify.
+        destruct EQUIV as (EQUIV & DOML).
+        eapply DOML in EVAL1.
+        eapply L_inc in EVAL1'; try instantiate (1 := ℓ0); ss; auto.
+        eapply L_inc in EVAL2'; eauto. }
+      { eauto. } }
+Qed.

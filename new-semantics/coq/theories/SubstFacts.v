@@ -933,6 +933,24 @@ Section SubstFacts.
     erewrite RR; eauto.
     ii. des_ifs; eqb2eq loc; clarify.
   Qed.
+
+  Definition subst_id_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall ℓ, subst_loc_wvl ℓ ℓ w = w.
+
+  Definition subst_id_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall ℓ, subst_loc_nv ℓ ℓ σ = σ.
+
+  Definition subst_id_vl `{Eq loc} (v : vl var loc lang) :=
+    forall ℓ, subst_loc_vl ℓ ℓ v = v.
+
+  Lemma subst_id `{Eq loc} :
+    (forall w, subst_id_wvl w) /\
+    (forall σ, subst_id_nv σ) /\
+    (forall v, subst_id_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; repeat rw; eauto;
+    des_ifs; eqb2eq loc; clarify.
+  Qed.
 End SubstFacts.
 
 (*

@@ -136,6 +136,20 @@ Proof.
     exfalso; apply NEQ; eauto.
 Qed.
 
+Ltac Inb2In T :=
+  match goal with
+  | H : Eq T |- _ => first 
+    [rewrite (@Inb_In T H) in * | 
+     rewrite (@Inb_nIn T H) in *]
+  end.
+
+Ltac In2Inb T :=
+  match goal with
+  | H : Eq T |- _ => first 
+    [rewrite <- (@Inb_In T H) in * | 
+     rewrite <- (@Inb_nIn T H) in *]
+  end.
+
 (* Infinite set that can be used as names *)
 Class Name T `{Eq T} : Type :=
 {
