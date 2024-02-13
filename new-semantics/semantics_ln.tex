@@ -424,13 +424,13 @@ The point of this semantics is that we are expressing a function that interacts 
 \begin{figure}[h!]
   \centering
   \begin{tabular}{rrcll}
-    Environment & $\ctx$ & $\rightarrow$ & $\cdots$                            \\
-                &        & $\vbar$       & $[E]$         & answer to an event  \\
-    Value       & $v$    & $\rightarrow$ & $\cdots$                            \\
-                &        & $\vbar$       & $E$           & answer to an event  \\
-    Event       & $E$    & $\rightarrow$ & $\InitE$      & initial environment \\
-                &        & $\vbar$       & $\ReadE(E,x)$ & read event          \\
-                &        & $\vbar$       & $\CallE(E,v)$ & call event
+    Environment & $\ctx$   & $\rightarrow$ & $\cdots$                                 \\
+                &          & $\vbar$       & $[\event]$         & answer to an event  \\
+    Value       & $v$      & $\rightarrow$ & $\cdots$                                 \\
+                &          & $\vbar$       & $\event$           & answer to an event  \\
+    Event       & $\event$ & $\rightarrow$ & $\InitE$           & initial environment \\
+                &          & $\vbar$       & $\ReadE(\event,x)$ & read event          \\
+                &          & $\vbar$       & $\CallE(\event,v)$ & call event
   \end{tabular}
   \caption{Definition of the semantic domains with events. All other semantic domains are equal to Figure \ref{fig:domain}.}
   \label{fig:eventdomain}
@@ -438,9 +438,9 @@ The point of this semantics is that we are expressing a function that interacts 
 
 We redefine how to read weak values given an environment.
 \begin{align*}
-  \bullet(x)             & \triangleq\bot    &            &  & ((x,w)\cons\ctx)(x) & \triangleq w                                                                   \\
-  ((x,\ell)\cons\ctx)(x) & \triangleq\bot    &            &  & ((x,n)\cons\ctx)(x) & \triangleq\bot        & (\text{impossible when }\ctx\text{ is locally closed}) \\
-  ((x',\_)\cons\ctx)(x)  & \triangleq\ctx(x) & (x\neq x') &  & [E](x)              & \triangleq\ReadE(E,x)
+  \bullet(x)             & \triangleq\bot    &            &  & ((x,w)\cons\ctx)(x) & \triangleq w                                                                        \\
+  ((x,\ell)\cons\ctx)(x) & \triangleq\bot    &            &  & ((x,n)\cons\ctx)(x) & \triangleq\bot             & (\text{impossible when }\ctx\text{ is locally closed}) \\
+  ((x',\_)\cons\ctx)(x)  & \triangleq\ctx(x) & (x\neq x') &  & [\event](x)         & \triangleq\ReadE(\event,x)
 \end{align*}
 
 Then we need to add only one rule to the semantics in Figure \ref{fig:bigstep} for the semantics to incorporate events.
@@ -449,7 +449,7 @@ Then we need to add only one rule to the semantics in Figure \ref{fig:bigstep} f
     \hypo{
       (e_{1}, \ctx)
       \Downarrow
-      E
+      \event
     }
     \hypo{
       (e_{2}, \ctx)
@@ -459,7 +459,7 @@ Then we need to add only one rule to the semantics in Figure \ref{fig:bigstep} f
     \infer2{
       (e_{1}\:e_{2}, \ctx)
       \Downarrow
-      \CallE(E,v)
+      \CallE(\event,v)
     }
   \end{InfRule}
 \]
@@ -491,29 +491,29 @@ Now we present the definition for resolution.
       }
     \end{InfRule}\:
     \begin{InfRule}{R-Read}
-      \hypo{E\downarrow\Sigma}
+      \hypo{\event\downarrow\Sigma}
       \hypo{V=\Sigma(x)}
       \infer2{
-        \ReadE(E,x)
+        \ReadE(\event,x)
         \downarrow
         V
       }
     \end{InfRule}\:
     \begin{InfRule}{R-ReadRec}
-      \hypo{E\downarrow\Sigma}
+      \hypo{\event\downarrow\Sigma}
       \hypo{\mu.V=\Sigma(x)}
       \infer2{
-        \ReadE(E,x)
+        \ReadE(\event,x)
         \downarrow
         \openloc{V}{\mu.V}
       }
     \end{InfRule}\:
     \begin{InfRule}{R-CallV}
-      \hypo{E\downarrow\langle\lambda x.e,\Sigma\rangle}
+      \hypo{\event\downarrow\langle\lambda x.e,\Sigma\rangle}
       \hypo{v\downarrow V}
       \hypo{(e,(x,V)\cons\Sigma)\semarrow V'}
       \infer3{
-        \CallE(E,v)
+        \CallE(\event,v)
         \downarrow
         V'
       }
@@ -522,12 +522,12 @@ Now we present the definition for resolution.
 
   \[
     \begin{InfRule}{R-CallE}
-      \hypo{E\downarrow E'}
+      \hypo{\event\downarrow \event'}
       \hypo{v\downarrow V}
       \infer2{
-        \CallE(E,v)
+        \CallE(\event,v)
         \downarrow
-        \CallE(E',V)
+        \CallE(\event',V)
       }
     \end{InfRule}\:
     \begin{InfRule}{R-Nil}
@@ -554,17 +554,17 @@ Now we present the definition for resolution.
 
   \[
     \begin{InfRule}{R-HoleE}
-      \hypo{E\downarrow E'}
+      \hypo{\event\downarrow \event'}
       \infer1{
-        [E]
+        [\event]
         \downarrow
-        [E']
+        [\event']
       }
     \end{InfRule}\:
     \begin{InfRule}{R-HoleEnv}
-      \hypo{E\downarrow \Sigma}
+      \hypo{\event\downarrow \Sigma}
       \infer1{
-        [E]
+        [\event]
         \downarrow
         \Sigma
       }

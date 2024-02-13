@@ -1,0 +1,137 @@
+%! TEX program = xelatex
+\documentclass{article}
+\input{preamble.tex}
+
+\title{Soundness of Bottom-Up Type-State Analysis}
+\author{Joonhyup Lee}
+\begin{document}
+\maketitle
+\section{Syntax and Semantics}
+\subsection{Abstract Syntax}
+\begin{figure}[htb]
+  \centering
+  \begin{tabular}{rrcll}
+    Identifiers       & $x,y$ & $\in$         & $\ExprVar$                                            \\
+    Allocation site   & $h$   & $\in$         & $\text{AllocSite}$                                    \\
+    Primitive methods & $m$   & $\in$         & $\mathbb{M}$                                          \\
+    Commands          & $C$   & $\rightarrow$ & $c$                           & atomic commands       \\
+                      &       & $\vbar$       & $C+C$                         & branching             \\
+                      &       & $\vbar$       & $C;C$                         & sequencing            \\
+                      &       & $\vbar$       & $C^*$                         & iteration             \\
+    Atomic commands   & $c$   & $\rightarrow$ & $x\:\texttt{=}\:\text{new }h$ & allocation            \\
+                      &       & $\vbar$       & $x\:\texttt{=}\:y$            & assignment            \\
+                      &       & $\vbar$       & $x.m()$                       & primitive method call
+  \end{tabular}
+  \caption{Abstract syntax of the language.}
+  \label{fig:syntax}
+\end{figure}
+\subsection{Operational Semantics}
+\begin{figure}[h!]
+  \centering
+  \begin{tabular}{rrcll}
+    Location                  & $\ell$          & $\in$ & $\mathbb{L}\triangleq\text{AllocSite}\times\mathbb{N}$       \\
+    Type-state                & $\tystate$      & $\in$ & $\mathbb{T}\triangleq\{\text{init, error, opened, closed}\}$ \\
+    Interpretation of methods & $\underline{m}$ & $\in$ & $\mathbb{T}\rightarrow\mathbb{T}$                            \\
+    Environment               & $\ctx$          & $\in$ & $\Ctx\triangleq\fin{\ExprVar}{\mathbb{L}}$                   \\
+    Heap                      & $\mem$          & $\in$ & $\Mem\triangleq\fin{\mathbb{L}}{\mathbb{T}}$
+  \end{tabular}
+  \caption{Definition of the semantic domains.}
+  \label{fig:domain}
+\end{figure}
+\begin{figure}[h!]
+  \centering
+  \footnotesize
+  \begin{flushright}
+    \fbox{$\ctx,\mem\vdash C\Rightarrow\ctx,\mem$}
+  \end{flushright}
+  \[
+    \begin{InfRule}{Br-L}
+      \hypo{\ctx,\mem\vdash C_1\Rightarrow\ctx',\mem'}
+      \infer1{\ctx,\mem\vdash C_1+C_2\Rightarrow\ctx',\mem'}
+    \end{InfRule}\quad
+    \begin{InfRule}{Br-R}
+      \hypo{\ctx,\mem\vdash C_2\Rightarrow\ctx',\mem'}
+      \infer1{\ctx,\mem\vdash C_1+C_2\Rightarrow\ctx',\mem'}
+    \end{InfRule}\quad
+    \begin{InfRule}{Seq}
+      \hypo{\ctx,\mem\vdash C_1\Rightarrow\ctx_1,\mem_1}
+      \hypo{\ctx_1,\mem_1\vdash C_2\Rightarrow\ctx',\mem'}
+      \infer2{\ctx,\mem\vdash C_1;C_2\Rightarrow\ctx',\mem'}
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{Iter-0}
+      \infer0{\ctx,\mem\vdash C^*\Rightarrow\ctx,\mem}
+    \end{InfRule}\quad
+    \begin{InfRule}{Iter-*}
+      \hypo{\ctx,\mem\vdash C^*\Rightarrow\ctx_1,\mem_1}
+      \hypo{\ctx_1,\mem_1\vdash C\Rightarrow\ctx',\mem'}
+      \infer2{\ctx,\mem\vdash C^*\Rightarrow\ctx',\mem'}
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{Alloc}
+      \hypo{(h,n)=\ell}
+      \hypo{\ell\not\in\dom(\mem)}
+      \infer2{\ctx,\mem\vdash x\:\texttt{=}\:\text{new }h\Rightarrow\ctx[x\mapsto\ell],\mem[\ell\mapsto\text{init}]}
+    \end{InfRule}\quad
+    \begin{InfRule}{Assign}
+      \hypo{\ctx(y)=\ell}
+      \infer1{\ctx,\mem\vdash x\:\texttt{=}\:y\Rightarrow\ctx[x\mapsto\ell],\mem}
+    \end{InfRule}\quad
+    \begin{InfRule}{Method}
+      \hypo{\ctx(x)=\ell}
+      \hypo{\mem(\ell)=t}
+      \infer2{\ctx,\mem\vdash v.m()\Rightarrow\ctx,\mem[\ell\mapsto\underline{m}(t)]}
+    \end{InfRule}
+  \]
+  \caption{Operational semantics of the language.}
+  \label{fig:semantics}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \footnotesize
+  \[
+    \begin{InfRule}{Alloc-E}
+      \hypo{(h,n)=\ell}
+      \hypo{\ell\not\in\dom([\mem])}
+      \infer2{[\ctx],[\mem],\Cstr\vdash x\:\texttt{=}\:\text{new }h\Rightarrow(x,\ell)\cons[\ctx],(\ell,\text{init})\cons[\mem],\Cstr}
+    \end{InfRule}\quad
+    \begin{InfRule}{Assign-E}
+      \hypo{[\ctx](y)=\ell}
+      \infer1{[\ctx],[\mem],\Cstr\vdash x\:\texttt{=}\:y\Rightarrow(x,\ell)\cons[\ctx],[\mem],\Cstr}
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{Method1-E}
+      \hypo{[\ctx](x)=[y]}
+      \hypo{(t,\Cstr')\in[\mem]([y],\Cstr)}
+      \infer2{[\ctx],[\mem],\Cstr\vdash v.m()\Rightarrow[\ctx],([y],\underline{m}(t))\cons[\mem],\Cstr'}
+    \end{InfRule}\quad
+    \begin{InfRule}{Method2-E}
+      \hypo{[\ctx](x)=(h,n)}
+      \hypo{[\mem](h,n)=t}
+      \infer2{[\ctx],[\mem],\Cstr\vdash v.m()\Rightarrow[\ctx],((h,n),\underline{m}(t))\cons[\mem],\Cstr}
+    \end{InfRule}
+  \]
+
+  \caption{Semantics for atomic commands, with read events.}
+  \label{fig:eventsemantics}
+\end{figure}
+
+Definition for reading from the heap under the set of constraints $\Cstr$:
+\begin{align*}
+  (([y],t)\cons[\mem])([x],\Cstr)  & \triangleq\{(t,\{[x]\A{=}[y]\}\cup\Cstr)\}\cup[\mem]([y],\{[x]\A{\neq}[y]\}\cup\Cstr) \\
+  ((h,n),\_)\cons[\mem]([x],\Cstr) & \triangleq[\mem]([x],\Cstr)                                                           \\
+  ([])([x],\Cstr)                  & \triangleq\{(t,\{[[x]]\A{=}t\}\cup\Cstr)|t\in\mathbb{T}\}
+\end{align*}
+\end{document}
+%%% Local Variables: 
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-engine: xetex
+%%% End:
