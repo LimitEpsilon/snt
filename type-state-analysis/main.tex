@@ -125,9 +125,9 @@
 
 Definition for reading from the heap under the set of constraints $\Cstr$:
 \begin{align*}
-  (([y],t)\cons[\mem])([x],\Cstr)  & \triangleq\{(t,\{[x]\A{=}[y]\}\cup\Cstr)\}\cup[\mem]([y],\{[x]\A{\neq}[y]\}\cup\Cstr) \\
-  ((h,n),\_)\cons[\mem]([x],\Cstr) & \triangleq[\mem]([x],\Cstr)                                                           \\
-  ([])([x],\Cstr)                  & \triangleq\{(t,\{[[x]]\A{=}t\}\cup\Cstr)|t\in\mathbb{T}\}
+  (([y],t)\cons[\mem])([x],\Cstr)    & \triangleq\{(t,\{[x]\A{=}[y]\}\cup\Cstr)\}\cup[\mem]([y],\{[x]\A{\neq}[y]\}\cup\Cstr) \\
+  (((h,n),\_)\cons[\mem])([x],\Cstr) & \triangleq[\mem]([x],\Cstr)                                                           \\
+  ([])([x],\Cstr)                    & \triangleq\{(t,\{[[x]]\A{=}t\}\cup\Cstr)|t\in\mathbb{T}\}
 \end{align*}
 \end{document}
 %%% Local Variables: 

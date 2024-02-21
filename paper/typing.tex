@@ -1,0 +1,256 @@
+\section{Typing}
+The definitions for types are in Figure \ref{fig:typdom} and the typing rules are in Figure \ref{fig:typjudge}.
+The definitions for subtyping are in Figure \ref{fig:subtyping}.
+
+\begin{figure}[h!]
+  \centering
+  \begin{tabular}{rrcll}
+    Types              & $\tau$   & $\rightarrow$ & $\Gamma$               & module type       \\
+                       &          & $\vbar$       & $\tau\rightarrow\tau$  & function type     \\
+    Typing Environment & $\Gamma$ & $\rightarrow$ & $\bullet$              & empty environment \\
+                       &          & $\vbar$       & $(x,\tau)\cons \Gamma$ & type binding
+  \end{tabular}
+  \caption{Definition of types.}
+  \label{fig:typdom}
+\end{figure}
+
+\begin{figure}[h!]
+  \begin{flushright}
+    \fbox{$\Gamma\vdash e:\tau$}
+  \end{flushright}
+  \centering
+  \vspace{0pt} % -0.75em}
+  \[
+    \begin{InfRule}{T-Id}
+      \hypo{\Gamma(x)=\tau}
+      \infer1{
+        \Gamma\vdash x:\tau
+      }
+    \end{InfRule}\quad
+    \begin{InfRule}{T-Fn}
+      \hypo{(x,\tau_1)\cons\Gamma\vdash e:\tau_2}
+      \infer1{
+        \Gamma\vdash\lambda x.e:\tau_1\rightarrow\tau_2
+      }
+    \end{InfRule}\quad
+    \begin{InfRule}{T-App}
+      \hypo{\Gamma\vdash e_1:\tau_1\rightarrow\tau}
+      \hypo{\Gamma\vdash e_2:\tau_2}
+      \hypo{\tau_1\ge\tau_2}
+      \infer3{
+        \Gamma\vdash e_{1}\:e_{2}:\tau
+      }
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{T-Link}
+      \hypo{\Gamma\vdash e_1:\Gamma_1}
+      \hypo{\Gamma_1\vdash e_2:\tau_2}
+      \infer2{
+        \Gamma\vdash\link{e_{1}}{e_{2}}:\tau_2
+      }
+    \end{InfRule}\quad
+    \begin{InfRule}{T-Nil}
+      \infer0{
+        \Gamma\vdash\varepsilon:\bullet
+      }
+    \end{InfRule}\quad
+    \begin{InfRule}{T-Bind}
+      \hypo{\Gamma\vdash e_1:\tau_1}
+      \hypo{(x, \tau_1)\cons\Gamma\vdash e_2:\Gamma_2}
+      \infer2{
+        \Gamma\vdash x=e_1;e_2:(x,\tau_1)\cons\Gamma_2
+      }
+    \end{InfRule}
+  \]
+  \caption{The typing judgment.}
+  \label{fig:typjudge}
+\end{figure}
+\begin{figure}[h!]
+  \begin{flushright}
+    \fbox{$\tau\ge\tau'$}
+  \end{flushright}
+  \centering
+  \vspace{0pt} % -0.75em}
+  \[
+    \begin{InfRule}{Nil}
+      \infer0{
+        \bullet\ge\bullet
+      }
+    \end{InfRule}\quad
+    \begin{InfRule}{ConsFree}
+      \hypo{
+        x\not\in\dom(\Gamma)
+      }
+      \hypo{
+        \Gamma\ge\Gamma'
+      }
+      \infer2{
+        \Gamma\ge(x,\tau)\cons\Gamma'
+      }
+    \end{InfRule}\quad
+    \begin{InfRule}{ConsBound}
+      \hypo{
+        \Gamma(x)\ge\tau
+      }
+      \hypo{
+        \Gamma-x\ge\Gamma'
+      }
+      \infer2{
+        \Gamma\ge(x,\tau)\cons\Gamma'
+      }
+    \end{InfRule}\quad
+    \begin{InfRule}{Arrow}
+      \hypo{
+        \tau_2\ge\tau_1
+      }
+      \hypo{
+        \tau_1'\ge\tau_2'
+      }
+      \infer2{
+        \tau_1\rightarrow\tau_1'\ge
+        \tau_2\rightarrow\tau_2'
+      }
+    \end{InfRule}
+  \]
+  \caption{The subtype relation.}
+  \label{fig:subtyping}
+\end{figure}
+
+\subsection{Type Safety}
+\begin{theorem}[Type Safety]\normalfont
+  For all $e\in\Expr$, if $\bullet\vdash e:\tau$ for some $\tau$, then there exists some $v\in\Value$ such that $\bullet\vdash e\semarrow v$.
+\end{theorem}
+\begin{proof}[Sketch]
+  We prove this through unary logical relations and induction on the typing judgment.
+
+  \begin{tabular}{rclr}
+    \textbf{Value Relation}            &              &                                                                                                        & \fbox{$\ValRel{\tau}$}       \\
+    $\ValRel{\bullet}$                 & $\triangleq$ & $\Ctx$                                                                                                                                \\
+    $\ValRel{(x,\tau)\cons\Gamma}$     & $\triangleq$ & $\{\ctx|\ctx(x)\in\ValRel{\tau}\text{ and }\ctx\in\ValRel{\Gamma-x}\}$                                                                \\
+    $\ValRel{\tau_1\rightarrow\tau_2}$ & $\triangleq$ & $\{\langle\lambda x.e,\ctx\rangle|\forall v\in\ValRel{\tau_1}:(e,(x,v)\cons\ctx)\in\ExprRel{\tau_2}\}$                                \\
+    \\
+    \textbf{Expression Relation}       &              &                                                                                                        & \fbox{$\ExprRel{\tau}$}      \\
+    $\ExprRel{\tau}$                   & $\triangleq$ & $\{(e,\ctx)|\exists v\in\ValRel{\tau}:\ctx\vdash e\semarrow v\}$                                                                      \\
+    \\
+    \textbf{Semantic Typing}           &              &                                                                                                        & \fbox{$\Gamma\vDash e:\tau$} \\
+    $\Gamma\vDash e:\tau$              & $\triangleq$ & $\forall\ctx\in\ValRel{\Gamma}:(e,\ctx)\in\ExprRel{\tau}$
+  \end{tabular}
+
+  \vphantom{}
+
+  We prove
+  \[\Gamma\vdash e:\tau\Rightarrow\Gamma\vDash e:\tau\]
+  by induction on $\vdash$.
+\end{proof}
+
+\subsection{Type Inference}
+
+When modules are first-class, type variables can go in the place of type environments.
+
+First we define the syntax for type constraints.
+\begin{figure}[h!]
+  \centering
+  \begin{tabular}{rrcll}
+    Type Variable      & $\alpha$ & $\in$         & $\TyVar$                                                         \\
+    Path               & $p$      & $\rightarrow$ & $\epsilon$                       & empty string                  \\
+                       &          & $\vbar$       & $p x$                            & concatenation with identifier \\
+    Types              & $\tau$   & $\rightarrow$ & $\Gamma$ | $\tau\rightarrow\tau$ & module/function types         \\
+    Type Environment   & $\Gamma$ & $\rightarrow$ & $\bullet$                        & empty environment             \\
+                       &          & $\vbar$       & $(x,\tau)\cons \Gamma$           & binding                       \\
+                       &          & $\vbar$       & $\alpha.p$                       & type variable                 \\
+                       &          & $\vbar$       & $[].p$                           & type read from hole           \\
+    Type Constraint    & $u$      & $\rightarrow$ & $\tau\A{=}\tau$                  & equality constraint           \\
+                       &          & $\vbar$       & $\tau\A{\ge}\tau$                & subtyping constraint          \\
+    Set of Constraints & $U$      & $\subseteq$   & $\{u|u\text{ type constraint}\}$
+  \end{tabular}
+  \caption{Definition of type constraints.}
+  \label{fig:typeqdom}
+\end{figure}
+
+Next we define the type access operation $\tau(x)$:
+\begin{align*}
+  \bullet(x)              & \triangleq\bot      &                      &  & (\alpha.p)(x)        & \triangleq\alpha.px \\
+  ((x,\tau)\cons\_)(x)    & \triangleq\tau      &                      &  & ([].p)(x)            & \triangleq[].px     \\
+  ((x',\_)\cons\Gamma)(x) & \triangleq\Gamma(x) & \text{when }x'\neq x &  & (\_\rightarrow\_)(x) & \triangleq\bot
+\end{align*}
+
+Now we can define the constraint generation algorithm $V(\Gamma,e,\alpha)$.
+Note that the \textbf{let} $U$ \texttt{=} $\_$ \textbf{in} $\_$ notation returns $\bot$ if the right hand side is $\bot$.
+Also note that we write $\alpha$ for $\alpha.\epsilon$ as well.
+
+  {\small
+    \begin{flushright}\fbox{$V(\Gamma,e,\alpha)=U$}\end{flushright}
+
+    \begin{tabular}{@{\hskip0pt}r@{\hskip2pt}c@{\hskip2pt}l@{\hskip1pt}r@{\hskip2pt}c@{\hskip2pt}l}
+      $V(\Gamma,\varepsilon,\alpha)$ & $\triangleq$ & $\{\alpha\A{=}\bullet\}$                                                             & $V(\Gamma,\link{e_1}{e_2},\alpha)$ & $\triangleq$ & \textbf{let} $\alpha_1$ \texttt{=} \textit{fresh} \textbf{in}                       \\
+      $V(\Gamma,x,\alpha)$           & $\triangleq$ & \textbf{let} $\tau$ \texttt{=} $\Gamma(x)$ \textbf{in}                               &                                    &              & \textbf{let} $U_1$ \texttt{=} $V(\Gamma,e_1,\alpha_1)$ \textbf{in}                  \\
+                                     &              & $\{\alpha\A{=}\tau\}$                                                                &                                    &              & \textbf{let} $U_2$ \texttt{=} $V(\alpha_1,e_2,\alpha)$  \textbf{in}                 \\
+      $V(\Gamma,\lambda x.e,\alpha)$ & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2$ \texttt{=} \textit{fresh} \textbf{in}               &                                    &              & $U_1\cup U_2$                                                                       \\
+                                     &              & \textbf{let} $U$ \texttt{=} $V((x,\alpha_1)\cons\Gamma,e,\alpha_2)$ \textbf{in}      & $V(\Gamma,x=e_1;e_2,\alpha)$       & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2$ \texttt{=} \textit{fresh} \textbf{in}              \\
+                                     &              & $\{\alpha\A{=}\alpha_1\rightarrow\alpha_2\}\cup U$                                   &                                    &              & \textbf{let} $U_1$ \texttt{=} $V(\Gamma,e_1,\alpha_1)$ \textbf{in}                  \\
+      $V(\Gamma,e_1\:e_2,\alpha)$    & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2,\alpha_3$ \texttt{=} \textit{fresh} \textbf{in}      &                                    &              & \textbf{let} $U_2$ \texttt{=} $V((x,\alpha_1)\cons\Gamma,e_2,\alpha_2)$ \textbf{in} \\
+                                     &              & \textbf{let} $U_1$ \texttt{=} $V(\Gamma,e_1,\alpha_1)$ \textbf{in}                   &                                    &              & $\{\alpha\A{=}(x,\alpha_1)\cons\alpha_2\}\cup U_1\cup U_2$                          \\
+                                     &              & \textbf{let} $U_2$ \texttt{=} $V(\Gamma,e_2,\alpha_2)$ \textbf{in}                   &                                    &              &                                                                                     \\
+                                     &              & $\{\alpha_1\A{=}\alpha_3\rightarrow\alpha,\alpha_3\A{\ge}\alpha_2\}\cup U_1\cup U_2$ &                                    &              &                                                                                     \\
+    \end{tabular}
+  }
+
+\vphantom{}
+
+We want to prove that the constraint generation algorithm is correct.
+
+First, for $\tau\in\Type$, define the path access operation $\tau(p)$:
+\begin{align*}
+  \tau(\epsilon) & \triangleq\tau &  &  & \tau(px) & \triangleq\tau(p)(x)
+\end{align*}
+and define the injection operation $\tau[\external]$:
+\begin{align*}
+  (\bullet)[\external]                 & \triangleq\bullet                                       &  &  & ((x,\tau)\cons\Gamma)[\external] & \triangleq(x,\tau[\external])\cons\Gamma[\external] \\
+  (\alpha.p)[\external]                & \triangleq\alpha.p                                      &  &  & ([].p)[\external]                & \triangleq\external(p)                              \\
+  (\tau_1\rightarrow\tau_2)[\external] & \triangleq\tau_1[\external]\rightarrow\tau_2[\external]
+\end{align*}
+
+Let $\Subst\triangleq\fin{\TyVar}{\Type}$ be the set of substitutions.
+For $S\in\Subst$, define:
+\begin{align*}
+  S\bullet    & \triangleq\bullet  &                                  &  & S(\tau_1\rightarrow\tau_2) & \triangleq S\tau_1\rightarrow S\tau_2                                      \\
+  S(\alpha.p) & \triangleq\alpha.p & \text{when }\alpha\not\in\dom(S) &  & S(\alpha.p)                & \triangleq \tau(p)                    & \text{when }\alpha\mapsto\tau\in S \\
+  S([].p)     & \triangleq [].p
+\end{align*}
+Define:
+\begin{align*}
+  (S,\external)\vDash U\triangleq & \forall(\tau_1\A{=}\tau_2)\in U:(S\tau_1)[\external]= (S\tau_2)[\external]\text{ and} \\
+                                  & \forall(\tau_1\A{\ge}\tau_2)\in U:(S\tau_1)[\external]\ge(S\tau_2)[\external]
+\end{align*}
+where subtyping rules are the same as Figure \ref{fig:subtyping} and subtyping between type variables are not defined.
+
+Then we can show that:
+\begin{theorem}[Correctness of $V$]\normalfont
+  For $e\in\Expr$, $\Gamma,\external\in\TyEnv$, $\alpha\in\TyVar$, $S\in\Subst$:
+  \begin{align*}
+    (S,\external)\vDash V(\Gamma,e,\alpha) \Leftrightarrow & (S\Gamma)[\external]\vdash e:(S\alpha)[\external]
+  \end{align*}
+\end{theorem}
+\begin{proof}[Sketch]
+  Structural induction on $e$.
+\end{proof}
+
+Note that by including $[].p$ in type environments, we can naturally generate constraints about the external environment $[]$.
+Also, by injection, we can utilize constraints generated \emph{in advance} to obtain constraints generated from a more informed environment.
+We extend injection to the output of the constraint-generating algorithm:
+\begin{align*}
+  \bot[\external] \triangleq & \bot                                                                                                          \\
+  U[\external]    \triangleq & \{\tau_1[\external]\A{=}\tau_2[\external]|(\tau_1\A{=}\tau_2)\in U\}\cup                                      \\
+                             & \{\tau_1[\external]\A{\ge}\tau_2[\external]|(\tau_1\A{\ge}\tau_2)\in U\} & \text{when all injections succeed} \\
+  U[\external]    \triangleq & \bot                                                                     & \text{when injection fails}
+\end{align*}
+Then we can prove:
+\begin{theorem}[Advance]\normalfont
+  For $e\in\Expr$, $\Gamma,\external\in\TyEnv$, $\alpha\in\TyVar$:
+  \[V(\Gamma[\external],e,\alpha)=V(\Gamma,e,\alpha)[\external]\]
+\end{theorem}
+\begin{proof}[Sketch]
+  Structural induction on $\Gamma$.
+\end{proof}

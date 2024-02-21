@@ -1,0 +1,269 @@
+\section{Syntax and Semantics}
+\subsection{Abstract Syntax}
+\begin{figure}[htb]
+  \centering
+  \begin{tabular}{rrcll}
+    Identifiers & $x$ & $\in$         & $\ExprVar$                                                      \\
+    Expression  & $e$ & $\rightarrow$ & $x$ $\vbar$ $\lambda x.e$ $\vbar$ $e$ $e$ & $\lambda$-calculus  \\
+                &     & $\vbar$       & $\link{e}{e}$                             & linked expression   \\
+                &     & $\vbar$       & $\varepsilon$                             & empty module        \\
+                &     & $\vbar$       & $x=e$ ; $e$                               & (recursive) binding
+  \end{tabular}
+  \caption{Abstract syntax of the language.}
+  \label{fig:syntax}
+\end{figure}
+\subsection{Operational Semantics}
+\begin{figure}[h!]
+  \centering
+  \begin{tabular}{rrcll}
+    Environment & $\ctx$ & $\in$         & $\Ctx$                                                                        \\
+    Location    & $\ell$ & $\in$         & $\Loc\triangleq\{\text{infinite set of locations}\}$                          \\
+    Value       & $v$    & $\in$         & $\Value \triangleq\Ctx+\ExprVar\times\Expr\times\Ctx$                         \\
+    Weak Value  & $w$    & $\in$         & $\Walue\triangleq\Value+\Loc\times\Value$                                     \\
+    Environment & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack           \\
+                &        & $\vbar$       & $(x,\ell)\cons\ctx$                                   & free location binding \\
+                &        & $\vbar$       & $(x,w)\cons \ctx$                                     & weak value binding    \\
+    Value       & $v$    & $\rightarrow$ & $\ctx$                                                & exported environment  \\
+                &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure               \\
+    Weak Value  & $w$    & $\rightarrow$ & $v$                                                   & value                 \\
+                &        & $\vbar$       & $\mu\ell.v$                                           & recursive value
+  \end{tabular}
+  \caption{Definition of the semantic domains.}
+  \label{fig:domain}
+\end{figure}
+\begin{figure}[h!]
+  \begin{flushright}
+    \fbox{$\ctx\vdash e\Downarrow v$}
+  \end{flushright}
+  \centering
+  \vspace{0pt} % -0.75em}
+  \[
+    \begin{InfRule}{Id}
+      \hypo{\ctx(x)=v}
+      \infer1{
+        \ctx\vdash x
+        \Downarrow
+        v
+      }
+    \end{InfRule}\:
+    \begin{InfRule}{RecId}
+      \hypo{\ctx(x)=\mu\ell.v}
+      \infer1{
+        \ctx\vdash x
+        \Downarrow
+        v[\mu\ell.v/\ell]
+      }
+    \end{InfRule}\:
+    \begin{InfRule}{Fn}
+      \infer0{
+        \ctx\vdash\lambda x.e
+        \Downarrow
+        \langle\lambda x.e, \ctx\rangle
+      }
+    \end{InfRule}\:
+    \begin{InfRule}{App}
+      \hypo{
+        \ctx\vdash e_{1}
+        \Downarrow
+        \langle\lambda x.e, \ctx_1\rangle
+      }
+      \hypo{
+        \ctx\vdash e_{2}
+        \Downarrow
+        v_2
+      }
+      \hypo{
+        (x, v_2)\cons \ctx_1\vdash e
+        \Downarrow
+        v
+      }
+      \infer{2,1}{
+        \ctx\vdash e_{1}\:e_{2}
+        \Downarrow
+        v
+      }
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{Link}
+      \hypo{
+        \ctx\vdash e_{1}
+        \Downarrow
+        \ctx_1
+      }
+      \hypo{
+        \ctx_1\vdash e_{2}
+        \Downarrow
+        v
+      }
+      \infer2{
+        \ctx\vdash \link{e_{1}}{e_{2}}
+        \Downarrow
+        v
+      }
+    \end{InfRule}\quad
+    \begin{InfRule}{Empty}
+      \infer0{
+        \ctx\vdash \varepsilon
+        \Downarrow
+        \bullet
+      }
+    \end{InfRule}\quad
+    \begin{InfRule}{Bind}
+      \hypo{
+        \ell\not\in\FLoc(\ctx)
+      }
+      \hypo{
+        (x,\ell)\cons\ctx\vdash e_{1}
+        \Downarrow
+        v_1
+      }
+      \hypo{
+        (x, \mu\ell.v_1)\cons \ctx\vdash e_{2}
+        \Downarrow
+        \ctx_2
+      }
+      \infer{2,1}{
+        \ctx\vdash x=e_1; e_2
+        \Downarrow
+        (x,\mu\ell.v_1)\cons\ctx_2
+      }
+    \end{InfRule}
+  \]
+  \caption{The big-step operational semantics.}
+  \label{fig:bigstep}
+\end{figure}
+\subsection{Reconciling with Conventional Backpatching}
+\begin{figure}[h!]
+  \centering
+  \begin{tabular}{rrcll}
+    Environment & $\ctx$ & $\in$         & $\Mtx$                                                                       \\
+    Memory      & $\mem$ & $\in$         & $\Mem\triangleq\fin{\Loc}{\Malue}$                                           \\
+    Value       & $v$    & $\in$         & $\Malue \triangleq\Mtx+\ExprVar\times\Expr\times\Mtx$                        \\
+    Environment & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack          \\
+                &        & $\vbar$       & $(x,\ell)\cons\ctx$                                   & location binding     \\
+    Value       & $v$    & $\rightarrow$ & $\ctx$                                                & exported environment \\
+                &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure
+  \end{tabular}
+  \caption{Definition of the semantic domains with memory.}
+  \label{fig:memdomain}
+\end{figure}
+\begin{figure}[h!]
+  \begin{flushright}
+    \fbox{$\ctx,\mem,L\vdash e\Downarrow v,\mem',L'$}
+  \end{flushright}
+  \centering
+  \vspace{0pt} % -0.75em}
+  \[
+    \begin{InfRule}{Id}
+      \hypo{\ctx(x)=\ell}
+      \hypo{\mem(\ell)=v}
+      \infer2{
+        \ctx,\mem,L\vdash x
+        \Downarrow
+        v,\mem,L
+      }
+    \end{InfRule}\:
+    \begin{InfRule}{Fn}
+      \infer0{
+        \ctx,\mem,L\vdash \lambda x.e
+        \Downarrow
+        \langle\lambda x.e, \ctx\rangle,\mem,L
+      }
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{App}
+      \hypo{
+        \ctx,\mem,L\vdash e_{1}
+        \Downarrow
+        \langle\lambda x.e, \ctx_1\rangle,\mem_1,L_1
+      }
+      \hypo{
+        \ctx,\mem_1,L_1\vdash e_{2}
+        \Downarrow
+        v_2,\mem_2,L_2
+      }
+      \hypo{
+        \ell\not\in\dom(\mem_2)\cup L_2
+      }
+      \hypo{
+        (x, \ell)\cons \ctx_1,\mem_2[\ell\mapsto v_2],L_2\vdash e
+        \Downarrow
+        v,\mem',L'
+      }
+      \infer{3,1}{
+        \ctx,\mem,L\vdash e_{1}\:e_{2}
+        \Downarrow
+        v,\mem',L'
+      }
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{Link}
+      \hypo{
+        \ctx,\mem,L\vdash e_{1}
+        \Downarrow
+        \ctx_1,\mem_1,L_1
+      }
+      \hypo{
+        \ctx_1,\mem_1,L_1\vdash e_{2}
+        \Downarrow
+        v,\mem',L'
+      }
+      \infer2{
+        \ctx,\mem,L\vdash \link{e_{1}}{e_{2}}
+        \Downarrow
+        v,\mem',L'
+      }
+    \end{InfRule}\quad
+    \begin{InfRule}{Empty}
+      \infer0{
+        \ctx,\mem,L\vdash \varepsilon
+        \Downarrow
+        \bullet,\mem,L
+      }
+    \end{InfRule}\quad
+  \]
+
+  \[
+    \begin{InfRule}{Bind}
+      \hypo{
+        \ell\not\in\dom(\mem)\cup L
+      }
+      \hypo{
+        (x,\ell)\cons\ctx,\mem,L\cup\{\ell\}\vdash e_{1}
+        \Downarrow
+        v_1,\mem_1,L_1
+      }
+      \hypo{
+        (x, \ell)\cons \ctx,\mem_1[\ell\mapsto v_1],L_1\vdash e_{2}
+        \Downarrow
+        \ctx_2,\mem',L'
+      }
+      \infer{2,1}{
+        \ctx,\mem,L\vdash x=e_1; e_2
+        \Downarrow
+        (x,\ell)\cons\ctx_2,\mem',L'
+      }
+    \end{InfRule}
+  \]
+  \caption{The big-step operational semantics with memory.}
+  \label{fig:membigstep}
+\end{figure}
+
+The semantics in Figure \ref{fig:bigstep} makes sense due to similarity with a conventional backpatching semantics as presented in Figure \ref{fig:membigstep}.
+We have defined a relation $\sim$ that satisfies:
+\[\sim\subseteq\Walue\times(\Malue\times\Mem\times\pset(\Loc))\qquad\bullet\sim(\bullet,\varnothing,\varnothing)\]
+and the following theorem:
+\begin{theorem}[Equivalence of semantics]\normalfont
+  For all $\ctx\in\Ctx,\ctx'\in\Mtx\times\Mem\times\pset(\Loc),v\in\Value,v'\in\Malue\times\Mem\times\pset(\Loc)$, we have:
+  \begin{align*}
+    \ctx\sim\ctx'\text{ and }\ctx\vdash e\Downarrow v   & \Rightarrow\exists v':v\sim v'\text{ and }\ctx'\vdash e\Downarrow v' \\
+    \ctx\sim\ctx'\text{ and }\ctx'\vdash e\Downarrow v' & \Rightarrow\exists v:v\sim v'\text{ and }\ctx\vdash e\Downarrow v
+  \end{align*}
+\end{theorem}
+The actual definition for $\sim$ can be found in the appendix.
