@@ -33,102 +33,44 @@
 \end{figure}
 \begin{figure}[h!]
   \begin{flushright}
-    \fbox{$\ctx\vdash e\Downarrow v$}
+    \fbox{$\evjudg{\ctx}{e}{v}$}
   \end{flushright}
   \centering
   \vspace{0pt} % -0.75em}
   \[
     \begin{InfRule}{Id}
       \hypo{\ctx(x)=v}
-      \infer1{
-        \ctx\vdash x
-        \Downarrow
-        v
-      }
+      \infer1{\evjudg{\ctx}{x}{v}}
     \end{InfRule}\:
     \begin{InfRule}{RecId}
       \hypo{\ctx(x)=\mu\ell.v}
-      \infer1{
-        \ctx\vdash x
-        \Downarrow
-        v[\mu\ell.v/\ell]
-      }
+      \infer1{\evjudg{\ctx}{x}{v[\mu\ell.v/\ell]}}
     \end{InfRule}\:
     \begin{InfRule}{Fn}
-      \infer0{
-        \ctx\vdash\lambda x.e
-        \Downarrow
-        \langle\lambda x.e, \ctx\rangle
-      }
+      \infer0{\evjudg{\ctx}{\lambda x.e}{\langle\lambda x.e, \ctx\rangle}}
     \end{InfRule}\:
     \begin{InfRule}{App}
-      \hypo{
-        \ctx\vdash e_{1}
-        \Downarrow
-        \langle\lambda x.e, \ctx_1\rangle
-      }
-      \hypo{
-        \ctx\vdash e_{2}
-        \Downarrow
-        v_2
-      }
-      \hypo{
-        (x, v_2)\cons \ctx_1\vdash e
-        \Downarrow
-        v
-      }
-      \infer{2,1}{
-        \ctx\vdash e_{1}\:e_{2}
-        \Downarrow
-        v
-      }
+      \hypo{\evjudg{\ctx}{e_1}{\langle\lambda x.e, \ctx_1\rangle}}
+      \hypo{\evjudg{\ctx}{e_2}{v_2}}
+      \hypo{\evjudg{(x, v_2)\cons \ctx_1}{e}{v}}
+      \infer{2,1}{\evjudg{\ctx}{e_1\:e_2}{v}}
     \end{InfRule}
   \]
 
   \[
     \begin{InfRule}{Link}
-      \hypo{
-        \ctx\vdash e_{1}
-        \Downarrow
-        \ctx_1
-      }
-      \hypo{
-        \ctx_1\vdash e_{2}
-        \Downarrow
-        v
-      }
-      \infer2{
-        \ctx\vdash \link{e_{1}}{e_{2}}
-        \Downarrow
-        v
-      }
+      \hypo{\evjudg{\ctx}{e_1}{\ctx_1}}
+      \hypo{\evjudg{\ctx_1}{e_2}{v}}
+      \infer2{\evjudg{\ctx}{\link{e_1}{e_2}}{v}}
     \end{InfRule}\quad
     \begin{InfRule}{Empty}
-      \infer0{
-        \ctx\vdash \varepsilon
-        \Downarrow
-        \bullet
-      }
+      \infer0{\evjudg{\ctx}{\varepsilon}{\bullet}}
     \end{InfRule}\quad
     \begin{InfRule}{Bind}
-      \hypo{
-        \ell\not\in\FLoc(\ctx)
-      }
-      \hypo{
-        (x,\ell)\cons\ctx\vdash e_{1}
-        \Downarrow
-        v_1
-      }
-      \hypo{
-        (x, \mu\ell.v_1)\cons \ctx\vdash e_{2}
-        \Downarrow
-        \ctx_2
-      }
-      \infer{2,1}{
-        \ctx\vdash x=e_1; e_2
-        \Downarrow
-        (x,\mu\ell.v_1)\cons\ctx_2
-      }
+      \hypo{\ell\not\in\FLoc(\ctx)}
+      \hypo{\evjudg{(x,\ell)\cons\ctx}{e_1}{v_1}}
+      \hypo{\evjudg{(x, \mu\ell.v_1)\cons \ctx}{e_1}{\ctx_2}}
+      \infer{2,1}{\evjudg{\ctx}{x=e_1; e_2}{(x,\mu\ell.v_1)\cons\ctx_2}}
     \end{InfRule}
   \]
   \caption{The big-step operational semantics.}
@@ -138,20 +80,21 @@
 \begin{figure}[h!]
   \centering
   \begin{tabular}{rrcll}
-    Environment & $\ctx$ & $\in$         & $\Mtx$                                                                       \\
-    Memory      & $\mem$ & $\in$         & $\Mem\triangleq\fin{\Loc}{\Malue}$                                           \\
-    Value       & $v$    & $\in$         & $\Malue \triangleq\Mtx+\ExprVar\times\Expr\times\Mtx$                        \\
-    Environment & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack          \\
-                &        & $\vbar$       & $(x,\ell)\cons\ctx$                                   & location binding     \\
-    Value       & $v$    & $\rightarrow$ & $\ctx$                                                & exported environment \\
-                &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure
+    Environment   & $\ctx$ & $\in$         & $\Mtx\triangleq\fin{\ExprVar}{\Loc}$                                         \\
+    Memory        & $\mem$ & $\in$         & $\Mem\triangleq\fin{\Loc}{\Malue}$                                           \\
+    Allocated set & $L$    & $\subseteq$   & $\Loc$                                                                       \\
+    Value         & $v$    & $\in$         & $\Malue \triangleq\Mtx+\ExprVar\times\Expr\times\Mtx$                        \\
+    Environment   & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack          \\
+                  &        & $\vbar$       & $(x,\ell)\cons\ctx$                                   & location binding     \\
+    Value         & $v$    & $\rightarrow$ & $\ctx$                                                & exported environment \\
+                  &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure
   \end{tabular}
   \caption{Definition of the semantic domains with memory.}
   \label{fig:memdomain}
 \end{figure}
 \begin{figure}[h!]
   \begin{flushright}
-    \fbox{$\ctx,\mem,L\vdash e\Downarrow v,\mem',L'$}
+    \fbox{$\evjudg{\ctx,\mem,L}{e}{v,\mem',L'}$}
   \end{flushright}
   \centering
   \vspace{0pt} % -0.75em}
@@ -159,96 +102,40 @@
     \begin{InfRule}{Id}
       \hypo{\ctx(x)=\ell}
       \hypo{\mem(\ell)=v}
-      \infer2{
-        \ctx,\mem,L\vdash x
-        \Downarrow
-        v,\mem,L
-      }
+      \infer2{\evjudg{\ctx,\mem,L}{x}{v,\mem,L}}
     \end{InfRule}\:
     \begin{InfRule}{Fn}
-      \infer0{
-        \ctx,\mem,L\vdash \lambda x.e
-        \Downarrow
-        \langle\lambda x.e, \ctx\rangle,\mem,L
-      }
+      \infer0{\evjudg{\ctx,\mem,L}{\lambda x.e}{\langle\lambda x.e,\ctx\rangle,\mem,L}}
     \end{InfRule}
   \]
 
   \[
     \begin{InfRule}{App}
-      \hypo{
-        \ctx,\mem,L\vdash e_{1}
-        \Downarrow
-        \langle\lambda x.e, \ctx_1\rangle,\mem_1,L_1
-      }
-      \hypo{
-        \ctx,\mem_1,L_1\vdash e_{2}
-        \Downarrow
-        v_2,\mem_2,L_2
-      }
-      \hypo{
-        \ell\not\in\dom(\mem_2)\cup L_2
-      }
-      \hypo{
-        (x, \ell)\cons \ctx_1,\mem_2[\ell\mapsto v_2],L_2\vdash e
-        \Downarrow
-        v,\mem',L'
-      }
-      \infer{3,1}{
-        \ctx,\mem,L\vdash e_{1}\:e_{2}
-        \Downarrow
-        v,\mem',L'
-      }
+      \hypo{\evjudg{\ctx,\mem,L}{e_1}{\langle\lambda x.e,\ctx_1\rangle,\mem_1,L_1}}
+      \hypo{\evjudg{\ctx,\mem_1,L_1}{e_2}{v_2,\mem_2,L_2}}
+      \hypo{\ell\not\in\dom(\mem_2)\cup L_2}
+      \hypo{\evjudg{(x,\ell)\cons\ctx_1,\mem_2[\ell\mapsto v_2],L_2}{e}{v,\mem',L'}}
+      \infer{3,1}{\evjudg{\ctx,\mem,L}{e_1\:e_2}{v,\mem',L'}}
     \end{InfRule}
   \]
 
   \[
     \begin{InfRule}{Link}
-      \hypo{
-        \ctx,\mem,L\vdash e_{1}
-        \Downarrow
-        \ctx_1,\mem_1,L_1
-      }
-      \hypo{
-        \ctx_1,\mem_1,L_1\vdash e_{2}
-        \Downarrow
-        v,\mem',L'
-      }
-      \infer2{
-        \ctx,\mem,L\vdash \link{e_{1}}{e_{2}}
-        \Downarrow
-        v,\mem',L'
-      }
+      \hypo{\evjudg{\ctx,\mem,L}{e_1}{\ctx_1,\mem_1,L_1}}
+      \hypo{\evjudg{\ctx_1,\mem_1,L_1}{e_2}{v,\mem',L'}}
+      \infer2{\evjudg{\ctx,\mem,L}{\link{e_1}{e_2}}{v,\mem',L'}}
     \end{InfRule}\quad
     \begin{InfRule}{Empty}
-      \infer0{
-        \ctx,\mem,L\vdash \varepsilon
-        \Downarrow
-        \bullet,\mem,L
-      }
-    \end{InfRule}\quad
+      \infer0{\evjudg{\ctx,\mem,L}{\varepsilon}{\bullet,\mem,L}}
+    \end{InfRule}
   \]
 
   \[
     \begin{InfRule}{Bind}
-      \hypo{
-        \ell\not\in\dom(\mem)\cup L
-      }
-      \hypo{
-        (x,\ell)\cons\ctx,\mem,L\cup\{\ell\}\vdash e_{1}
-        \Downarrow
-        v_1,\mem_1,L_1
-      }
-      \hypo{
-        (x, \ell)\cons \ctx,\mem_1[\ell\mapsto v_1],L_1\vdash e_{2}
-        \Downarrow
-        \ctx_2,\mem',L'
-      }
-      \infer{2,1}{
-        \ctx,\mem,L\vdash x=e_1; e_2
-        \Downarrow
-        (x,\ell)\cons\ctx_2,\mem',L'
-      }
+      \hypo{\ell\not\in\dom(\mem)\cup L}
+      \hypo{\evjudg{(x,\ell)\cons\ctx,\mem,L\cup\{\ell\}}{e_1}{v_1,\mem_1,L_1}}
+      \hypo{\evjudg{(x,\ell)\cons\ctx,\mem_1[\ell\mapsto v_1],L_1}{e_2}{\ctx_2,\mem',L'}}
+      \infer{2,1}{\evjudg{\ctx,\mem,L}{x=e_1;e_2}{(x,\ell)\cons\ctx_2,\mem',L'}}
     \end{InfRule}
   \]
   \caption{The big-step operational semantics with memory.}
@@ -262,8 +149,8 @@ and the following theorem:
 \begin{theorem}[Equivalence of semantics]\normalfont
   For all $\ctx\in\Ctx,\ctx'\in\Mtx\times\Mem\times\pset(\Loc),v\in\Value,v'\in\Malue\times\Mem\times\pset(\Loc)$, we have:
   \begin{align*}
-    \ctx\sim\ctx'\text{ and }\ctx\vdash e\Downarrow v   & \Rightarrow\exists v':v\sim v'\text{ and }\ctx'\vdash e\Downarrow v' \\
-    \ctx\sim\ctx'\text{ and }\ctx'\vdash e\Downarrow v' & \Rightarrow\exists v:v\sim v'\text{ and }\ctx\vdash e\Downarrow v
+    \ctx\sim\ctx'\text{ and }\ctx\vdash e\evjudg{\ctx}{e}{v} v   & \Rightarrow\exists v':v\sim v'\text{ and }\ctx'\vdash e\evjudg{\ctx}{e}{v} v' \\
+    \ctx\sim\ctx'\text{ and }\ctx'\vdash e\evjudg{\ctx}{e}{v} v' & \Rightarrow\exists v:v\sim v'\text{ and }\ctx\vdash e\evjudg{\ctx}{e}{v} v
   \end{align*}
 \end{theorem}
 The actual definition for $\sim$ can be found in the appendix.

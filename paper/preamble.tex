@@ -184,7 +184,7 @@
 \newcommand*{\Fin}{\mathsf{Fin}}
 \newcommand*{\Link}{\mathsf{Link}}
 \newcommand*{\sembracket}[1]{\lBrack{#1}\rBrack}
-\newcommand*{\fin}[2]{{#1}\xrightarrow{\text{fin}}{#2}}
+\newcommand*{\fin}[2]{{#1}\xrightarrow{\mbox{\tiny{fin}}}{#2}}
 \newcommand*{\addr}{\mathsf{addr}}
 \newcommand*{\tick}{\mathsf{tick}}
 \newcommand*{\modctx}{\mathsf{ctx}}
@@ -196,16 +196,32 @@
 \newcommand*{\filter}{\mathsf{filter}}
 \newcommand*{\Lete}{\mathtt{val}}
 \newcommand*{\Letm}{\mathtt{mod}}
+\newcommand*{\textand}{\text{ and }}
+\newcommand*{\eval}{\text{eval}}
 
+% big-step evaluation judgment σ ⊢ e ⇓ v
+\newcommand*{\evjudg}[3]{{#1}\vdash{#2}\Downarrow{#3}}
+
+% typing judgment Γ ⊢ e : τ, S
+\newcommand*{\typejudg}[4]{{#1}\vdash{#2}:{#3},{#4}}
+
+% semantic typing judgment Γ ⊨ e : τ, S
+\newcommand*{\semtypejudg}[4]{{#1}\vDash{#2}:{#3},{#4}}
+
+\newcommand*{\arrowty}[3]{{#1}\xrightarrow{\mbox{\tiny$#2$}}{#3}}
 \newcommand*{\ValRel}[1]{\mathcal{V}\sembracket{#1}}
-\newcommand*{\ExprRel}[1]{\mathcal{E}\sembracket{#1}}
+\newcommand*{\WalRel}[1]{\mathcal{W}\sembracket{#1}}
+\newcommand*{\ExprRel}[1]{\mathcal{X}\sembracket{#1}}
 \newcommand*{\CtxRel}[1]{\mathcal{C}\sembracket{#1}}
+\newcommand*{\EvtRel}[1]{\mathcal{\event}\sembracket{#1}}
 \newcommand*{\ModRel}[1]{\mathcal{M}\sembracket{#1}}
 \newcommand*{\TyEnv}{\text{TyEnv}}
 \newcommand*{\TyVar}{\text{TyVar}}
 \newcommand*{\Type}{\text{Type}}
 \newcommand*{\Subst}{\text{Subst}}
 \newcommand*{\external}{\Gamma_0}
+\newcommand*{\Safe}{S}
+\newcommand*{\unsafe}{\text{unsafe}}
 
 \newcommand*{\event}{E}
 \newcommand*{\Event}{\text{Event}}

@@ -4,23 +4,22 @@ Now we formulate the semantics for generating events.
 \begin{figure}[h!]
   \centering
   \begin{tabular}{rrcll}
+    Event       & $\event$ & $\rightarrow$ & $\InitE$           & initial environment \\
+                &          & $\vbar$       & $\ReadE(\event,x)$ & read event          \\
+                &          & $\vbar$       & $\CallE(\event,v)$ & call event          \\
     Environment & $\ctx$   & $\rightarrow$ & $\cdots$                                 \\
                 &          & $\vbar$       & $[\event]$         & answer to an event  \\
     Value       & $v$      & $\rightarrow$ & $\cdots$                                 \\
-                &          & $\vbar$       & $\event$           & answer to an event  \\
-    Event       & $\event$ & $\rightarrow$ & $\InitE$           & initial environment \\
-                &          & $\vbar$       & $\ReadE(\event,x)$ & read event          \\
-                &          & $\vbar$       & $\CallE(\event,v)$ & call event
+                &          & $\vbar$       & $\event$           & answer to an event
   \end{tabular}
   \caption{Definition of the semantic domains with events. All other semantic domains are equal to Figure \ref{fig:domain}.}
   \label{fig:eventdomain}
 \end{figure}
 
-We redefine how to read weak values given an environment.
+We extend how to read weak values given an environment.
 \begin{align*}
-  \bullet(x)             & \triangleq\bot             &  &  & ((x,w)\cons\ctx)(x)   & \triangleq w                   \\
-  ((x,\ell)\cons\ctx)(x) & \triangleq\bot             &  &  & ((x',\_)\cons\ctx)(x) & \triangleq\ctx(x) & (x\neq x') \\
-  [\event](x)            & \triangleq\ReadE(\event,x)
+  \bullet(x)  & \triangleq\bot             &  &  & ((x',\ell)\cons\ctx)(x) & \triangleq (x=x'?\ell:\ctx(x)) \\
+  [\event](x) & \triangleq\ReadE(\event,x) &  &  & ((x',w)\cons\ctx)(x)    & \triangleq (x=x'?w:\ctx(x))    \\
 \end{align*}
 
 Then we need to add only one rule to the semantics in Figure \ref{fig:bigstep} for the semantics to incorporate events.
@@ -49,22 +48,21 @@ The concrete linking rule $\ctx_0\semlink w$, given an answer $\ctx_0$ to the $\
 
 \begin{figure}
   \begin{align*}
-    \fbox{$\semlink\in\Ctx\rightarrow\Event\rightarrow\pset(\Value)$}                                                                                                                                        \\
-    \ctx_0\semlink\InitE\triangleq                         & \{\ctx_0\}                                                                                                                                      \\
-    \ctx_0\semlink\ReadE(\event,x)\triangleq               & \{V|\Sigma\in\ctx_0\semlink\event\text{ and }\Sigma(x)=V\}\cup                                                                                  \\
-                                                           & \{V[\mu\ell.V/\ell]|\Sigma\in\ctx_0\semlink E\text{ and }\Sigma(x)=\mu\ell.V\}                                                                  \\
-    \ctx_0\semlink\CallE(\event,v)\triangleq               & \{V'|\langle\lambda x.e,\Sigma\rangle\in\ctx_0\semlink E\text{ and }V\in\ctx_0\semlink v\text{ and }(x,V)\cons\Sigma\vdash e\Downarrow V'\}\cup \\
-                                                           & \{\CallE(\event',V)|\event'\in\ctx_0\semlink\event\text{ and }V\in\ctx_0\semlink v\}                                                            \\
-    \fbox{$\semlink\in\Ctx\rightarrow\Ctx\rightarrow\pset(\Ctx)$}                                                                                                                                            \\
-    \ctx_0\semlink\bullet\triangleq                        & \{\bullet\}                                                                                                                                     \\
-    \ctx_0\semlink(x,\ell)\cons\ctx\triangleq              & \{(x,\ell)\cons\Sigma|\Sigma\in\ctx_0\semlink\ctx\}                                                                                             \\
-    \ctx_0\semlink(x,w)\cons\ctx\triangleq                 & \{(x,W)\cons\Sigma|W\in\ctx_0\semlink w\text{ and }\Sigma\in\ctx_0\semlink\ctx\}                                                                \\
-    \ctx_0\semlink[E]\triangleq                            & \{\Sigma\in\Ctx|\Sigma\in\ctx_0\semlink\event\}\cup                                                                                             \\
-                                                           & \{[\event']|\event'\in\ctx_0\semlink\event\}                                                                                                    \\
-    \fbox{$\semlink\in\Ctx\rightarrow\Value\rightarrow\pset(\Value)$}                                                                                                                                        \\
-    \ctx_0\semlink\langle\lambda x.e,\ctx\rangle\triangleq & \{\langle\lambda x.e,\Sigma\rangle|\Sigma\in\ctx_0\semlink\ctx\}                                                                                \\
-    \fbox{$\semlink\in\Ctx\rightarrow\Walue\rightarrow\pset(\Walue)$}                                                                                                                                        \\
-    \ctx_0\semlink\mu\ell.v\triangleq                      & \{\mu\ell.V|V\in\ctx_0\semlink v\}
+    \fbox{$\semlink\in\Ctx\rightarrow\Event\rightarrow\pset(\Value)$}                                                                                                                               \\
+    \ctx_0\semlink\InitE\triangleq                         & \{\ctx_0\}                                                                                                                             \\
+    \ctx_0\semlink\ReadE(\event,x)\triangleq               & \{v_+|\ctx_+\in\ctx_0\semlink\event\land\ctx_+(x)=v_+\}                                                                                \\
+    \cup                                                   & \{v_+[\mu\ell.v_+/\ell]|\ctx_+\in\ctx_0\semlink E\land\ctx_+(x)=\mu\ell.v_+\}                                                          \\
+    \ctx_0\semlink\CallE(\event,v)\triangleq               & \{v_+'|\langle\lambda x.e,\ctx_+\rangle\in\ctx_0\semlink E\land v_+\in\ctx_0\semlink v\land(x,v_+)\cons\Sigma\vdash e\Downarrow v_+'\} \\
+    \cup                                                   & \{\CallE(\event_+,v_+)|\event_+\in\ctx_0\semlink\event\land v_+\in\ctx_0\semlink v\}                                                   \\
+    \fbox{$\semlink\in\Ctx\rightarrow\Ctx\rightarrow\pset(\Ctx)$}                                                                                                                                   \\
+    \ctx_0\semlink\bullet\triangleq                        & \{\bullet\}                                                                                                                            \\
+    \ctx_0\semlink(x,\ell)\cons\ctx\triangleq              & \{(x,\ell)\cons\ctx_+|\ctx_+\in\ctx_0\semlink\ctx\}                                                                                    \\
+    \ctx_0\semlink(x,w)\cons\ctx\triangleq                 & \{(x,w_+)\cons\ctx_+|w_+\in\ctx_0\semlink w\land\ctx_+\in\ctx_0\semlink\ctx\}                                                          \\
+    \ctx_0\semlink[E]\triangleq                            & \{\ctx_+|\ctx_+\in\ctx_0\semlink\event\}\cup\{[\event_+]|\event_+\in\ctx_0\semlink\event\}                                             \\
+    \fbox{$\semlink\in\Ctx\rightarrow\Value\rightarrow\pset(\Value)$}                                                                                                                               \\
+    \ctx_0\semlink\langle\lambda x.e,\ctx\rangle\triangleq & \{\langle\lambda x.e,\ctx_+\rangle|\ctx_+\in\ctx_0\semlink\ctx\}                                                                       \\
+    \fbox{$\semlink\in\Ctx\rightarrow\Walue\rightarrow\pset(\Walue)$}                                                                                                                               \\
+    \ctx_0\semlink\mu\ell.v\triangleq                      & \{\mu\ell.v_+|v_+\in\ctx_0\semlink v\}
   \end{align*}
   \caption{Definition for concrete linking.}
   \label{fig:conclink}
@@ -72,9 +70,9 @@ The concrete linking rule $\ctx_0\semlink w$, given an answer $\ctx_0$ to the $\
 
 Concrete linking makes sense because of the following theorem.
 First define:
-\[\text{eval}(e,\ctx)\triangleq\{v|\ctx\vdash e\Downarrow v\}\qquad\text{eval}(e,\Sigma)\triangleq\bigcup_{\ctx\in\Sigma}\text{eval}(\ctx,e)\qquad\ctx_0\semlink W\triangleq\bigcup_{w\in W}(\ctx_0\semlink w)\]
+\[\eval(e,\ctx)\triangleq\{v|\ctx\vdash e\Downarrow v\}\qquad\eval(e,\Sigma)\triangleq\bigcup_{\ctx\in\Sigma}\eval(e,\ctx)\qquad\ctx_0\semlink W\triangleq\bigcup_{w\in W}(\ctx_0\semlink w)\]
 Then the following holds:
 \begin{theorem}[Soundness of concrete linking]\normalfont
   Given $e\in\Expr,\ctx\in\Ctx,v\in\Value$,
-  \[\forall\ctx_0\in\Ctx:\text{eval}(e,\ctx_0\semlink\ctx)\subseteq\ctx_0\semlink\text{eval}(e,\ctx)\]
+  \[\forall\ctx_0\in\Ctx:\eval(e,\ctx_0\semlink\ctx)\subseteq\ctx_0\semlink\eval(e,\ctx)\]
 \end{theorem}

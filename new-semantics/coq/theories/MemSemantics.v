@@ -259,7 +259,7 @@ Qed.
 Lemma equiv_read_env {var loc} `{Eq var} `{Name loc} (σ : nv var loc (@val var)) :
   forall σ' m x v
     (EQUIV : equiv σ bot (mvalue_exp σ') m)
-    (READ : read_env σ x = Some v),
+    (READ : read_env σ x = Env_wvl v),
   exists ℓ v',
     read_menv σ' x = Some ℓ /\
     m ℓ = Some v' /\
@@ -280,7 +280,7 @@ Lemma equiv_read_menv {var loc} `{Eq var} `{Name loc} (σ' : menv var loc) :
     (READσ : read_menv σ' x = Some ℓ)
     (READm : m ℓ = Some v'),
   exists v,
-    read_env σ x = Some v /\
+    read_env σ x = Env_wvl v /\
     equiv v bot v' m.
 Proof.
   induction σ'; ii; ss; des_ifs; eqb2eq var; clarify;

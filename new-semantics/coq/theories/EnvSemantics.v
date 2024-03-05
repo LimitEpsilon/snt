@@ -3,19 +3,25 @@ From LN Require Import Defs.
 From LN Require Import Syntax.
 From LN Require Import SubstFacts.
 
+Variant read_env_res {var loc lang} :=
+  | Env_err
+  | Env_loc (ℓ : loc)
+  | Env_wvl (w : wvl var loc lang)
+.
+
 Fixpoint read_env {var loc lang} `{Eq var} (σ : nv var loc lang) (x : var) :=
   match σ with
-  | nv_mt | nv_bloc _ _ _ => None
-  | nv_floc x' _ σ' =>
-    if eqb x x' then None else read_env σ' x
+  | nv_mt | nv_bloc _ _ _ => Env_err
+  | nv_floc x' ℓ σ' =>
+    if eqb x x' then Env_loc ℓ else read_env σ' x
   | nv_bval x' w σ' =>
-    if eqb x x' then Some w else read_env σ' x
+    if eqb x x' then Env_wvl w else read_env σ' x
   end.
 
 Inductive eval {var loc} `{Eq var} `{Eq loc} (σ : nv var loc (@val var)): tm -> (vl var loc val) -> Prop :=
-| ev_id x v (READ : read_env σ x = Some (wvl_v v))
+| ev_id x v (READ : read_env σ x = Env_wvl (wvl_v v))
 : eval σ (tm_var x) v
-| ev_rec x v (READ : read_env σ x = Some (wvl_recv v))
+| ev_rec x v (READ : read_env σ x = Env_wvl (wvl_recv v))
 : eval σ (tm_var x) (open_wvl_vl 0 (wvl_recv v) v)
 | ev_fn x t
 : eval σ (tm_lam x t) (vl_clos (v_fn x t) σ)
@@ -38,7 +44,7 @@ Inductive eval {var loc} `{Eq var} `{Eq loc} (σ : nv var loc (@val var)): tm ->
 .
 
 Lemma read_env_lc {var loc lang} `{Eq var} (σ : nv var loc lang) (Σ : env σ) :
-  forall x w (READ : read_env σ x = Some w), wvalue w.
+  forall x w (READ : read_env σ x = Env_wvl w), wvalue w.
 Proof.
   induction σ; ii; ss;
   des_ifs; eqb2eq var; clarify;
@@ -78,8 +84,8 @@ Proof.
 Qed.
 
 Lemma read_env_map {var loc lang} `{Eq var} `{Eq loc} (σ : nv var loc lang) :
-  forall φ w x (READ : read_env σ x = Some w),
-    read_env (map_nv φ σ) x = Some (map_wvl φ w).
+  forall φ w x (READ : read_env σ x = Env_wvl w),
+    read_env (map_nv φ σ) x = Env_wvl (map_wvl φ w).
 Proof.
   induction σ; ii; ss;
   des_ifs; ss;
@@ -88,7 +94,7 @@ Proof.
 Qed.
 
 Lemma read_env_floc {var loc lang} `{Eq var} `{Eq loc} (σ : nv var loc lang) :
-  forall w ℓ x (READ : read_env σ x = Some w) (IN : In ℓ (floc_wvl w)),
+  forall w ℓ x (READ : read_env σ x = Env_wvl w) (IN : In ℓ (floc_wvl w)),
     In ℓ (floc_nv σ).
 Proof.
   induction σ; ii; ss;
