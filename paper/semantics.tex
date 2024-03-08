@@ -149,8 +149,8 @@ and the following theorem:
 \begin{theorem}[Equivalence of semantics]\normalfont
   For all $\ctx\in\Ctx,\ctx'\in\Mtx\times\Mem\times\pset(\Loc),v\in\Value,v'\in\Malue\times\Mem\times\pset(\Loc)$, we have:
   \begin{align*}
-    \ctx\sim\ctx'\text{ and }\ctx\vdash e\evjudg{\ctx}{e}{v} v   & \Rightarrow\exists v':v\sim v'\text{ and }\ctx'\vdash e\evjudg{\ctx}{e}{v} v' \\
-    \ctx\sim\ctx'\text{ and }\ctx'\vdash e\evjudg{\ctx}{e}{v} v' & \Rightarrow\exists v:v\sim v'\text{ and }\ctx\vdash e\evjudg{\ctx}{e}{v} v
+    \ctx\sim\ctx'\text{ and }\evjudg{\ctx}{e}{v}   & \Rightarrow\exists v':v\sim v'\text{ and }\evjudg{\ctx'}{e}{v'} \\
+    \ctx\sim\ctx'\text{ and }\evjudg{\ctx'}{e}{v'} & \Rightarrow\exists v:v\sim v'\text{ and }\evjudg{\ctx}{e}{v}
   \end{align*}
 \end{theorem}
 The actual definition for $\sim$ can be found in the appendix.

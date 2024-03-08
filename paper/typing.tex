@@ -88,7 +88,7 @@ The definitions for types are in Figure \ref{fig:typdom} and the typing rules ar
 
 \subsection{Type Safety}
 \begin{theorem}[Type Safety]\normalfont
-  For all $e\in\Expr$, if $\bullet\vdash e:\tau$ for some $\tau$, then there exists some $v\in\Value$ such that $\bullet\vdash e\semarrow v$.
+  For all $e\in\Expr$, if $\typejudg{\bullet}{e}{\tau}{\Safe}$ for some $\tau,\Safe$, then $e$ runs under $\bullet$ without error.
 \end{theorem}
 \begin{proof}[Sketch]
   We prove this through unary logical relations and induction on the typing judgment.
@@ -123,4 +123,18 @@ The definitions for types are in Figure \ref{fig:typdom} and the typing rules ar
   We prove
   \[\typejudg{\Gamma}{e}{\tau}{\Safe}\Rightarrow\semtypejudg{\Gamma}{e}{\tau}{\Safe}\]
   by induction on $\vdash$.
+
+  Note that we have to extend the big-step evaluation rules with error propagation rules for $\eval(e,\ctx)\subseteq\ValRel{\tau}\rho$ to mean that $\eval(e,\ctx)$ has no errors.
 \end{proof}
+
+\begin{align*}
+  \unsafe(\InitE)         & \triangleq\varnothing                 &  &  & \unsafe(\ReadE(E,x))                    & \triangleq\unsafe(E)             \\
+  \unsafe(\CallE(E,v))    & \triangleq\unsafe(E)\cup\unsafe(v)    &  &  & \unsafe([\event])                       & \triangleq\unsafe(E)             \\
+  \unsafe(\bullet)        & \triangleq\varnothing                 &  &  & \unsafe((x,\ell)\cons\ctx)              & \triangleq\{x\}\cup\unsafe(\ctx) \\
+  \unsafe((x,w)\cons\ctx) & \triangleq\unsafe(w)\cup\unsafe(\ctx) &  &  & \unsafe(\langle\lambda x.e,\ctx\rangle) & \triangleq\unsafe(\ctx)          \\
+  \unsafe(\mu\ell.v)      & \triangleq\unsafe(v[\bullet/\ell])
+\end{align*}
+
+\[\Abs\eval(e,\Gamma)\triangleq\bigcup_{\Safe}\{\tau|\typejudg{\Gamma}{e}{\tau}{S}\}\quad\gamma(\tau)\triangleq\{v|v\in\ValRel{\tau}\bot\land\unsafe(v)=\varnothing\}\quad\gamma(T)\triangleq\bigcap_{\tau\in T}{\gamma(\tau)}\]
+
+\[\eval(e,\gamma(\Gamma))\subseteq\gamma(\Abs\eval(e,\Gamma))\]
