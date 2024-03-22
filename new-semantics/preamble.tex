@@ -151,8 +151,8 @@
 \newcommand*{\ortype}{\mathrel{|}}
 \newcommand*{\cons}{::}
 \newcommand*{\pset}{\mathcal{P}}
-\newcommand*{\closeloc}[2]{\{0\leftarrow{#1}\}{#2}}
-\newcommand*{\openloc}[2]{\{0\rightarrow{#1}\}{#2}}
+\newcommand*{\closeloc}[2]{\prescript{\textbackslash{#1}}{}{#2}}
+\newcommand*{\openloc}[2]{{#2}^{#1}}
 
 \def\ovbarw{1.2mu}
 \def\ovbarh{1}
@@ -223,6 +223,12 @@
 \newcommand*{\Letm}{\mathtt{mod}}
 \newcommand*{\textand}{\text{ and }}
 \newcommand*{\eval}{\text{eval}}
+
+% symbol standing for partial proof tree
+\newcommand*{\ptree}{t}
+
+% labelled expressions {p:e}
+\newcommand*{\plabel}[2]{\{{#1}:{#2}\}}
 
 % big-step evaluation judgment σ ⊢ e ⇓ v
 \newcommand*{\evjudg}[3]{{#1}\vdash{#2}\Downarrow{#3}}
