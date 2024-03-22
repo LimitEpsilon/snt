@@ -723,15 +723,15 @@ Section SubstFacts.
   Qed.
 
   Definition map_close_wvl `{Eq loc} (w : wvl var loc lang) :=
-    forall i ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν),
+    forall i ℓ φ (INJ : oto φ),
       map_wvl φ (close_wvl i ℓ w) = close_wvl i (φ ℓ) (map_wvl φ w).
 
   Definition map_close_nv `{Eq loc} (σ : nv var loc lang) :=
-    forall i ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν),
+    forall i ℓ φ (INJ : oto φ),
       map_nv φ (close_nv i ℓ σ) = close_nv i (φ ℓ) (map_nv φ σ).
 
   Definition map_close_vl `{Eq loc} (v : vl var loc lang) :=
-    forall i ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν),
+    forall i ℓ φ (INJ : oto φ),
       map_vl φ (close_vl i ℓ v) = close_vl i (φ ℓ) (map_vl φ v).
 
   Lemma map_close `{Eq loc} :
@@ -739,7 +739,7 @@ Section SubstFacts.
     (forall σ, map_close_nv σ) /\
     (forall v, map_close_vl v).
   Proof.
-    apply pre_val_ind; ii; ss; repeat rw; eauto.
+    apply pre_val_ind; ii; ss; unfold oto in INJ; repeat rw; eauto.
     des_ifs.
     all: repeat (eqb2eq loc; clarify; ss).
     all: repeat rw; eauto.
@@ -792,18 +792,39 @@ Section SubstFacts.
     all: repeat rw; eauto.
   Qed.
 
+  Definition floc_map_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall ℓ φ (IN : In ℓ (floc_wvl w)),
+      In (φ ℓ) (floc_wvl (map_wvl φ w)).
+
+  Definition floc_map_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall ℓ φ (IN : In ℓ (floc_nv σ)),
+      In (φ ℓ) (floc_nv (map_nv φ σ)).
+
+  Definition floc_map_vl `{Eq loc} (v : vl var loc lang) :=
+    forall ℓ φ (IN : In ℓ (floc_vl v)),
+      In (φ ℓ) (floc_vl (map_vl φ v)).
+
+  Lemma floc_map `{Eq loc} :
+    (forall w, floc_map_wvl w) /\
+    (forall σ, floc_map_nv σ) /\
+    (forall v, floc_map_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; des; clarify; auto.
+    rewrite in_app_iff in *; des; auto.
+  Qed.
+
   Definition map_floc_wvl `{Eq loc} (w : wvl var loc lang) :=
-    forall ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+    forall ℓ φ (INJ : oto φ)
       (IN : In (φ ℓ) (floc_wvl (map_wvl φ w))),
     In ℓ (floc_wvl w).
 
   Definition map_floc_nv `{Eq loc} (σ : nv var loc lang) :=
-    forall ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+    forall ℓ φ (INJ : oto φ)
       (IN : In (φ ℓ) (floc_nv (map_nv φ σ))),
     In ℓ (floc_nv σ).
 
   Definition map_floc_vl `{Eq loc} (v : vl var loc lang) :=
-    forall ℓ φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+    forall ℓ φ (INJ : oto φ)
       (IN : In (φ ℓ) (floc_vl (map_vl φ v))),
     In ℓ (floc_vl v).
 
@@ -835,17 +856,17 @@ Section SubstFacts.
   Qed.
 
   Definition swap_is_subst_wvl `{Eq loc} (w : wvl var loc lang) :=
-    forall φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+    forall φ (INJ : oto φ)
       ℓ ν (FRESH : ~ In ℓ (floc_wvl w)),
       map_wvl (swap φ ℓ ν) w = subst_loc_wvl (φ ℓ) (φ ν) (map_wvl φ w).
 
   Definition swap_is_subst_nv `{Eq loc} (σ : nv var loc lang) :=
-    forall φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+    forall φ (INJ : oto φ)
       ℓ ν (FRESH : ~ In ℓ (floc_nv σ)),
       map_nv (swap φ ℓ ν) σ = subst_loc_nv (φ ℓ) (φ ν) (map_nv φ σ).
 
   Definition swap_is_subst_vl `{Eq loc} (v : vl var loc lang) :=
-    forall φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν)
+    forall φ (INJ : oto φ)
       ℓ ν (FRESH : ~ In ℓ (floc_vl v)),
       map_vl (swap φ ℓ ν) v = subst_loc_vl (φ ℓ) (φ ν) (map_vl φ v).
 
@@ -854,7 +875,7 @@ Section SubstFacts.
     (forall σ, swap_is_subst_nv σ) /\
     (forall v, swap_is_subst_vl v).
   Proof.
-    apply pre_val_ind; ii; ss; repeat rw; split_nIn; eauto.
+    apply pre_val_ind; ii; ss; unfold oto in INJ; repeat rw; split_nIn; eauto.
     unfold swap; des_ifs; repeat eqb2eq loc; clarify.
     exploit INJ; eauto; ii; clarify.
   Qed.
@@ -906,6 +927,28 @@ Section SubstFacts.
     end.
     erewrite EXT; eauto.
     all:ii; apply EXT; rewrite in_app_iff; eauto.
+  Qed.
+
+  Definition compose (f g : loc -> loc) ℓ := f (g ℓ).
+
+  Definition map_compose_wvl (w : wvl var loc lang) :=
+    forall φ ϕ,
+      map_wvl φ (map_wvl ϕ w) = map_wvl (compose φ ϕ) w.
+
+  Definition map_compose_nv (σ : nv var loc lang) :=
+    forall φ ϕ,
+      map_nv φ (map_nv ϕ σ) = map_nv (compose φ ϕ) σ.
+
+  Definition map_compose_vl (v : vl var loc lang) :=
+    forall φ ϕ,
+      map_vl φ (map_vl ϕ v) = map_vl (compose φ ϕ) v.
+
+  Lemma map_compose :
+    (forall w, map_compose_wvl w) /\
+    (forall σ, map_compose_nv σ) /\
+    (forall v, map_compose_vl v).
+  Proof.
+    apply pre_val_ind; ii; ss; repeat rw; auto.
   Qed.
 
   Definition map_lc_wvl (w : wvl var loc lang) (W : wvalue w) :=

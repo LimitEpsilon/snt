@@ -52,7 +52,7 @@ The concrete linking rule $\ctx_0\semlink w$, given an answer $\ctx_0$ to the $\
     \ctx_0\semlink\InitE\triangleq                         & \{\ctx_0\}                                                                                                                             \\
     \ctx_0\semlink\ReadE(\event,x)\triangleq               & \{v_+|\ctx_+\in\ctx_0\semlink\event\land\ctx_+(x)=v_+\}                                                                                \\
     \cup                                                   & \{v_+[\mu\ell.v_+/\ell]|\ctx_+\in\ctx_0\semlink E\land\ctx_+(x)=\mu\ell.v_+\}                                                          \\
-    \ctx_0\semlink\CallE(\event,v)\triangleq               & \{v_+'|\langle\lambda x.e,\ctx_+\rangle\in\ctx_0\semlink E\land v_+\in\ctx_0\semlink v\land(x,v_+)\cons\Sigma\vdash e\Downarrow v_+'\} \\
+    \ctx_0\semlink\CallE(\event,v)\triangleq               & \{v_+'|\langle\lambda x.e,\ctx_+\rangle\in\ctx_0\semlink E\land v_+\in\ctx_0\semlink v\land(x,v_+)\cons\ctx_+\vdash e\Downarrow v_+'\} \\
     \cup                                                   & \{\CallE(\event_+,v_+)|\event_+\in\ctx_0\semlink\event\land v_+\in\ctx_0\semlink v\}                                                   \\
     \fbox{$\semlink\in\Ctx\rightarrow\Ctx\rightarrow\pset(\Ctx)$}                                                                                                                                   \\
     \ctx_0\semlink\bullet\triangleq                        & \{\bullet\}                                                                                                                            \\

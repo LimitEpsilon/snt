@@ -131,7 +131,7 @@ Proof.
 Qed.
 
 Lemma eval_map {var loc} `{Eq var} `{Name loc} t (σ : nv var loc (@val var)) v (EVAL : eval σ t v) :
-  forall φ (INJ : forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν),
+  forall φ (INJ : oto φ),
     eval (map_nv φ σ) t (map_vl φ v).
 Proof.
   induction EVAL; ii; ss; try solve [econstructor; eauto].
@@ -162,4 +162,85 @@ Proof.
   ii; unfold swap, id in fEQ; des_ifs; repeat eqb2eq loc; clarify.
   all:try solve [ii; ss].
   red. intros IN. eapply eval_floc_dec in EVAL; eauto.
+Qed.
+
+Lemma read_env_wvl {var loc lang} `{Eq var} `{Eq loc} (σ : nv var loc lang) x :
+  forall r w ℓ (READ : read_env σ x = r),
+    read_env (subst_wvl_nv w ℓ σ) x =
+    match r with
+    | Env_err => Env_err
+    | Env_loc ℓ' =>
+      if eqb ℓ ℓ' then Env_wvl w else Env_loc ℓ'
+    | Env_wvl u =>
+      Env_wvl (subst_wvl_wvl w ℓ u)
+    end.
+Proof.
+  induction σ; ii;
+  ss; des_ifs; ss; des_ifs;
+  exploit IHσ; eauto; ss; repeat rw; eauto.
+Qed.
+
+Lemma eval_subst_wvl {var loc} `{Eq var} `{Name loc} t (σ : nv var loc (@val var)) v (EVAL : eval σ t v) :
+  forall φ (INJ : oto φ)
+    u (U : wvalue u) ℓ',
+    eval (subst_wvl_nv u ℓ' (map_nv φ σ)) t (subst_wvl_vl u ℓ' (map_vl φ v)).
+Proof.
+  induction EVAL; ii; ss;
+  try solve [econstructor; eauto].
+  - econstructor 1.
+    eapply read_env_map with (φ := φ) in READ.
+    exploit (read_env_wvl _ _ _ u ℓ'); eauto.
+  - assert (map_open_wvl_vl _ _ _ v) by (eapply map_open_wvl; auto).
+    rw. s.
+    assert (open_wvl_subst_wvl_vl _ _ _ (map_vl φ v)) by (eapply open_wvl_subst_wvl; auto).
+    rw; eauto.
+    econstructor 2.
+    eapply read_env_map with (φ := φ) in READ.
+    exploit (read_env_wvl _ _ _ u ℓ'); eauto.
+  - specialize (IHEVAL2 φ INJ u U ℓ').
+    assert (map_close_vl _ _ _ v1) as RR by (eapply map_close; auto).
+    rewrite RR in *; auto. clear RR.
+    gensym_tac (ℓ' :: φ ℓ :: floc_wvl u ++ floc_nv (map_nv φ σ)) ℓ''. clear Heqℓ''.
+    assert (~ In ℓ'' (floc_vl (map_vl φ v1))) as HINT.
+    { intro. apply eval_map with (φ := φ) in EVAL1; auto.
+      eapply eval_floc_dec in EVAL1; eauto. ss. des; ss. }
+    replace 
+      (close_vl 0 (φ ℓ) (map_vl φ v1)) with
+      (close_vl 0 ℓ'' (subst_loc_vl ℓ'' (φ ℓ) (map_vl φ v1))) in *.
+    replace 
+      (subst_wvl_vl u ℓ' (close_vl 0 ℓ'' (subst_loc_vl ℓ'' (φ ℓ) (map_vl φ v1)))) with
+      (close_vl 0 ℓ'' (subst_wvl_vl u ℓ' (subst_loc_vl ℓ'' (φ ℓ) (map_vl φ v1)))) in *.
+    constructor; auto.
+    { intro IN. eapply floc_subst_wvl in IN. des; auto. }
+    { set (compose loc (swap id ℓ'' (φ ℓ)) φ) as φ'.
+      replace (map_nv φ σ) with (map_nv φ' σ).
+      replace (subst_loc_vl ℓ'' (φ ℓ) (map_vl φ v1)) with (map_vl φ' v1).
+      exploit (IHEVAL1 φ' _ u U).
+      subst φ'. unfold compose, swap, id.
+      ii; ss; des_ifs;
+      repeat match goal with
+      | _ => eqb2eq loc
+      | H : φ _ = φ _ |- _ => apply INJ in H
+      | _ => clarify
+      end.
+      instantiate (1 := ℓ').
+      replace (eqb ℓ' (φ' ℓ)) with false.
+      replace (φ' ℓ) with ℓ''. auto.
+      1, 2: subst φ'; unfold compose, swap, id; s; des_ifs; eqb2eq loc; clarify.
+      symmetry. apply eqb_neq. auto.
+      { assert (swap_is_subst_vl _ _ _ (map_vl φ v1)) as RR by eapply swap_is_subst.
+        specialize (RR id).
+        exploit RR; eauto. unfold oto. auto.
+        instantiate (1 := φ ℓ).
+        replace (map_vl id (map_vl φ v1)) with (map_vl φ v1) by (symmetry; eapply map_id_is_id).
+        unfold id at 2. unfold id at 2.
+        intro. rrw.
+        subst φ'. symmetry. eapply map_compose. }
+      { eapply map_ext.
+        ii. subst φ'. unfold compose, swap, id.
+        des_ifs; eqb2eq loc; clarify.
+        eapply floc_map in DOM; eauto. contradict.
+        exploit INJ; eauto. ii; clarify. } }
+    { eapply subst_wvl_close; auto. }
+    { eapply subst_loc_close_eq; auto. }
 Qed.

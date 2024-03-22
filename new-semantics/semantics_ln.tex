@@ -43,102 +43,44 @@
 \end{figure}
 \begin{figure}[h!]
   \begin{flushright}
-    \fbox{$(e,\ctx)\Downarrow v$}
+    \fbox{$\evjudg{\ctx}{e}{v}$}
   \end{flushright}
   \centering
   \vspace{0pt} % -0.75em}
   \[
     \begin{InfRule}{Id}
-      \hypo{v=\ctx(x)}
-      \infer1{
-        (x, \ctx)
-        \Downarrow
-        v
-      }
+      \hypo{\ctx(x)=v}
+      \infer1{\evjudg{\ctx}{x}{v}}
     \end{InfRule}\:
     \begin{InfRule}{RecId}
-      \hypo{\mu.v=\ctx(x)}
-      \infer1{
-        (x, \ctx)
-        \Downarrow
-        \openloc{v}{\mu.v}
-      }
+      \hypo{\ctx(x)=\mu.v}
+      \infer1{\evjudg{\ctx}{x}{\openloc{\mu.v}{v}}}
     \end{InfRule}\:
     \begin{InfRule}{Fn}
-      \infer0{
-        (\lambda x.e, \ctx)
-        \Downarrow
-        \langle\lambda x.e, \ctx\rangle
-      }
+      \infer0{\evjudg{\ctx}{\lambda x.e}{\langle\lambda x.e, \ctx\rangle}}
     \end{InfRule}\:
     \begin{InfRule}{App}
-      \hypo{
-        (e_{1}, \ctx)
-        \Downarrow
-        \langle\lambda x.e, \ctx_1\rangle
-      }
-      \hypo{
-        (e_{2}, \ctx)
-        \Downarrow
-        v_2
-      }
-      \hypo{
-        (e, (x, v_2)\cons \ctx_1)
-        \Downarrow
-        v
-      }
-      \infer3{
-        (e_{1}\:e_{2}, \ctx)
-        \Downarrow
-        v
-      }
+      \hypo{\evjudg{\ctx}{e_1}{\langle\lambda x.e, \ctx_1\rangle}}
+      \hypo{\evjudg{\ctx}{e_2}{v_2}}
+      \hypo{\evjudg{(x, v_2)\cons \ctx_1}{e}{v}}
+      \infer{2,1}{\evjudg{\ctx}{e_1\:e_2}{v}}
     \end{InfRule}
   \]
 
   \[
     \begin{InfRule}{Link}
-      \hypo{
-        (e_{1}, \ctx)
-        \Downarrow
-        \ctx_1
-      }
-      \hypo{
-        (e_{2}, \ctx_1)
-        \Downarrow
-        v
-      }
-      \infer2{
-        (\link{e_{1}}{e_{2}}, \ctx)
-        \Downarrow
-        v
-      }
+      \hypo{\evjudg{\ctx}{e_1}{\ctx_1}}
+      \hypo{\evjudg{\ctx_1}{e_2}{v}}
+      \infer2{\evjudg{\ctx}{\link{e_1}{e_2}}{v}}
     \end{InfRule}\quad
     \begin{InfRule}{Empty}
-      \infer0{
-        (\varepsilon, \ctx)
-        \Downarrow
-        \bullet
-      }
+      \infer0{\evjudg{\ctx}{\varepsilon}{\bullet}}
     \end{InfRule}\quad
     \begin{InfRule}{Bind}
-      \hypo{
-        \ell\not\in\FLoc(\ctx)
-      }
-      \hypo{
-        (e_{1}, (x,\ell)\cons\ctx)
-        \Downarrow
-        v_1
-      }
-      \hypo{
-        (e_{2}, (x, \mu.\closeloc{\ell}{v_1})\cons \ctx)
-        \Downarrow
-        \ctx_2
-      }
-      \infer3{
-        (x=e_1; e_2, \ctx)
-        \Downarrow
-        (x,\mu.\closeloc{\ell}{v_1})\cons\ctx_2
-      }
+      \hypo{\ell\not\in\FLoc(\ctx)}
+      \hypo{\evjudg{(x,\ell)\cons\ctx}{e_1}{v_1}}
+      \hypo{\evjudg{(x, \mu.\closeloc{\ell}{v_1})\cons \ctx}{e_1}{\ctx_2}}
+      \infer{2,1}{\evjudg{\ctx}{x=e_1; e_2}{(x,\mu.\closeloc{\ell}{v_1})\cons\ctx_2}}
     \end{InfRule}
   \]
   \caption{The big-step operational semantics.}
@@ -147,82 +89,76 @@
 We use the locally nameless representation, and enforce that all values be \emph{locally closed}.
 As a consequence, the big-step operational semantics will be \emph{deterministic}, no matter what $\ell$ is chosen in the Bind rule.
 
+\subsection{Reconciling with Conventional Backpatching}
 \begin{figure}[h!]
   \centering
-  \begin{tabular}{rclr}
-                                                              &               &                                                                                   & \fbox{$e,\ctx,K\rightarrow e,\ctx,K$} \\
-    $e_1\:e_2,\ctx,K$                                         & $\rightarrow$ & $e_1,\ctx,K\circ(\_\:(e_2,\ctx))$                                                                                         \\
-    $\link{e_1}{e_2},\ctx,K$                                  & $\rightarrow$ & $e_1,\ctx,K\circ(\link{\_}{e_2})$                                                                                         \\
-    $x=e_1;e_2,\ctx,K$                                        & $\rightarrow$ & $e_1,(x,\ell)\cons\ctx,K\circ(x=\ell;(e_2,\ctx))$                                 & $\ell\not\in\FLoc(\ctx)$              \\
-    \\
-                                                              &               &                                                                                   & \fbox{$v,K\rightarrow e,\ctx,K$}      \\
-    $\langle\lambda x.e,\ctx_1\rangle,K\circ(\_\:(e_2,\ctx))$ & $\rightarrow$ & $e_2,\ctx,K\circ(\langle\lambda x.e,\ctx_1\rangle\:\_)$                                                                   \\
-    $\ctx_1,K\circ(\link{\_}{e_2})$                           & $\rightarrow$ & $e_2,\ctx_1,K$                                                                                                            \\
-    $v_1,K\circ(x=\ell;(e_2,\ctx))$                           & $\rightarrow$ & $e_2,(x,\mu.\closeloc{\ell}{v_1})\cons\ctx,K\circ(x=\mu.\closeloc{\ell}{v_1};\_)$                                         \\
-    $v_2,K\circ(\langle\lambda x.e,\ctx_1\rangle\:\_)$        & $\rightarrow$ & $e,(x,v_2)\cons\ctx_1,K$                                                                                                  \\
-    \\
-                                                              &               &                                                                                   & \fbox{$v,K\rightarrow v,K$}           \\
-    $\ctx_2,K\circ(x=w_1;\_)$                                 & $\rightarrow$ & $(x,w_1)\cons\ctx_2,K$                                                                                                    \\
-    \\
-                                                              &               &                                                                                   & \fbox{$e,\ctx,K\rightarrow v,K$}      \\
-    $x,\ctx,K$                                                & $\rightarrow$ & $v,K$                                                                             & $v=\ctx(x)$                           \\
-    $x,\ctx,K$                                                & $\rightarrow$ & $v^{\mu.v},K$                                                                     & $\mu.v=\ctx(x)$                       \\
-    $\lambda x.e,\ctx,K$                                      & $\rightarrow$ & $\langle\lambda x.e,\ctx\rangle,K$                                                                                        \\
-    $\varepsilon,\ctx,K$                                      & $\rightarrow$ & $\bullet,K$
-  \end{tabular}
-  \caption{The equivalent small-step operational semantics.}
-  \label{fig:smallstep}
-\end{figure}
-
-\subsection{Adding Memory}
-
-The first step towards abstraction is reformulating the semantics into a version with memory.
-
-\begin{figure}[h!]
-  \centering
+  \small
   \begin{tabular}{rrcll}
-    Environment & $\ctx$ & $\in$         & $\Ctx$                                                                       \\
-    Location    & $\ell$ & $\in$         & $\Loc$                                                                       \\
-    Memory      & $\mem$ & $\in$         & $\Mem\triangleq\fin{\Loc}{\Value}$                                           \\
-    Value       & $v$    & $\in$         & $\Value \triangleq\Ctx+\ExprVar\times\Expr\times\Ctx$                        \\
-    Environment & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack          \\
-                &        & $\vbar$       & $(x,\ell)\cons\ctx$                                   & location binding     \\
-    Value       & $v$    & $\rightarrow$ & $\ctx$                                                & exported environment \\
-                &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure
+    Environment   & $\ctx$ & $\in$         & $\Mtx\triangleq\fin{\ExprVar}{\Loc}$                                         \\
+    Memory        & $\mem$ & $\in$         & $\Mem\triangleq\fin{\Loc}{\Malue}$                                           \\
+    Allocated set & $L$    & $\subseteq$   & $\Loc$                                                                       \\
+    Value         & $v$    & $\in$         & $\Malue \triangleq\Mtx+\ExprVar\times\Expr\times\Mtx$                        \\
+    Environment   & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack          \\
+                  &        & $\vbar$       & $(x,\ell)\cons\ctx$                                   & location binding     \\
+    Value         & $v$    & $\rightarrow$ & $\ctx$                                                & exported environment \\
+                  &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure
   \end{tabular}
   \caption{Definition of the semantic domains with memory.}
   \label{fig:memdomain}
 \end{figure}
 \begin{figure}[h!]
+  \small
+  \begin{flushright}
+    \fbox{$\evjudg{\ctx,\mem,L}{e}{v,\mem',L'}$}
+  \end{flushright}
   \centering
-  \begin{tabular}{rclr}
-                                                                   &               &                                                                 & \fbox{$e,\ctx,\mem,K\rightarrow e,\ctx,\mem,K$} \\
-    $e_1\:e_2,\ctx,\mem,K$                                         & $\rightarrow$ & $e_1,\ctx,\mem,K\circ(\_\:(e_2,\ctx))$                                                                            \\
-    $\link{e_1}{e_2},\ctx,\mem,K$                                  & $\rightarrow$ & $e_1,\ctx,\mem,K\circ(\link{\_}{e_2})$                                                                            \\
-    $x=e_1;e_2,\ctx,\mem,K$                                        & $\rightarrow$ & $e_1,(x,\ell)\cons\ctx,\mem,K\circ(x=\ell;(e_2,\ctx))$          & $\ell\not\in\dom(m)\cup\FLoc(K)$                \\
-    \\
-                                                                   &               &                                                                 & \fbox{$v,\mem,K\rightarrow e,\ctx,\mem,K$}      \\
-    $\langle\lambda x.e,\ctx_1\rangle,\mem,K\circ(\_\:(e_2,\ctx))$ & $\rightarrow$ & $e_2,\ctx,\mem,K\circ(\langle\lambda x.e,\ctx_1\rangle\:\_)$                                                      \\
-    $\ctx_1,\mem,K\circ(\link{\_}{e_2})$                           & $\rightarrow$ & $e_2,\ctx_1,\mem,K$                                                                                               \\
-    $v_1,\mem,K\circ(x=\ell;(e_2,\ctx))$                           & $\rightarrow$ & $e_2,(x,\ell)\cons\ctx,\mem[\ell\mapsto v_1],K\circ(x=\ell;\_)$                                                   \\
-    $v_2,\mem,K\circ(\langle\lambda x.e,\ctx_1\rangle\:\_)$        & $\rightarrow$ & $e,(x,\ell)\cons\ctx_1,\mem[\ell\mapsto v_2],K$                 & $\ell\not\in\dom(m)\cup\FLoc(K)$                \\
-    \\
-                                                                   &               &                                                                 & \fbox{$v,\mem,K\rightarrow v,\mem,K$}           \\
-    $\ctx_2,\mem,K\circ(x=\ell;\_)$                                & $\rightarrow$ & $(x,\ell)\cons\ctx_2,\mem,K$                                                                                      \\
-    \\
-                                                                   &               &                                                                 & \fbox{$e,\ctx,\mem,K\rightarrow v,\mem,K$}      \\
-    $x,\ctx,\mem,K$                                                & $\rightarrow$ & $v,\mem,K$                                                      & $\ell=\ctx(x),v=\mem(\ell)$                     \\
-    $\lambda x.e,\ctx,\mem,K$                                      & $\rightarrow$ & $\langle\lambda x.e,\ctx\rangle,\mem,K$                                                                           \\
-    $\varepsilon,\ctx,\mem,K$                                      & $\rightarrow$ & $\bullet,\mem,K$
-  \end{tabular}
-  \caption{The small-step operational semantics with memory.}
-  \label{fig:memsmallstep}
+  \vspace{0pt} % -0.75em}
+  \[
+    \begin{InfRule}{Id}
+      \hypo{\ctx(x)=\ell}
+      \hypo{\mem(\ell)=v}
+      \infer2{\evjudg{\ctx,\mem,L}{x}{v,\mem,L}}
+    \end{InfRule}\:
+    \begin{InfRule}{Fn}
+      \infer0{\evjudg{\ctx,\mem,L}{\lambda x.e}{\langle\lambda x.e,\ctx\rangle,\mem,L}}
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{App}
+      \hypo{\evjudg{\ctx,\mem,L}{e_1}{\langle\lambda x.e,\ctx_1\rangle,\mem_1,L_1}}
+      \hypo{\evjudg{\ctx,\mem_1,L_1}{e_2}{v_2,\mem_2,L_2}}
+      \hypo{\ell\not\in\dom(\mem_2)\cup L_2}
+      \hypo{\evjudg{(x,\ell)\cons\ctx_1,\mem_2[\ell\mapsto v_2],L_2}{e}{v,\mem',L'}}
+      \infer{3,1}{\evjudg{\ctx,\mem,L}{e_1\:e_2}{v,\mem',L'}}
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{Link}
+      \hypo{\evjudg{\ctx,\mem,L}{e_1}{\ctx_1,\mem_1,L_1}}
+      \hypo{\evjudg{\ctx_1,\mem_1,L_1}{e_2}{v,\mem',L'}}
+      \infer2{\evjudg{\ctx,\mem,L}{\link{e_1}{e_2}}{v,\mem',L'}}
+    \end{InfRule}\quad
+    \begin{InfRule}{Empty}
+      \infer0{\evjudg{\ctx,\mem,L}{\varepsilon}{\bullet,\mem,L}}
+    \end{InfRule}
+  \]
+
+  \[
+    \begin{InfRule}{Bind}
+      \hypo{\ell\not\in\dom(\mem)\cup L}
+      \hypo{\evjudg{(x,\ell)\cons\ctx,\mem,L\cup\{\ell\}}{e_1}{v_1,\mem_1,L_1}}
+      \hypo{\evjudg{(x,\ell)\cons\ctx,\mem_1[\ell\mapsto v_1],L_1}{e_2}{\ctx_2,\mem',L'}}
+      \infer{2,1}{\evjudg{\ctx,\mem,L}{x=e_1;e_2}{(x,\ell)\cons\ctx_2,\mem',L'}}
+    \end{InfRule}
+  \]
+  \caption{The big-step operational semantics with memory.}
+  \label{fig:membigstep}
 \end{figure}
-\subsection{Reconciling the Two Semantics}
-We need to prove that the two semantics simulate each other.
-Thus, we need to define a notion of equivalence between the two semantic domains.
 \begin{figure}[h!]
   \centering
+  \small
   \begin{flushright}
     \fbox{$w\sim_f v,\mem$}
   \end{flushright}
@@ -258,7 +194,7 @@ Thus, we need to define a notion of equivalence between the two semantic domains
     \begin{InfRule}{Eq-Rec}
       \hypo{L\text{ finite}}
       \hypo{\mem(\ell')=v'}
-      \hypo{\forall\ell\not\in L,\:\openloc{v}{\ell}\sim_{f[\ell\mapsto\ell']}v'}
+      \hypo{\forall\ell\not\in L,\:\openloc{\ell}{v}\sim_{f[\ell\mapsto\ell']}v'}
       \infer3{\mu.v\sim_f v'}
     \end{InfRule}
   \]
@@ -267,8 +203,22 @@ Thus, we need to define a notion of equivalence between the two semantic domains
   \label{fig:equivrel}
 \end{figure}
 
-Some useful lemmas.
 
+The semantics in Figure \ref{fig:bigstep} makes sense due to similarity with a conventional backpatching semantics as presented in Figure \ref{fig:membigstep}.
+We have defined a relation $\sim$ that satisfies:
+\[\sim\subseteq\Walue\times(\Malue\times\Mem\times\pset(\Loc))\qquad\bullet\sim(\bullet,\varnothing,\varnothing)\]
+and the following theorem:
+\begin{thm}[Equivalence of semantics]\label{thm:equivsem}
+  For all $\ctx\in\Ctx,\ctx'\in\Mtx\times\Mem\times\pset(\Loc),v\in\Value,v'\in\Malue\times\Mem\times\pset(\Loc)$, we have:
+  \begin{align*}
+    \ctx\sim\ctx'\text{ and }\evjudg{\ctx}{e}{v}   & \Rightarrow\exists v':v\sim v'\text{ and }\evjudg{\ctx'}{e}{v'} \\
+    \ctx\sim\ctx'\text{ and }\evjudg{\ctx'}{e}{v'} & \Rightarrow\exists v:v\sim v'\text{ and }\evjudg{\ctx}{e}{v}
+  \end{align*}
+\end{thm}
+
+The actual definition for $\sim$ is given in Figure \ref{fig:equivrel}.
+
+The proof of Theorem \ref{thm:equivsem} uses some useful lemmas, such as:
 \begin{lem}[Free locations not in $f$ are free in memory]
   \[w\sim_f v',\mem\Rightarrow m|_{\FLoc(w)-\dom(f)}=\bot\]
 \end{lem}
@@ -293,320 +243,144 @@ Some useful lemmas.
   \[w\sim_f v',\mem\text{ and }\ell\in\dom(f)\text{ and }\nu\not\in\FLoc(w)\Rightarrow w[\nu/\ell]\sim_{f\circ(\nu\leftrightarrow\ell)}v',\mem\]
 \end{lem}
 
-It turns out, we only need to reason about what free locations are in the continuation of the semantics of Figure \ref{fig:memsmallstep}.
-Thus, we can formulate a big-step semantics and reason about the equivalence between the big-step semantics directly.
-
-\begin{figure}[h!]
-  \begin{flushright}
-    \fbox{$(e,\ctx,\mem,L)\Downarrow (v,\mem,L)$}
-  \end{flushright}
-  \centering
-  \vspace{0pt} % -0.75em}
-  \[
-    \begin{InfRule}{Id}
-      \hypo{\ell=\ctx(x)}
-      \hypo{v=\mem(\ell)}
-      \infer2{
-        (x,\ctx,\mem,L)
-        \Downarrow
-        (v,\mem,L)
-      }
-    \end{InfRule}\:
-    \begin{InfRule}{Fn}
-      \infer0{
-        (\lambda x.e, \ctx,\mem,L)
-        \Downarrow
-        (\langle\lambda x.e, \ctx\rangle,\mem,L)
-      }
-    \end{InfRule}
-  \]
-
-  \[
-    \begin{InfRule}{App}
-      \hypo{
-        (e_{1}, \ctx,\mem,L)
-        \Downarrow
-        (\langle\lambda x.e, \ctx_1\rangle,\mem_1,L_1)
-      }
-      \hypo{
-        (e_{2}, \ctx,\mem_1,L_1)
-        \Downarrow
-        (v_2,\mem_2,L_2)
-      }
-      \hypo{
-        \ell\not\in\dom(\mem_2)\cup L_2
-      }
-      \hypo{
-        (e, (x, \ell)\cons \ctx_1,\mem_2[\ell\mapsto v_2],L_2)
-        \Downarrow
-        (v,\mem',L')
-      }
-      \infer{1,3}{
-        (e_{1}\:e_{2}, \ctx,\mem,L)
-        \Downarrow
-        (v,\mem',L')
-      }
-    \end{InfRule}
-  \]
-
-  \[
-    \begin{InfRule}{Link}
-      \hypo{
-        (e_{1}, \ctx,\mem,L)
-        \Downarrow
-        (\ctx_1,\mem_1,L_1)
-      }
-      \hypo{
-        (e_{2}, \ctx_1,\mem_1,L_1)
-        \Downarrow
-        (v,\mem',L')
-      }
-      \infer2{
-        (\link{e_{1}}{e_{2}}, \ctx)
-        \Downarrow
-        (v,\mem',L')
-      }
-    \end{InfRule}\quad
-    \begin{InfRule}{Empty}
-      \infer0{
-        (\varepsilon, \ctx,\mem,L)
-        \Downarrow
-        (\bullet,\mem,L)
-      }
-    \end{InfRule}\quad
-  \]
-
-  \[
-    \begin{InfRule}{Bind}
-      \hypo{
-        \ell\not\in\dom(\mem)\cup L
-      }
-      \hypo{
-        (e_{1}, (x,\ell)\cons\ctx,\mem,L\cup\{\ell\})
-        \Downarrow
-        (v_1,\mem_1,L_1)
-      }
-      \hypo{
-        (e_{2}, (x, \ell)\cons \ctx,\mem_1[\ell\mapsto v_1],L_1-\{\ell\})
-        \Downarrow
-        (\ctx_2,\mem',L')
-      }
-      \infer3{
-        (x=e_1; e_2, \ctx,\mem,L)
-        \Downarrow
-        ((x,\ell)\cons\ctx_2,\mem',L')
-      }
-    \end{InfRule}
-  \]
-  \caption{The big-step operational semantics with memory.}
-  \label{fig:membigstep}
-\end{figure}
-
-Then we can prove the following.
-
-\begin{definition}[Equivalence of configurations]
-  \[\ctx\sim\ctx',\mem,L\triangleq\ctx\sim_\bot\ctx',\mem\text{ and }\FLoc(\ctx)\subseteq L\]
-\end{definition}
-
-\begin{thm}[Equivalence of semantics]
-  \begin{align*}
-    \ctx\sim\ctx',\mem,L\text{ and }(e,\ctx)\semarrow v                    & \Rightarrow\exists v',\mem',L':v\sim v',\mem',L'\text{ and }(e,\ctx',\mem,L)\semarrow(v',\mem',L') \\
-    \ctx\sim\ctx',\mem,L\text{ and }(e,\ctx',\mem,L)\semarrow(v',\mem',L') & \Rightarrow\exists v:v\sim v',\mem',L'\text{ and }(e,\ctx)\semarrow v
-  \end{align*}
-\end{thm}
-
 \section{Generating and Resolving Events}
-
-\subsection{Without Memory}
 Now we formulate the semantics for generating events.
-The point of this semantics is that we are expressing a function that interacts with a stream of answers to external events as a data structure.
 
 \begin{figure}[h!]
   \centering
   \begin{tabular}{rrcll}
+    Event       & $\event$ & $\rightarrow$ & $\InitE$           & initial environment \\
+                &          & $\vbar$       & $\ReadE(\event,x)$ & read event          \\
+                &          & $\vbar$       & $\CallE(\event,v)$ & call event          \\
     Environment & $\ctx$   & $\rightarrow$ & $\cdots$                                 \\
                 &          & $\vbar$       & $[\event]$         & answer to an event  \\
     Value       & $v$      & $\rightarrow$ & $\cdots$                                 \\
-                &          & $\vbar$       & $\event$           & answer to an event  \\
-    Event       & $\event$ & $\rightarrow$ & $\InitE$           & initial environment \\
-                &          & $\vbar$       & $\ReadE(\event,x)$ & read event          \\
-                &          & $\vbar$       & $\CallE(\event,v)$ & call event
+                &          & $\vbar$       & $\event$           & answer to an event
   \end{tabular}
   \caption{Definition of the semantic domains with events. All other semantic domains are equal to Figure \ref{fig:domain}.}
   \label{fig:eventdomain}
 \end{figure}
 
-We redefine how to read weak values given an environment.
+We extend how to read weak values given an environment.
 \begin{align*}
-  \bullet(x)             & \triangleq\bot    &            &  & ((x,w)\cons\ctx)(x) & \triangleq w                                                                        \\
-  ((x,\ell)\cons\ctx)(x) & \triangleq\bot    &            &  & ((x,n)\cons\ctx)(x) & \triangleq\bot             & (\text{impossible when }\ctx\text{ is locally closed}) \\
-  ((x',\_)\cons\ctx)(x)  & \triangleq\ctx(x) & (x\neq x') &  & [\event](x)         & \triangleq\ReadE(\event,x)
+  \bullet(x)  & \triangleq\bot             &  &  & ((x',\ell)\cons\ctx)(x) & \triangleq (x=x'?\ell:\ctx(x)) \\
+  [\event](x) & \triangleq\ReadE(\event,x) &  &  & ((x',w)\cons\ctx)(x)    & \triangleq (x=x'?w:\ctx(x))    \\
 \end{align*}
 
 Then we need to add only one rule to the semantics in Figure \ref{fig:bigstep} for the semantics to incorporate events.
 \[
   \begin{InfRule}{AppEvent}
     \hypo{
-      (e_{1}, \ctx)
+      \ctx\vdash e_{1}
       \Downarrow
       \event
     }
     \hypo{
-      (e_{2}, \ctx)
+      \ctx\vdash e_{2}
       \Downarrow
       v
     }
     \infer2{
-      (e_{1}\:e_{2}, \ctx)
+      \ctx\vdash e_{1}\:e_{2}
       \Downarrow
       \CallE(\event,v)
     }
   \end{InfRule}
 \]
 
-Now we need to formulate the \emph{event resolution} rules.
-The event resolution rule $w\resolve W$, given an answer $\ctx_0$ to the $\InitE$ event, resolves all events within $w$ to obtain $W$.
-Note that $\FLoc(\ctx_0)\cap\FLoc(w)=\varnothing$ is required for the resolution to work.
+Now we need to formulate the \emph{concrete linking} rules.
+The concrete linking rule $\ctx_0\semlink w$, given an answer $\ctx_0$ to the $\InitE$ event, resolves all events within $w$ to obtain a set of final results.
 
-For the event resolution to be sound, we expect the following theorem to hold.
-
-\begin{thm}[Soundness of resolution]
-  \[\ctx\resolve\Sigma\text{ and }(e,\ctx)\semarrow v\text{ and }(e,\Sigma)\semarrow V\Rightarrow v\resolve V\]
-\end{thm}
-
-Now we present the definition for resolution.
-
-\begin{figure}[h!]
-  \begin{flushright}
-    \fbox{$w\downarrow W$}
-  \end{flushright}
-  \centering
-  \vspace{0pt} % -0.75em}
-  \[
-    \begin{InfRule}{R-Init}
-      \infer0{
-        \InitE
-        \downarrow
-        \ctx_0
-      }
-    \end{InfRule}\:
-    \begin{InfRule}{R-Read}
-      \hypo{\event\downarrow\Sigma}
-      \hypo{V=\Sigma(x)}
-      \infer2{
-        \ReadE(\event,x)
-        \downarrow
-        V
-      }
-    \end{InfRule}\:
-    \begin{InfRule}{R-ReadRec}
-      \hypo{\event\downarrow\Sigma}
-      \hypo{\mu.V=\Sigma(x)}
-      \infer2{
-        \ReadE(\event,x)
-        \downarrow
-        \openloc{V}{\mu.V}
-      }
-    \end{InfRule}\:
-    \begin{InfRule}{R-CallV}
-      \hypo{\event\downarrow\langle\lambda x.e,\Sigma\rangle}
-      \hypo{v\downarrow V}
-      \hypo{(e,(x,V)\cons\Sigma)\semarrow V'}
-      \infer3{
-        \CallE(\event,v)
-        \downarrow
-        V'
-      }
-    \end{InfRule}
-  \]
-
-  \[
-    \begin{InfRule}{R-CallE}
-      \hypo{\event\downarrow \event'}
-      \hypo{v\downarrow V}
-      \infer2{
-        \CallE(\event,v)
-        \downarrow
-        \CallE(\event',V)
-      }
-    \end{InfRule}\:
-    \begin{InfRule}{R-Nil}
-      \infer0{\bullet\downarrow\bullet}
-    \end{InfRule}\:
-    \begin{InfRule}{R-ConsLoc}
-      \hypo{\ctx\downarrow\Sigma}
-      \infer1{
-        (x,\ell)\cons\ctx
-        \downarrow
-        (x,\ell)\cons\Sigma
-      }
-    \end{InfRule}\:
-    \begin{InfRule}{R-ConsWVal}
-      \hypo{w\downarrow W}
-      \hypo{\ctx\downarrow\Sigma}
-      \infer2{
-        (x,w)\cons\ctx
-        \downarrow
-        (x,W)\cons\Sigma
-      }
-    \end{InfRule}
-  \]
-
-  \[
-    \begin{InfRule}{R-HoleE}
-      \hypo{\event\downarrow \event'}
-      \infer1{
-        [\event]
-        \downarrow
-        [\event']
-      }
-    \end{InfRule}\:
-    \begin{InfRule}{R-HoleEnv}
-      \hypo{\event\downarrow \Sigma}
-      \infer1{
-        [\event]
-        \downarrow
-        \Sigma
-      }
-    \end{InfRule}\:
-    \begin{InfRule}{R-Clos}
-      \hypo{\ctx\downarrow\Sigma}
-      \infer1{
-        \langle\lambda x.e,\ctx\rangle
-        \downarrow
-        \langle\lambda x.e,\Sigma\rangle
-      }
-    \end{InfRule}\:
-    \begin{InfRule}{R-Rec}
-      \hypo{\ell\not\in\FLoc(v)\cup\FLoc(\ctx_0)}
-      \hypo{\openloc{v}{\ell}\downarrow V}
-      \infer2{
-        \mu.v
-        \downarrow
-        \mu.\closeloc{\ell}{V}
-      }
-    \end{InfRule}
-  \]
-  \caption{The resolution relation. The subscript $\ctx_0$ in $\resolve$ is omitted for brevity.}
-  \label{fig:resolution}
+\begin{figure}
+  \begin{align*}
+    \fbox{$\semlink\in\Ctx\rightarrow\Event\rightarrow\pset(\Value)$}                                                                                                                               \\
+    \ctx_0\semlink\InitE\triangleq                         & \{\ctx_0\}                                                                                                                             \\
+    \ctx_0\semlink\ReadE(\event,x)\triangleq               & \{v_+|\ctx_+\in\ctx_0\semlink\event\land\ctx_+(x)=v_+\}                                                                                \\
+    \cup                                                   & \{\openloc{\mu.v_+}{v_+}|\ctx_+\in\ctx_0\semlink E\land\ctx_+(x)=\mu.v_+\}                                                             \\
+    \ctx_0\semlink\CallE(\event,v)\triangleq               & \{v_+'|\langle\lambda x.e,\ctx_+\rangle\in\ctx_0\semlink E\land v_+\in\ctx_0\semlink v\land(x,v_+)\cons\ctx_+\vdash e\Downarrow v_+'\} \\
+    \cup                                                   & \{\CallE(\event_+,v_+)|\event_+\in\ctx_0\semlink\event\land v_+\in\ctx_0\semlink v\}                                                   \\
+    \fbox{$\semlink\in\Ctx\rightarrow\Ctx\rightarrow\pset(\Ctx)$}                                                                                                                                   \\
+    \ctx_0\semlink\bullet\triangleq                        & \{\bullet\}                                                                                                                            \\
+    \ctx_0\semlink(x,\ell)\cons\ctx\triangleq              & \{(x,\ell)\cons\ctx_+|\ctx_+\in\ctx_0\semlink\ctx\}                                                                                    \\
+    \ctx_0\semlink(x,w)\cons\ctx\triangleq                 & \{(x,w_+)\cons\ctx_+|w_+\in\ctx_0\semlink w\land\ctx_+\in\ctx_0\semlink\ctx\}                                                          \\
+    \ctx_0\semlink[E]\triangleq                            & \{\ctx_+|\ctx_+\in\ctx_0\semlink\event\}\cup\{[\event_+]|\event_+\in\ctx_0\semlink\event\}                                             \\
+    \fbox{$\semlink\in\Ctx\rightarrow\Value\rightarrow\pset(\Value)$}                                                                                                                               \\
+    \ctx_0\semlink\langle\lambda x.e,\ctx\rangle\triangleq & \{\langle\lambda x.e,\ctx_+\rangle|\ctx_+\in\ctx_0\semlink\ctx\}                                                                       \\
+    \fbox{$\semlink\in\Ctx\rightarrow\Walue\rightarrow\pset(\Walue)$}                                                                                                                               \\
+    \ctx_0\semlink\mu.v\triangleq                          & \{\mu.\closeloc{\ell}{v_+}|\ell\not\in\FLoc(v)\cup\FLoc(\ctx_0)\land v_+\in\ctx_0\semlink\openloc{\ell}{v}\}
+  \end{align*}
+  \caption{Definition for concrete linking.}
+  \label{fig:conclink}
 \end{figure}
 
-Note that substitution of free locations that happens when unfolding a recursive value may generate multiple copies of the same event.
-In our simple module language, resolution is not impacted by neither the order nor the redundancy of resolution.
-However, in the future, to support stateful events which depend on both the order and redundancy, we must assign \emph{unique numbers} to the events.
-Furthermore, for abstraction of the data structure, it is much easier if everything is threaded through the memory through memory locations.
-This motivates us to:
-\begin{enumerate}
-  \item Lift $\downarrow$ in the case for memory in a way that is \emph{compatible} with the equivalence relation $\sim$.
-  \item Formulate a semantics where events are assigned a unique number, and their dependencies are tracked by a \emph{memory for events}.
-\end{enumerate}
+Concrete linking makes sense because of the following theorem.
+First define:
+\[\eval(e,\ctx)\triangleq\{v|\ctx\vdash e\Downarrow v\}\qquad\eval(e,\Sigma)\triangleq\bigcup_{\ctx\in\Sigma}\eval(e,\ctx)\qquad\ctx_0\semlink W\triangleq\bigcup_{w\in W}(\ctx_0\semlink w)\]
+Then the following holds:
+\begin{thm}[Soundness of concrete linking]\label{thm:linksound}
+  Given $e\in\Expr,\ctx\in\Ctx,v\in\Value$,
+  \[\forall\ctx_0\in\Ctx:\eval(e,\ctx_0\semlink\ctx)\subseteq\ctx_0\semlink\eval(e,\ctx)\]
+\end{thm}
 
-We expect by doing so, we may obtain a sound approximation for the semantics by simply abstracting the \emph{evaluation relation} and the \emph{resolution relation}.
-
-\subsection{With Memory}
-
-\subsection{With Event Memory}
-
+The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
+\begin{lem}[Linking distributes under substitution]
+  Let $\ctx_0$ be the external environment that is linked with locally closed weak values $w$ and $u$.
+  For all $\ell\not\in\FLoc(\ctx_0)$, we have:
+  \[\forall w_+,u_+:w_+\in\ctx_0\semlink w\wedge u_+\in\ctx_0\semlink u\Rightarrow\{u_+\leftarrow\ell\}w_+\in\ctx_0\semlink\{u\leftarrow\ell\}w\]
+\end{lem}
+\begin{lem}[Linking is compatible with reads]
+  Let $\ctx_0$ be the external environment that is linked with some environment $\ctx$.
+  Let $v$ be the value obtained from reading $x$ from $\ctx$.
+  Let $\text{unfold}:\Walue\rightarrow\Value$ be defined as:
+  \[\text{unfold}(\mu.v)\triangleq\openloc{\mu.v}{v}\qquad\text{unfold}(v)\triangleq v\]
+  Then for all $\ctx_+\in\ctx_0\semlink\ctx$, we have:
+  \[\exists w_+\in\Walue:\ctx_+(x)=w_+\land\text{unfold}(w_+)\in\ctx_0\semlink v\]
+\end{lem}
+\clearpage
+\section{CFA}
+\begin{center}
+  \begin{tabular}{rrcl}
+    Program point       & $p$ & $\in$         & $\mathbb{P}\triangleq\{\text{finite set of program points}\}$                              \\
+    Labelled expression & $e$ & $\in$         & $\text{PExpr}$                                                                             \\
+    Program graph       & $g$ & $\in$         & $\mathbb{G}\triangleq\mathbb{P}\rightarrow\text{PExpr}$                                    \\
+    Proof tree          & $t$ & $\in$         & $\mathbb{T}\triangleq\mathbb{P}\rightarrow\pset(\text{PEnv}+\text{PEnv}\times\text{PVal})$ \\
+                        & $e$ & $\rightarrow$ & $x$ | $\lambda x.p$ | $p$ $p$ | $\link{p}{p}$ | $\varepsilon$ | $x=p;p$
+  \end{tabular}
+\end{center}
+\begin{align*}
+                                                         &                                                                                                                                                                        & \fbox{$\Step:\mathbb{T}\rightarrow\mathbb{T}$}                   \\
+  \Step(t)   \triangleq                                  & \bigcup_{p\in\mathbb{P}}\step(t,p)                                                                                                                                                                                                        \\
+                                                         &                                                                                                                                                                        & \fbox{$\step:(\mathbb{T}\times\mathbb{P})\rightarrow\mathbb{T}$} \\
+  \step(t,p) \triangleq                                  & [p\mapsto\{(\ctx,v)|\ctx\in t(p)\text{ and }\ctx(x)=v\}]                                                                                                               & \text{when }g(p)=x                                               \\
+  \cup                                                   & [p\mapsto\{(\ctx,\openloc{\mu.v}{v})|\ctx\in t(p)\text{ and }\ctx(v)=\mu.v\}]                                                                                                                                                             \\
+  \step(t,p)            \triangleq                       & [p\mapsto\{(\ctx,\langle\lambda x.p',\ctx\rangle)|\ctx\in t(p)\}]                                                                                                      & \text{when }g(p)=\lambda x.p'                                    \\
+  \step(t,p)            \triangleq                       & [p_1\mapsto\{\ctx|\ctx\in t(p)\}]                                                                                                                                      & \text{when }g(p)=p_1\:p_2                                        \\
+  \cup                                                   & [p_2\mapsto\{\ctx|\ctx\in t(p)\}]                                                                                                                                                                                                         \\
+  \cup                                                   & \bigcup_{\ctx\in t(p)}\bigcup_{(\ctx,\langle\lambda x.p',\ctx_1\rangle)\in t(p_1)}[p'\mapsto\{(x,v_2)\cons\ctx_1|(\ctx,v_2)\in t(p_2)\}]                                                                                                  \\
+  \cup                                                   & [p\mapsto\bigcup_{\ctx\in t(p)}\bigcup_{(\ctx,\langle\lambda x.p',\ctx_1\rangle)\in t(p_1)}\bigcup_{(\ctx,v_2)\in t(p_2)}\{(\ctx,v)|((x,v_2)\cons\ctx_1,v)\in t(p')\}]                                                                    \\
+  \cup                                                   & [p\mapsto\bigcup_{\ctx\in t(p)}\{(\ctx,\CallE(\event_1,v_2))|(\ctx,\event_1)\in t(p_1)\text{ and }(\ctx,v_2)\in t(p_2)\}]                                                                                                                 \\
+  \step(t,p)                       \triangleq            & [p_1\mapsto\{\ctx|\ctx\in t(p)\}]                                                                                                                                      & \text{when }g(p)=\link{p_1}{p_2}                                 \\
+  \cup                                                   & [p_2\mapsto\bigcup_{\ctx\in t(p)}\{\ctx_1|(\ctx,\ctx_1)\in t(p_1)\}]                                                                                                                                                                      \\
+  \cup                                                   & [p\mapsto\bigcup_{\ctx\in t(p)}\bigcup_{(\ctx,\ctx_1)\in t(p_1)}\{(\ctx,v_2)|(\ctx_1,v_2)\in t(p_2)\}]                                                                                                                                    \\
+  \step(t,p)                                  \triangleq & [p\mapsto\{(\ctx,\bullet)|\ctx\in t(p)\}]                                                                                                                              & \text{when }g(p)=\varepsilon                                     \\
+  \step(t,p)                                  \triangleq & [p_1\mapsto\{(x,\ell)\cons\ctx|\ctx\in t(p)\text{ and }\ell\not\in\FLoc(\ctx)\}]                                                                                       & \text{when }g(p)=x=p_1;p_2                                       \\
+  \cup                                                   & [p_2\mapsto\{(x,\mu.\closeloc{\ell}{v_1})\cons\ctx|\ctx\in t(p)\text{ and }((x,\ell)\cons\ctx,v_1)\in t(p_1)\}]                                                                                                                           \\
+  \cup                                                   & [p\mapsto\{(\ctx,(x,w_1)\cons\ctx_2)|\ctx\in t(p)\text{ and }((x,w_1)\cons\ctx,\ctx_2)\in t(p_2)\}]
+\end{align*}
+The proof tree $t_0$ computed by
+\[t_0\triangleq\lfp(\lambda t.\Step(t)\cup[p_0\mapsto\{\ctx_0\}])\]
+contains all derivations of the form $\evjudg{\ctx_0}{p_0}{v_0}$ for some $v_0$.
+That is, $(\ctx,v)$ is contained in $t_0(p)$ if and only if $\evjudg{\ctx}{p}{v}$ must be contained in a valid derivation for the judgment $\evjudg{\ctx_0}{p_0}{v_0}$.
+\begin{center}
+  \begin{tabular}{rrcl}
+    Abstract event       & $\Abs{\event}$                 & $\in$         & $\Abs{\Event}$                                                                     \\
+    Abstract environment & $\Abs{\ctx}$                   & $\in$         & $\Abs{\Ctx}\triangleq(\fin{\ExprVar}{\pset(\mathbb{P})})\times\pset(\Abs{\Event})$ \\
+    Abstract closure     & $\langle\lambda x.p,p'\rangle$ & $\in$         & $\Abs{\text{Clos}}\triangleq\ExprVar\times\mathbb{P}\times\mathbb{P}$              \\
+    Abstract value       & $\Abs{v}$                      & $\in$         & $\Abs{\Value}\triangleq\Abs{\Ctx}\times\pset(\Abs{\text{Clos}})$                   \\
+    Abstract proof tree  & $\Abs{t}$                      & $\in$         & $\Abs{\mathbb{T}}\triangleq\mathbb{P}\rightarrow\Abs{\Ctx}\times\Abs{\Value}$      \\
+                         & $\Abs{\event}$                 & $\rightarrow$ & $\Abs{\InitE}$ | $\Abs{\ReadE}(p,x)$ | $\Abs{\CallE}(p,p)$
+  \end{tabular}
+\end{center}
 \end{document}
 %%% Local Variables: 
 %%% coding: utf-8

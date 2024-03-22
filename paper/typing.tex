@@ -94,27 +94,28 @@ The definitions for types are in Figure \ref{fig:typdom} and the typing rules ar
   We prove this through unary logical relations and induction on the typing judgment.
 
   \begin{tabular}{r@{\hskip2pt}c@{\hskip2pt}l@{\hskip1pt}r}
-    \textbf{Event Relation}                        &              &                                                                                                                  & \fbox{$\EvtRel{\Abs\event}\rho$}   \\
-    $\EvtRel{\Abs\InitE}\rho$                      & $\triangleq$ & $\{\InitE\}$                                                                                                                                          \\
-    $\EvtRel{\Abs\ReadE(\Abs\event,x)}\rho$        & $\triangleq$ & $\{\ReadE(\event,x)|\event\in\EvtRel{\Abs\event}\rho\}$                                                                                               \\
-    $\EvtRel{\Abs\CallE(\Abs\event,\tau)}\rho$     & $\triangleq$ & $\{\CallE(\event,v)|\event\in\EvtRel{\Abs\event}\rho\land v\in\ValRel{\tau}\rho\}$                                                                    \\
+    \textbf{Event Relation}                        &              &                                                                                                                                                & \fbox{$\EvtRel{\Abs\event}\rho$}   \\
+    $\EvtRel{\Abs\InitE}\rho$                      & $\triangleq$ & $\{\InitE\}$                                                                                                                                                                        \\
+    $\EvtRel{\Abs\ReadE(\Abs\event,x)}\rho$        & $\triangleq$ & $\{\ReadE(\event,x)|\event\in\EvtRel{\Abs\event}\rho\}$                                                                                                                             \\
+    $\EvtRel{\Abs\CallE(\Abs\event,\tau)}\rho$     & $\triangleq$ & $\{\CallE(\event,v)|\event\in\EvtRel{\Abs\event}\rho\land v\in\ValRel{\tau}\rho\}$                                                                                                  \\
+    \\ 
+    \textbf{Context Relation}                      &              &                                                                                                                                                & \fbox{$\CtxRel{\Gamma}\rho$}       \\
+    $\CtxRel{\bullet}\rho$                         & $\triangleq$ & $\{\bullet\}$                                                                                                                                                                       \\
+    $\CtxRel{(x,\tau)\cons\Gamma}\rho$             & $\triangleq$ & $\{(x,w)\cons\ctx|w\in\WalRel{\tau}\rho\land\ctx\in\CtxRel{\Gamma}\rho\}$                                                                                                           \\
+                                                   & $\cup$       & $\{(x,\ell)\cons\ctx|\rho(\ell)=\tau\land\ctx\in\CtxRel{\Gamma}\rho\}$                                                                                                              \\
+    $\CtxRel{[\Abs\event]}\rho$                    & $\triangleq$ & $\{[\event]|\event\in\EvtRel{\Abs\event}\rho\}$                                                                                                                                     \\
     \\
-    \textbf{Context Relation}                      &              &                                                                                                                  & \fbox{$\CtxRel{\Gamma}\rho$}       \\
-    $\CtxRel{\bullet}\rho$                         & $\triangleq$ & $\{\bullet\}$                                                                                                                                         \\
-    $\CtxRel{(x,\tau)\cons\Gamma}\rho$             & $\triangleq$ & $\{(x,w)\cons\ctx|w\in\WalRel{\tau}\rho\land\ctx\in\CtxRel{\Gamma}\rho\}$                                                                             \\
-                                                   & $\cup$       & $\{(x,\ell)\cons\ctx|\rho(\ell)=\tau\land\ctx\in\CtxRel{\Gamma}\rho\}$                                                                                \\
-    $\CtxRel{[\Abs\event]}\rho$                    & $\triangleq$ & $\{[\event]|\event\in\EvtRel{\Abs\event}\rho\}$                                                                                                       \\
+    \textbf{Value Relation}                        &              &                                                                                                                                                & \fbox{$\ValRel{\tau}\rho$}         \\
+    $\ValRel{\arrowty{\tau_1}{\Safe}{\tau_2}}\rho$ & $\triangleq$ & $\{\langle\lambda x.e,\ctx\rangle|\forall \rho',w\in\WalRel{\tau_1}\rho':\rho'|_{\FLoc(\ctx)}=\rho|_{\FLoc(\ctx)}$                                                                  \\
+                                                   &              & \hphantom{$\{\langle\lambda x.e,\ctx\rangle|\vphantom\}$}$\Rightarrow(e,(x,w)\cons\ctx,S)\in\ExprRel{\tau_2}\rho'\}$                                      \\
     \\
-    \textbf{Value Relation}                        &              &                                                                                                                  & \fbox{$\ValRel{\tau}\rho$}         \\
-    $\ValRel{\arrowty{\tau_1}{\Safe}{\tau_2}}\rho$ & $\triangleq$ & $\{\langle\lambda x.e,\ctx\rangle|\forall v\in\ValRel{\tau_1}\rho:(e,(x,v)\cons\ctx,S)\in\ExprRel{\tau_2}\rho\}$                                      \\
+    \textbf{Weak Value Relation}                   &              &                                                                                                                                                & \fbox{$\WalRel{\tau}\rho$}         \\
+    $\WalRel{\tau}\rho$                            & $\triangleq$ & $\ValRel{\tau}\rho\cup\{\mu\ell.v|v\in\ValRel{\tau}\rho[\ell\mapsto\tau]\}$                                                                                                         \\
     \\
-    \textbf{Weak Value Relation}                   &              &                                                                                                                  & \fbox{$\WalRel{\tau}\rho$}         \\
-    $\WalRel{\tau}\rho$                            & $\triangleq$ & $\ValRel{\tau}\rho\cup\{\mu\ell.v|v\in\ValRel{\tau}\rho[\ell\mapsto\tau]\}$                                                                           \\
+    \textbf{Expression Relation}                   &              &                                                                                                                                                & \fbox{$\ExprRel{\tau}\rho$}        \\
+    $\ExprRel{\tau}\rho$                           & $\triangleq$ & $\{(e,\ctx,\Safe)|\unsafe(\ctx)\cap\Safe=\varnothing\Rightarrow\eval(e,\ctx)\subseteq\ValRel{\tau}\rho\}$                                                                           \\
     \\
-    \textbf{Expression Relation}                   &              &                                                                                                                  & \fbox{$\ExprRel{\tau}\rho$}        \\
-    $\ExprRel{\tau}\rho$                           & $\triangleq$ & $\{(e,\ctx,\Safe)|\unsafe(\ctx)\cap\Safe=\varnothing\Rightarrow\eval(e,\ctx)\subseteq\ValRel{\tau}\rho\}$                                             \\
-    \\
-    \textbf{Semantic Typing}                       &              &                                                                                                                  & \fbox{$\Gamma\vDash e:\tau,\Safe$} \\
+    \textbf{Semantic Typing}                       &              &                                                                                                                                                & \fbox{$\Gamma\vDash e:\tau,\Safe$} \\
     $\semtypejudg{\Gamma}{e}{\tau}{\Safe}$         & $\triangleq$ & $\forall\rho,\ctx\in\CtxRel{\Gamma}\rho:(e,\ctx,\Safe)\in\ExprRel{\tau}\rho$
   \end{tabular}
 

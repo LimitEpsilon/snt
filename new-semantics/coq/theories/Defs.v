@@ -371,3 +371,6 @@ Arguments equiv_floc {var loc lang}.
 Arguments equiv_bval {var loc lang}.
 Arguments equiv_recv {var loc lang}.
 Arguments equiv_clos {var loc lang}.
+
+(* one-to-one, or injective, function *)
+Definition oto {A B} (φ : A -> B) := forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν.

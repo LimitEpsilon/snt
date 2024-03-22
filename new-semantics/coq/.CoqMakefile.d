@@ -22,3 +22,6 @@ theories/SubstFacts.vos theories/SubstFacts.vok theories/SubstFacts.required_vos
 theories/Syntax.vo theories/Syntax.glob theories/Syntax.v.beautified theories/Syntax.required_vo: theories/Syntax.v 
 theories/Syntax.vio: theories/Syntax.v 
 theories/Syntax.vos theories/Syntax.vok theories/Syntax.required_vos: theories/Syntax.v 
+theories/Typing.vo theories/Typing.glob theories/Typing.v.beautified theories/Typing.required_vo: theories/Typing.v basics/Basics.vo theories/Defs.vo theories/Syntax.vo theories/SubstFacts.vo theories/EnvSemantics.vo
+theories/Typing.vio: theories/Typing.v basics/Basics.vio theories/Defs.vio theories/Syntax.vio theories/SubstFacts.vio theories/EnvSemantics.vio
+theories/Typing.vos theories/Typing.vok theories/Typing.required_vos: theories/Typing.v basics/Basics.vos theories/Defs.vos theories/Syntax.vos theories/SubstFacts.vos theories/EnvSemantics.vos
