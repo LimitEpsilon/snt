@@ -80,7 +80,7 @@
       \hypo{\ell\not\in\FLoc(\ctx)}
       \hypo{\evjudg{(x,\ell)\cons\ctx}{e_1}{v_1}}
       \hypo{\evjudg{(x, \mu.\closeloc{\ell}{v_1})\cons \ctx}{e_1}{\ctx_2}}
-      \infer{2,1}{\evjudg{\ctx}{x=e_1; e_2}{(x,\mu.\closeloc{\ell}{v_1})\cons\ctx_2}}
+      \infer{2,1}{\evjudg{\ctx}{x\texttt{=}e_1; e_2}{(x,\mu.\closeloc{\ell}{v_1})\cons\ctx_2}}
     \end{InfRule}
   \]
   \caption{The big-step operational semantics.}
@@ -349,7 +349,7 @@ The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
 \end{center}
 \begin{align*}
                              &                                                                                                                                                                                                       & \fbox{$\Step:\mathbb{T}\rightarrow\mathbb{T}$}                   \\
-  \step(\ptree)   \triangleq & \bigcup_{p\in\mathbb{P}}\step(\ptree,p)                                                                                                                                                                                                                                  \\
+  \Step(\ptree)   \triangleq & \bigcup_{p\in\mathbb{P}}\step(\ptree,p)                                                                                                                                                                                                                                  \\
                              &                                                                                                                                                                                                       & \fbox{$\step:(\mathbb{T}\times\mathbb{P})\rightarrow\mathbb{T}$} \\
   \step(\ptree,p) \triangleq & [p\mapsto\{(\ctx,v)|\ctx\in \ptree(p)\text{ and }\ctx(x)=v\}]                                                                                                                                         & \plabel{p}{x}                                                    \\
   \cup                       & [p\mapsto\{(\ctx,\openloc{\mu.v}{v})|\ctx\in \ptree(p)\text{ and }\ctx(x)=\mu.v\}]                                                                                                                                                                                       \\
