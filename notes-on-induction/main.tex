@@ -218,7 +218,7 @@ The propagation function at $a$ propagates all assumptions $a'$ such that $(a',\
 
 \begin{definition}[Incremental proof tree computation]
 	$F\in\mathcal{P}(A+A\times B)\rightarrow\mathcal{P}(A+A\times B)$ is an \emph{incremental proof tree computation} function when:
-	\[F(X)=\underbrace{\{(a,b)|a\in X\text{ and }\Phi:Y\rightarrow(a,b)\text{ for some }Y\subseteq X\}}_{\text{evaluate}}\cup\overbrace{\bigcup_{a,Y}f_a(Y,X)}^{\text{propagate}}\]
+\[F(X)=\underbrace{\{(a,b)|a\in X\text{ and }\Phi:Y\rightarrow(a,b)\text{ for some }Y\subseteq X\}}_{\text{evaluate}}\cup\overbrace{\bigcup_{a\in X}\bigcup_{Y}f_a(Y,X)}^{\text{propagate}}\]
 	where $(f_a)_{a\in A}$ satisfies:
 	\[\forall a,f_a\text{ is a propagation function at }a\]
 \end{definition}
@@ -227,7 +227,7 @@ Note that $F$ is monotonic, since $f_a$ is monotonic in its second argument.
 
 We want to prove that, when $F$ is an incremental proof tree computation function and $I\subseteq A$,
 \[\text{lfp}(\lambda X.F(X)\cup I)\]
-is a \emph{sound and complete} representation for all proof trees for $\{(a,b)|b\in B\}$.
+is a \emph{sound and complete} representation of all proof trees for $I\times B$.
 
 \begin{theorem}[Soundness]
 	Let $F$ be an incremental proof tree computation function.
@@ -247,7 +247,9 @@ is a \emph{sound and complete} representation for all proof trees for $\{(a,b)|b
 
 	For the inductive step, assume the statement for $|T|\le k$, and prove for $|T|=k+1$.
 
-	Fix $F$, $(a,b)$, $X$, and a finite tree $\Phi$-proof $T$ of $(a,b)$.
+	Fix $F$, $X$, $(a,b)$ such that $a\in X$, and a finite tree $\Phi$-proof $T$ of $(a,b)$.
+
+  Note that $f_a(Y,X)\subseteq F(X)$ for any $Y\in\bigcup_{b}\{Y|\Phi:Y\rightarrow(a,b)\}$, since $a\in X$.
 
 	\noindent\textbf{Step 1}. We can prove that $T_{((a,b))}\subseteq X$ by assuming $T_{((a,b))}-X\neq\varnothing$ and drawing a contradiction.
 
@@ -270,11 +272,13 @@ is a \emph{sound and complete} representation for all proof trees for $\{(a,b)|b
 	since $T_{((a,b))}\subseteq X$ and by condition 2 of definition \ref{def:propagation}.
 
 	Now, by monotonicity of $f_a$ in its second argument (condition 1 of definition \ref{def:propagation}), we have:
-	\[a'\in f_a(T_{((a,b))},X)\subseteq F(X)\subseteq X\]
+  \[a'\in f_a(T_{((a,b))},X-\{(a',b')\})\subseteq f_a(T_{((a,b))},X)\subseteq F(X)\subseteq X\]
 
 	\noindent\textbf{Step 3}. Now we can show that for any $(a_i)\in T$, $(a_i)\subseteq X$.
 
-	If $(a_i)=((a,b))$, $(a,b)\in X$, since $T_{((a,b))}\subseteq X$ and $a\in X$, thus $(a,b)\in F(X)\subseteq X$.
+  Note that $(a,b)\in(\text{evaluation part of }F(X))\subseteq X$, since $T_{((a,b))}\subseteq X$ and $a\in X$.
+
+  If $(a_i)=((a,b))$, $(a_i)=((a,b))\subseteq X$, since $(a,b)\in X$.
 
 	If $(a_i)=((a,b),x_1,\dots,x_m)$, $x_1=(a',b')$ for some $a'\in T_{((a,b))}.1\subseteq X$.
 
