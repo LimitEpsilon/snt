@@ -1,0 +1,332 @@
+\documentclass[12pt]{article}
+\input{preamble.tex}
+
+\title{Notes on Inductive Definitions}
+\author{Joonhyup Lee}
+\begin{document}
+\maketitle
+\section{What is an inductive definition?}\label{sec:inddef}
+Throughout this article, we always assume $S$ to be a set, and $\Phi$ to be a subset of $\mathcal{P}(S)\times S$.
+\begin{definition}[$\Phi$-closed]
+	A set $A\subseteq S$ is $\Phi$-closed iff:
+	\[\forall(X,x)\in\Phi,X\subseteq A\Rightarrow x\in A\]
+\end{definition}
+
+\noindent\textbf{Notation}. We call $(X,x)\in\Phi$ \emph{rules}, and we write:
+\[\Phi:X\rightarrow x\defeq(X,x)\in\Phi\]
+
+\begin{definition}[Inductive definition]
+	The set $I(\Phi)$ that is \emph{inductively defined} by $\Phi$ is the least $\Phi$-closed set.
+	That is:
+	\[I(\Phi)\defeq\bigcap\{A|A\text{ is }\Phi\text{-closed}\}\]
+\end{definition}
+
+\noindent\textbf{Remark}. This definition makes sense, since:
+\begin{enumerate}
+	\item $\Phi$-closed sets exist: $\bigcup_X\{x|(X,x)\in\Phi\}$ is obviously $\Phi$-closed.
+	\item For a collection of $\Phi$-closed sets $\{A_i\}_{i\in I}$, $\bigcap_{i\in I}A_i$ is $\Phi$-closed.
+\end{enumerate}
+
+\noindent\textbf{Example}. Let us look at an example: the big-step evaluation relation for the untyped $\lambda$-calculus.
+
+First, we need to define our set $S$:
+\[\text{Var}\defeq\{\text{a set of variables}\}\quad\text{Env}\defeq\text{Var}\xrightarrow{\text{fin}}\text{Val}\quad\text{Val}\defeq\text{Expr}\times\text{Env}\quad S\defeq\text{Val}\times\text{Val}\]
+
+Next, we need to define the set $\Phi\subseteq\mathcal{P}(S)\times S$ that inductively defines our relation.
+\[
+	\begin{InfRule}{Var}
+		\hypo{\sigma(x)=v}
+		\infer1{((x,\sigma),v)}
+	\end{InfRule}
+	\begin{InfRule}{Lam}
+		\infer0{((\lambda x.e,\sigma),(\lambda x.e,\sigma))}
+	\end{InfRule}
+	\begin{InfRule}{App}
+		\hypo{((e_1,\sigma),(\lambda x.e,\sigma_1))}
+		\hypo{((e_2,\sigma),v_2)}
+		\hypo{((e,\sigma_1[x\mapsto v_2]),v)}
+		\infer3{((e_1\:e_2,\sigma),v)}
+	\end{InfRule}
+\]
+The traditional way to present $\Phi$ is through the form of \emph{inference rules}, as displayed above.
+This is a way of expressing the set of rules $\Phi$ defined as:
+\begin{align*}
+	\Phi\defeq & \:\{\varnothing\rightarrow((x,\sigma),v)|\sigma(x)=v\}                                                                             \\
+	\cup       & \:\{\varnothing\rightarrow((\lambda x.e,\sigma),(\lambda x.e,\sigma))|\}                                                           \\
+	\cup       & \:\{\{((e_1,\sigma),(\lambda x.e,\sigma_1)),((e_2,\sigma),v_2),((e,\sigma_1[x\mapsto v_2]),v)\}\rightarrow((e_1\:e_2,\sigma),v)|\}
+\end{align*}
+One thing to note is that the rule set may contain elements that are nonsensical:
+\[\{((x,[]),(\lambda x.x,[])),((x,[]),(x,[])),((x,[x\mapsto(x,[])]),(x,[]))\}\rightarrow((x\:x,[]),(x,[]))\]
+is contained in $\Phi$, according to the definition above.
+
+However, since the big-step evaluation relation is defined as the \emph{least} set that is closed under $\Phi$, the defined relation makes sense.
+\clearpage
+
+\section{What is a proof tree?}
+In this section, we aim to connect the notion of \emph{proof trees} with the inductive definitions of the previous section.
+\begin{definition}[Well-founded tree]
+	A \emph{well-founded tree} $T$ is a set of finite sequences of positive length such that:
+	\begin{enumerate}
+		\item There exists a unique sequence of length 1. We call it the \emph{root} $(a_T)$ of the tree.
+		\item $T$ is prefix-closed. That is, if $(a_1,\dots,a_{n+1})\in T$, then $(a_1,\dots,a_n)\in T$.
+		\item The relation $<_T$ defined by:
+		      \[(a_1,\dots,a_n)<_T(b_1,\dots,b_m)\defeq n=m+1\text{ and }a_i=b_i\text{ for }i=1,\dots,m\]
+		      is well-founded (there is no infinitely decreasing sequence).
+
+		      That is, there is no infinite sequence $(b_i)_{i\in\mathbb{N}}$ such that its prefix $(b_i)_{i\le n}$ is in $T$ for each $n>0$.
+	\end{enumerate}
+\end{definition}
+\begin{definition}[Tree $\Phi$-proof]
+	A well-founded tree $T$ is a \emph{tree $\Phi$-proof of $a\in S$} when:
+	\begin{enumerate}
+		\item $a$ is the root of the tree. That is, $a=a_T$.
+		\item For each $(a_1,\dots,a_n)\in T$, $\Phi:T_{(a_1,\dots,a_n)}\rightarrow a_n$, where
+		      \[T_{(a_1,\dots,a_n)}\defeq\{a|(a_1,\dots,a_n,a)\in T\}\]
+	\end{enumerate}
+\end{definition}
+Naturally, we expect the following to hold:
+\begin{claim}[Proof trees, infinite version]
+	\[I(\Phi)=\{a_T|T\text{ is a tree }\Phi\text{-proof}\}\]
+\end{claim}
+This claim holds, however the proof requires the axiom of dependent choice.
+If we restrict $\Phi$ to be \emph{finitary}, we can prove a weakened, yet still useful version of the above claim.
+\begin{definition}[Finitary rule set]
+	$\Phi$ is called \emph{finitary} when for each $(X,x)\in\Phi$, $X$ is finite.
+\end{definition}
+\begin{definition}[Finite tree]
+	A \emph{finite tree} $T$ is a set of finite sequences of positive length such that:
+	\begin{enumerate}
+		\item There exists a unique sequence of length 1. We call it the \emph{root} $(a_T)$ of the tree.
+		\item $T$ is prefix-closed. That is, if $(a_1,\dots,a_{n+1})\in T$, then $(a_1,\dots,a_n)\in T$.
+		\item $T$ is finite.
+	\end{enumerate}
+\end{definition}
+
+Naturally, finite trees are also well-founded, so the following definition makes sense:
+\begin{definition}[Finite tree $\Phi$-proof]
+	A finite tree $T$ is a \emph{finite tree $\Phi$-proof} of $a\in S$ when it is a \emph{tree $\Phi$-proof} of $a$.
+\end{definition}
+
+For finite trees, we may define the \emph{level} of the tree.
+\begin{definition}[Level of a finite tree]
+	We define the \emph{level} of a finite tree $T$ to be the length of the longest sequence in $T$:
+	\[\text{level}(T)\defeq\max\{n|(a_1,\dots,a_n)\in T\}\]
+\end{definition}
+
+\noindent\textbf{Remark }(Proof methods).
+Before going into the proof, we must review methods of proof.
+\begin{enumerate}
+	\item($\Phi$-induction)
+	      The set $I(\Phi)$ is the least $\Phi$-closed set.
+
+	      Therefore, to prove that some set $A$ contains $I(\Phi)$, we can prove that $A$ is $\Phi$-closed.
+	\item(Induction on the number of nodes in $T$)
+	      To prove a formula of the form
+	      \[\forall T\in\{\text{finite trees}\}, P(T)\]
+	      we can perform induction on $|T|$, which is the \emph{number of nodes in $T$}.
+
+	      $|T|$ is the number of nodes, since each path from the root to a node uniquely determines the node.
+	      That is, we utilize:
+	      \[
+		      [\forall T\in\{\text{finite trees}\},P(T)]
+		      \Leftrightarrow
+		      [\forall n\in\mathbb{N},T\in\{\text{finite trees}\},|T|\le n\Rightarrow P(T)]
+	      \]
+	\item(Induction on the level of $T$)
+	      Likewise, we may also perform induction on the level of $T$:
+	      \[
+		      [\forall T\in\{\text{finite trees}\},P(T)]
+		      \Leftrightarrow
+		      [\forall n\in\mathbb{N},T\in\{\text{finite trees}\},\text{level}(T)\le n\Rightarrow P(T)]
+	      \]
+\end{enumerate}
+
+Now we can prove the following:
+\begin{theorem}[Proof tree, finite version]
+	For finitary $\Phi$,
+	\[I(\Phi)=\{a_T|T\text{ is a finite tree }\Phi\text{-proof}\}\]
+\end{theorem}
+\begin{proof}
+	We prove both sides of the inclusion.
+
+	\noindent($\subseteq$)
+	We show that the right hand side is $\Phi$-closed. That is:
+	\[\forall (X,x)\in\Phi,X\subseteq\{a_T|T\text{ is a finite tree }\Phi\text{-proof}\}\Rightarrow x\in\{a_T|T\text{ is a finite tree }\Phi\text{-proof}\}\]
+
+	Fix a $(X,x)\in\Phi$. Since $\Phi$ is finitary, we may enumerate the elements of $X$ as $x_1,\dots,x_n$.
+
+	By assumption, we can pick finite tree $\Phi$-proofs $T_1,\dots,T_n$ such that the root of $T_i$ is $x_i$.
+
+	Now, we let:
+	\[T\triangleq\{(x)\}\cup\bigcup_{1\le i\le n}\{(x,a_1,\dots,a_m)|(a_1,\dots,a_m)\in T_i\}\]
+
+	$T$ is a finite tree, since it has a unique sequence of length 1 ($(x)$), is prefix-closed, and is finite.
+
+	It is a finite tree $\Phi$-proof, since for each $(b_1,\dots,b_k)\in T$, $\Phi:T_{(b_1,\dots,b_k)}\rightarrow b_k$.
+
+	Thus, since $x=a_T$, we have shown that $x\in\{a_T|T\text{ is a finite tree }\Phi\text{-proof}\}$.
+
+	\noindent($\supseteq$)
+	We want to prove that:
+	\[\forall T\in\{\text{finite trees}\},T\text{ is a finite tree }\Phi\text{-proof}\Rightarrow a_T\in I(\Phi)\]
+
+	We perform induction on the level of $T$.
+
+	For level $1$, for $(a_T)$ to be a finite tree $\Phi$-proof, $\Phi:\varnothing\rightarrow a_T$ must hold.
+
+	Thus, for any $\Phi$-closed set $X$, $a_T\in X$. Thus $a_T\in I(\Phi)$.
+
+	For the inductive step, assume that the statement holds for level $\le k$, and prove for level $=k+1$.
+
+	Fix a finite tree $\Phi$-proof $T$ with level $k+1$, and let $r$ be the root of $T$.
+
+	Since $\Phi$ is finitary, $T_{(r)}$ can be enumerated as $x_1,\dots,x_n$.
+
+	Now define:
+	\[T_i\triangleq\{(a_1,\dots,a_m)|a_1=x_i\text{ and }(r,a_1,\dots,a_m)\in T\}\]
+
+	We can show that $T_i$ is a finite tree $\Phi$-proof of $x_i$, and that $\text{level}(T_i)\le k$.
+
+	Thus, $x_i\in I(\Phi)$ for each $i$ by the inductive hypothesis.
+
+	Since $\Phi:\{x_1,\dots,x_n\}\rightarrow r$ and $I(\Phi)$ is $\Phi$-closed, $r\in I(\Phi)$.
+\end{proof}
+\clearpage
+
+\section{Fixed point computation of proof trees}
+In this section, we aim to show how the set of proof trees that satisfy certain conditions may be computed as the least fixed point of some monotonic function.
+
+Of special interest is the case when the base set $S$ is of the form $A\times B$ for sets $A$ and $B$.
+Given a finitary rule set $\Phi$, we want to compute, for each $a\in A$, the set
+\[\lBrack a\rBrack\defeq\{b\in B|(a,b)\in I(\Phi)\}\]
+As can be deduced from the notation, characterizing $\lBrack a\rBrack$ as a least fixed point is useful for the semantics of programming languages.
+For example, if we let $A=B=\text{Val}$ in the example from section \ref{sec:inddef}, $\lBrack (e,\sigma)\rBrack$ becomes the set of values that the expression $e$ can evaluate to under $\sigma$.
+
+Thus, in this section we assume $S=A\times B$ for some $A,B$.
+\begin{definition}[Propagation function]\label{def:propagation}
+	$f_a\in\bigcup_b\{Y|\Phi:Y\rightarrow(a,b)\}\times\mathcal{P}(A+A\times B)\rightarrow\mathcal{P}(A)$ is a \emph{propagation function} at $a\in A$ when:
+	\begin{enumerate}
+		\item $f_a$ is monotonic in its second argument:
+		      \[X\subseteq X'\Rightarrow f_a(Y,X)\subseteq f_a(Y,X')\]
+		\item $f_a(Y,X)$ must propagate when there is some assumption $(a,b)\in Y$ that is not in $X$:
+		      \[Y-X\neq\varnothing\Rightarrow f_a(Y,X)\cap(Y-X).1\neq\varnothing\]
+		      where $Z.1\defeq\{a|(a,b)\in Z\text{ for some }b\}$.
+	\end{enumerate}
+\end{definition}
+
+The propagation function at $a$ propagates all assumptions $a'$ such that $(a',\_)$ \emph{might be needed} for the computation of $(a,\_)$.
+
+\begin{definition}[Incremental proof tree computation]
+	$F\in\mathcal{P}(A+A\times B)\rightarrow\mathcal{P}(A+A\times B)$ is an \emph{incremental proof tree computation} function when:
+	\[F(X)=\underbrace{\{(a,b)|a\in X\text{ and }\Phi:Y\rightarrow(a,b)\text{ for some }Y\subseteq X\}}_{\text{evaluate}}\cup\overbrace{\bigcup_{a,Y}f_a(Y,X)}^{\text{propagate}}\]
+	where $(f_a)_{a\in A}$ satisfies:
+	\[\forall a,f_a\text{ is a propagation function at }a\]
+\end{definition}
+
+Note that $F$ is monotonic, since $f_a$ is monotonic in its second argument.
+
+We want to prove that, when $F$ is an incremental proof tree computation function and $I\subseteq A$,
+\[\text{lfp}(\lambda X.F(X)\cup I)\]
+is a \emph{sound and complete} representation for all proof trees for $\{(a,b)|b\in B\}$.
+
+\begin{theorem}[Soundness]
+	Let $F$ be an incremental proof tree computation function.
+	For each finite tree $\Phi$-proof $T$, $X\subseteq A+A\times B$, and $a\in X$, if:
+	\begin{enumerate}
+		\item $X$ is a post-fixed point of $F$, and
+		\item $T$ is a finite tree $\Phi$-proof of $(a,b)$ for some $b\in B$,
+	\end{enumerate}
+	we have:
+	\[\forall(x_i)\in T,(x_i)\subseteq X\]
+\end{theorem}
+\begin{proof}
+	We use induction on the number of nodes in $T$.
+
+	When $|T|=1$, $\Phi:\varnothing\rightarrow (a,b)$ for some $b$, so
+	\[(a,b)\in\{(a,b)|a\in X\text{ and }\Phi:Y\rightarrow (a,b)\text{ for some }Y\subseteq X\}\subseteq F(X)\subseteq X\]
+
+	For the inductive step, assume the statement for $|T|\le k$, and prove for $|T|=k+1$.
+
+	Fix $F$, $(a,b)$, $X$, and a finite tree $\Phi$-proof $T$ of $(a,b)$.
+
+	\noindent\textbf{Step 1}. We can prove that $T_{((a,b))}\subseteq X$ by assuming $T_{((a,b))}-X\neq\varnothing$ and drawing a contradiction.
+
+	If $T_{((a,b))}-X\neq\varnothing$, since $T_{((a,b))}\in\bigcup_b\{Y|\Phi:Y\rightarrow (a,b)\}$, we have:
+	\[\text{There exists an }a'\in f_a(T_{((a,b))},X)\subseteq F(X)\subseteq X\text{ such that }a'\in(T_{((a,b))}-X).1\]
+
+	by condition 2 of definition \ref{def:propagation}.
+
+	Now, pick a $b'$ such that $(a',b')\in T_{((a,b))}-X$, and let
+	\[T'\defeq\{(x_1,\dots,x_m)|x_1=(a',b')\text{ and }((a,b),x_1,\dots,x_m)\in T\}\]
+
+	$T'$ is a finite tree $\Phi$-proof of $(a',b')$, $a'\in X$, and $|T'|\le k$, so by the inductive hypothesis:
+	\[(a',b')\in X\]
+
+	This is a contradiction, since $(a',b')\in T_{((a,b))}-X$.
+
+	\noindent\textbf{Step 2}. We can prove $T_{((a,b))}.1\subseteq X$. Fix a $(a',b')\in T_{((a,b))}$. Then:
+	\[f_a(T_{((a,b))},X-\{(a',b')\})\cap\{(a',b')\}.1\neq\varnothing\]
+
+	since $T_{((a,b))}\subseteq X$ and by condition 2 of definition \ref{def:propagation}.
+
+	Now, by monotonicity of $f_a$ in its second argument (condition 1 of definition \ref{def:propagation}), we have:
+	\[a'\in f_a(T_{((a,b))},X)\subseteq F(X)\subseteq X\]
+
+	\noindent\textbf{Step 3}. Now we can show that for any $(a_i)\in T$, $(a_i)\subseteq X$.
+
+	If $(a_i)=((a,b))$, $(a,b)\in X$, since $T_{((a,b))}\subseteq X$ and $a\in X$, thus $(a,b)\in F(X)\subseteq X$.
+
+	If $(a_i)=((a,b),x_1,\dots,x_m)$, $x_1=(a',b')$ for some $a'\in T_{((a,b))}.1\subseteq X$.
+
+	Letting $T'$ as above and using the inductive hypothesis, we have that $(x_i)\subseteq X$.
+\end{proof}
+
+\begin{theorem}[Completeness]
+	Let $F$ be an incremental proof tree computation function.
+	For each $I\subseteq A$,
+	\[\text{lfp}(\lambda X.F(X)\cup I)\subseteq I(\Phi)\cup A\]
+\end{theorem}
+\begin{proof}
+	We prove that $I(\Phi)\cup A$ is a post-fixed point of $\lambda X.F(X)\cup I$.
+
+	Note that $F(I(\Phi)\cup A)$ can be divided into the evaluation and the propagation part.
+
+	Since the propagation part is trivially included in $A$, we only have to prove:
+	\[\{(a,b)|a\in A\text{ and }\Phi:Y\rightarrow(a,b)\text{ for some }Y\subseteq I(\Phi)\}\subseteq I(\Phi)\]
+
+	This is true, since $I(\Phi)$ is $\Phi$-closed.
+\end{proof}
+
+\begin{corollary}[Sound and complete incremental computation]
+	Let $F$ be an incremental proof tree computation function.
+	For each $I\subseteq A$:
+	\[\forall a\in I, b\in B, (a,b)\in\text{lfp}(\lambda X.F(X)\cup I)\Leftrightarrow (a,b)\in I(\Phi)\]
+\end{corollary}
+\begin{proof}
+	From completeness, we have $(\Rightarrow)$. From soundness, we have $(\Leftarrow)$.
+\end{proof}
+\noindent\textbf{Example}. For the $\lambda$-calculus example,
+\begin{align*}
+	f_{(x,\sigma)}           & (\varnothing,X)                                                                                                                                            \\
+	                         & \defeq\varnothing                                                                                                                                          \\
+	f_{(\lambda x.e,\sigma)} & (\varnothing,X)                                                                                                                                            \\
+	                         & \defeq\varnothing                                                                                                                                          \\
+	f_{(e_1\:e_2,\sigma)}    & (\{((e_1,\sigma),(\lambda x.e,\sigma_1)),((e_2,\sigma),v_2),((e,\sigma_1[x\mapsto v_2]),v)\},X)                                                            \\
+	                         & \defeq\{(e_1,\sigma),(e_2,\sigma)\}\cup\bigcup_{((e_1,\sigma),(\lambda x.e,\sigma_1))\in X}\bigcup_{((e_2,\sigma),v_2)\in X}\{(e,\sigma_1[x\mapsto v_2])\}
+\end{align*}
+is a propagation function.
+
+Thus, letting:
+\begin{align*}
+	F(X)\triangleq & \bigcup_{(x,\sigma)\in X}\{((x,\sigma),v)|\sigma(x)=v\}                                                                                                                                           \\
+	\cup           & \bigcup_{(\lambda x.e,\sigma)\in X}\{((\lambda x.e,\sigma),(\lambda x.e,\sigma))\}                                                                                                                \\
+	\cup           & \bigcup_{(e_1\:e_2,\sigma)\in X}\left(\{(e_1,\sigma),(e_2,\sigma)\}\cup\bigcup_{((e_1,\sigma),(\lambda x.e,\sigma_1))\in X}\bigcup_{((e_2,\sigma),v_2)\in X}\{(e,\sigma_1[x\mapsto v_2])\}\right) \\
+  \cup           & \bigcup_{(e_1\:e_2,\sigma)\in X}\bigcup_{((e_1,\sigma),(\lambda x.e,\sigma_1))\in X}\bigcup_{((e_2,\sigma),v_2)\in X}\bigcup_{((e,\sigma_1[x\mapsto v_2]),v)\in X}\{((e_1\:e_2,\sigma),v)\}
+\end{align*}
+
+we have that:
+\[\lBrack(e,\sigma)\rBrack=\{v|((e,\sigma),v)\in\text{lfp}(\lambda X.F(X)\cup\{(e,\sigma)\})\}\]
+\bibliography{citations.bib}
+\bibliographystyle{acm}
+\nocite{*}
+\end{document}

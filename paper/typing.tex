@@ -139,3 +139,5 @@ The definitions for types are in Figure \ref{fig:typdom} and the typing rules ar
 \[\Abs\eval(e,\Gamma)\triangleq\bigcup_{\Safe}\{\tau|\typejudg{\Gamma}{e}{\tau}{S}\}\quad\gamma(\tau)\triangleq\{v|v\in\ValRel{\tau}\bot\land\unsafe(v)=\varnothing\}\quad\gamma(T)\triangleq\bigcap_{\tau\in T}{\gamma(\tau)}\]
 
 \[\eval(e,\gamma(\Gamma))\subseteq\gamma(\Abs\eval(e,\Gamma))\]
+
+Test compilation

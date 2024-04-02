@@ -380,3 +380,6 @@ time-of-build-pretty.log
 
 *.png
 *.jpg
+
+# emacs
+\#*\#

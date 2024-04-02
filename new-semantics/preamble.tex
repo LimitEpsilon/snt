@@ -195,7 +195,6 @@
 \newcommand*{\asemarrow}{\A{\rightsquigarrow}}
 \newcommand*{\synlink}{\rtimes}
 \newcommand*{\semlink}{\mathbin{\text{\rotatebox[origin=c]{180}{$\propto$}}}}
-\newcommand*{\link}[2]{{#1}\rtimes{#2}}
 \newcommand*{\mt}{\mathsf{empty}}
 \newcommand*{\valid}{\mathsf{valid}}
 \newcommand*{\Path}{\text{Path}}
@@ -207,7 +206,8 @@
 \newcommand*{\Exp}{\mathsf{Exp}}
 \newcommand*{\Imp}{\mathsf{Imp}}
 \newcommand*{\Fin}{\mathsf{Fin}}
-\newcommand*{\Link}{\mathsf{Link}}
+\newcommand*{\Link}{\text{Link}}
+\newcommand*{\link}{\text{link}}
 \newcommand*{\sembracket}[1]{\lBrack{#1}\rBrack}
 \newcommand*{\fin}[2]{{#1}\xrightarrow{\mbox{\tiny{fin}}}{#2}}
 \newcommand*{\addr}{\mathsf{addr}}
@@ -229,6 +229,9 @@
 
 % labelled expressions {p:e}
 \newcommand*{\plabel}[2]{\{{#1}:{#2}\}}
+
+% labelled locations \ell^p
+\newcommand*{\llabel}[2]{{#2}^{#1}}
 
 % big-step evaluation judgment σ ⊢ e ⇓ v
 \newcommand*{\evjudg}[3]{{#1}\vdash{#2}\Downarrow{#3}}

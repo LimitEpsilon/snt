@@ -1,4 +1,3 @@
-%! TEX program = xelatex
 \documentclass{article}
 \usepackage{geometry}
 \geometry{
@@ -259,7 +258,7 @@
 %%% Custom commands
 \newcommand*{\vbar}{|}
 \newcommand*{\finto}{\xrightarrow{\text{\textrm{fin}}}}
-\newcommand*{\istype}{\mathrel{⩴}}
+\newcommand*{\istype}{\mathrel{Ã¢Â©Â´}}
 \newcommand*{\ortype}{\mathrel{|}}
 \newcommand*{\cons}{::}
 \newcommand*{\pset}{\mathscr{P}}
@@ -338,298 +337,298 @@
 \maketitle
 \section{For the Simple Module Language}
 \begin{figure}[htb]
-  \centering
-  \begin{tabular}{rrcll}
-    Identifiers & $x,\modid$ & $\in$         & $\ExprVar$                                                                            \\
-    Expression  & $e$        & $\rightarrow$ & $()$ $\vbar$ $x$ $\vbar$ $\lambda x.e$ $\vbar$ $e$ $e$ & $\lambda$-calculus with unit \\
-                &            & $\vbar$       & $\link{m}{e}$                                          & linked expression            \\
-    Module      & $m$        & $\rightarrow$ & $\varepsilon$                                          & empty module                 \\
-                &            & $\vbar$       & $\modid$                                               & module identifier            \\
-                &            & $\vbar$       & $\Lete$ $x$ $e$ $m$                                    & value binding                \\
-                &            & $\vbar$       & $\Letm$ $\modid$ $m$ $m$                               & module binding               \\
-  \end{tabular}
-  \caption{Abstract syntax of the simple module language.}
-  \label{fig:syntax}
+	\centering
+	\begin{tabular}{rrcll}
+		Identifiers & $x,\modid$ & $\in$         & $\ExprVar$                                                                            \\
+		Expression  & $e$        & $\rightarrow$ & $()$ $\vbar$ $x$ $\vbar$ $\lambda x.e$ $\vbar$ $e$ $e$ & $\lambda$-calculus with unit \\
+		            &            & $\vbar$       & $\link{m}{e}$                                          & linked expression            \\
+		Module      & $m$        & $\rightarrow$ & $\varepsilon$                                          & empty module                 \\
+		            &            & $\vbar$       & $\modid$                                               & module identifier            \\
+		            &            & $\vbar$       & $\Lete$ $x$ $e$ $m$                                    & value binding                \\
+		            &            & $\vbar$       & $\Letm$ $\modid$ $m$ $m$                               & module binding               \\
+	\end{tabular}
+	\caption{Abstract syntax of the simple module language.}
+	\label{fig:syntax}
 \end{figure}
 \subsection{Operational Semantics}
 \begin{figure}[h!]
-  \centering
-  \begin{tabular}{rrcll}
-    Environment/Context  & $\ctx$ & $\in$         & $\Ctx$                                                                   \\
-    Value of expressions & $v$    & $\in$         & $\Value \triangleq\{()\}+\ExprVar\times\Expr\times\Ctx$                  \\
-    Context              & $\ctx$ & $\rightarrow$ & $\bullet$                                               & empty stack    \\
-                         &        & $\vbar$       & $(x,v)\cons \ctx$                                       & value binding  \\
-                         &        & $\vbar$       & $(\modid,\ctx)\cons \ctx$                               & module binding \\
-    Value of expressions & $v$    & $\rightarrow$ & $()$                                                    & unit           \\
-                         &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                     & closure
-  \end{tabular}
-  \caption{Definition of the semantic domains.}
-  \label{fig:simpdom}
+	\centering
+	\begin{tabular}{rrcll}
+		Environment/Context  & $\ctx$ & $\in$         & $\Ctx$                                                                   \\
+		Value of expressions & $v$    & $\in$         & $\Value \triangleq\{()\}+\ExprVar\times\Expr\times\Ctx$                  \\
+		Context              & $\ctx$ & $\rightarrow$ & $\bullet$                                               & empty stack    \\
+		                     &        & $\vbar$       & $(x,v)\cons \ctx$                                       & value binding  \\
+		                     &        & $\vbar$       & $(\modid,\ctx)\cons \ctx$                               & module binding \\
+		Value of expressions & $v$    & $\rightarrow$ & $()$                                                    & unit           \\
+		                     &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                     & closure
+	\end{tabular}
+	\caption{Definition of the semantic domains.}
+	\label{fig:simpdom}
 \end{figure}
 
 \begin{figure}[h!]
-  \footnotesize
-  \begin{flushright}
-    \fbox{$(e,\ctx)\semarrow v$ and $(m,\ctx)\semarrow\ctx$}
-  \end{flushright}
-  \centering
-  \vspace{0pt} % -0.75em}
-  \[
-    \begin{InfRule}{Unit}
-      \infer0{((),\ctx)\semarrow ()}
-    \end{InfRule}\qquad
-    \begin{prooftree}
-      \hypo{v=\ctx(x)}
-      \infer[left label=ExprID]1{
-      (x, \ctx)
-      \semarrow
-      v
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \infer[left label=Fn]0{
-      (\lambda x.e, \ctx)
-      \semarrow
-      \langle\lambda x.e, \ctx\rangle
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          (e_{1}, \ctx)
-          \semarrow
-          \langle\lambda x.e_{\lambda}, \ctx_{\lambda}\rangle \\
-          (e_{2}, \ctx)
-          \semarrow
-          v                                                   \\
-          (e_{\lambda}, (x, v)\cons \ctx_{\lambda})
-          \semarrow
-          v'
-        \end{matrix}
-      }
-      \infer[left label={App}]1{
-      (e_{1}\:e_{2}, \ctx)
-      \semarrow
-      v'
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          (m_{1}, \ctx)
-          \semarrow
-          \ctx' \\
-          (e_{2}, \ctx')
-          \semarrow
-          v
-        \end{matrix}
-      }
-      \infer[left label=Link]1{
-      (\link{m_{1}}{e_{2}}, \ctx)
-      \semarrow
-      v
-      }
-    \end{prooftree}
-  \]
+	\footnotesize
+	\begin{flushright}
+		\fbox{$(e,\ctx)\semarrow v$ and $(m,\ctx)\semarrow\ctx$}
+	\end{flushright}
+	\centering
+	\vspace{0pt} % -0.75em}
+	\[
+		\begin{InfRule}{Unit}
+			\infer0{((),\ctx)\semarrow ()}
+		\end{InfRule}\qquad
+		\begin{prooftree}
+			\hypo{v=\ctx(x)}
+			\infer[left label=ExprID]1{
+			(x, \ctx)
+			\semarrow
+			v
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\infer[left label=Fn]0{
+			(\lambda x.e, \ctx)
+			\semarrow
+			\langle\lambda x.e, \ctx\rangle
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					(e_{1}, \ctx)
+					\semarrow
+					\langle\lambda x.e_{\lambda}, \ctx_{\lambda}\rangle \\
+					(e_{2}, \ctx)
+					\semarrow
+					v                                                   \\
+					(e_{\lambda}, (x, v)\cons \ctx_{\lambda})
+					\semarrow
+					v'
+				\end{matrix}
+			}
+			\infer[left label={App}]1{
+			(e_{1}\:e_{2}, \ctx)
+			\semarrow
+			v'
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					(m_{1}, \ctx)
+					\semarrow
+					\ctx' \\
+					(e_{2}, \ctx')
+					\semarrow
+					v
+				\end{matrix}
+			}
+			\infer[left label=Link]1{
+			(\link{m_{1}}{e_{2}}, \ctx)
+			\semarrow
+			v
+			}
+		\end{prooftree}
+	\]
 
-  \[
-    \begin{prooftree}
-      \infer[left label=Empty]0{
-      (\varepsilon, \ctx)
-      \semarrow
-      \bullet
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{\ctx'=\ctx(\modid)}
-      \infer[left label=ModID]1{
-      (\modid, \ctx)
-      \semarrow
-      \ctx'
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          (e_{1}, \ctx)
-          \semarrow
-          v \\
-          (m_{2}, (x, v)\cons \ctx)
-          \semarrow
-          \ctx'
-        \end{matrix}
-      }
-      \infer[left label=LetE]1{
-      (\Lete\:x\:e_1\:m_2, \ctx)
-      \semarrow
-      (x,v)\cons\ctx'
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          (m_{1}, \ctx)
-          \semarrow
-          \ctx' \\
-          (m_{2}, (\modid, \ctx')\cons \ctx)
-          \semarrow
-          \ctx''
-        \end{matrix}
-      }
-      \infer[left label=LetM]1{
-      (\Letm\:\modid\:m_{1}\:m_{2}, \ctx)
-      \semarrow
-      (\modid,\ctx')\cons\ctx''
-      }
-    \end{prooftree}
-  \]
-  \caption{The big-step operational semantics.}
-  \label{fig:simpreach}
+	\[
+		\begin{prooftree}
+			\infer[left label=Empty]0{
+			(\varepsilon, \ctx)
+			\semarrow
+			\bullet
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{\ctx'=\ctx(\modid)}
+			\infer[left label=ModID]1{
+			(\modid, \ctx)
+			\semarrow
+			\ctx'
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					(e_{1}, \ctx)
+					\semarrow
+					v \\
+					(m_{2}, (x, v)\cons \ctx)
+					\semarrow
+					\ctx'
+				\end{matrix}
+			}
+			\infer[left label=LetE]1{
+			(\Lete\:x\:e_1\:m_2, \ctx)
+			\semarrow
+			(x,v)\cons\ctx'
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					(m_{1}, \ctx)
+					\semarrow
+					\ctx' \\
+					(m_{2}, (\modid, \ctx')\cons \ctx)
+					\semarrow
+					\ctx''
+				\end{matrix}
+			}
+			\infer[left label=LetM]1{
+			(\Letm\:\modid\:m_{1}\:m_{2}, \ctx)
+			\semarrow
+			(\modid,\ctx')\cons\ctx''
+			}
+		\end{prooftree}
+	\]
+	\caption{The big-step operational semantics.}
+	\label{fig:simpreach}
 \end{figure}
 \subsection{Typing}
 The definitions for types are in Figure \ref{fig:typdom} and the typing rules are in Figure \ref{fig:typjudge}.
 
 \begin{figure}[h!]
-  \centering
-  \begin{tabular}{rrcll}
-    Types            & $\tau$   & $\rightarrow$ & $\iota$                       & unit type         \\
-                     &          & $\vbar$       & $\tau\rightarrow\tau$         & function type     \\
-    Type Environment & $\Gamma$ & $\rightarrow$ & $\bullet$                     & empty environment \\
-                     &          & $\vbar$       & $(x,\tau)\cons \Gamma$        & value binding     \\
-                     &          & $\vbar$       & $(\modid,\Gamma)\cons \Gamma$ & module binding
-  \end{tabular}
-  \caption{Definition of types.}
-  \label{fig:typdom}
+	\centering
+	\begin{tabular}{rrcll}
+		Types            & $\tau$   & $\rightarrow$ & $\iota$                       & unit type         \\
+		                 &          & $\vbar$       & $\tau\rightarrow\tau$         & function type     \\
+		Type Environment & $\Gamma$ & $\rightarrow$ & $\bullet$                     & empty environment \\
+		                 &          & $\vbar$       & $(x,\tau)\cons \Gamma$        & value binding     \\
+		                 &          & $\vbar$       & $(\modid,\Gamma)\cons \Gamma$ & module binding
+	\end{tabular}
+	\caption{Definition of types.}
+	\label{fig:typdom}
 \end{figure}
 
 \begin{figure}[h!]
-  \footnotesize
-  \begin{flushright}
-    \fbox{$\Gamma\vdash e:\tau$ and $\Gamma\vdash m:\Gamma$}
-  \end{flushright}
-  \centering
-  \vspace{0pt} % -0.75em}
-  \[
-    \begin{prooftree}
-      \infer[left label=Unit]0{
-      \Gamma\vdash():\iota
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{\tau=\Gamma(x)}
-      \infer[left label=ExprID]1{
-      \Gamma\vdash x:\tau
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{(x,\tau_1)\cons\Gamma\vdash e:\tau_2}
-      \infer[left label=Fn]1{
-      \Gamma\vdash\lambda x.e:\tau_1\rightarrow\tau_2
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          \Gamma\vdash e_1:\tau'\rightarrow\tau \\
-          \Gamma\vdash e_2:\tau'
-        \end{matrix}
-      }
-      \infer[left label={App}]1{
-      \Gamma\vdash e_{1}\:e_{2}:\tau
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          \Gamma\vdash m_1:\Gamma_1 \\
-          \Gamma_1\vdash e_2:\tau_2
-        \end{matrix}
-      }
-      \infer[left label=Link]1{
-      \Gamma\vdash\link{m_{1}}{e_{2}}:\tau_2
-      }
-    \end{prooftree}
-  \]
+	\footnotesize
+	\begin{flushright}
+		\fbox{$\Gamma\vdash e:\tau$ and $\Gamma\vdash m:\Gamma$}
+	\end{flushright}
+	\centering
+	\vspace{0pt} % -0.75em}
+	\[
+		\begin{prooftree}
+			\infer[left label=Unit]0{
+			\Gamma\vdash():\iota
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{\tau=\Gamma(x)}
+			\infer[left label=ExprID]1{
+			\Gamma\vdash x:\tau
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{(x,\tau_1)\cons\Gamma\vdash e:\tau_2}
+			\infer[left label=Fn]1{
+			\Gamma\vdash\lambda x.e:\tau_1\rightarrow\tau_2
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					\Gamma\vdash e_1:\tau'\rightarrow\tau \\
+					\Gamma\vdash e_2:\tau'
+				\end{matrix}
+			}
+			\infer[left label={App}]1{
+			\Gamma\vdash e_{1}\:e_{2}:\tau
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					\Gamma\vdash m_1:\Gamma_1 \\
+					\Gamma_1\vdash e_2:\tau_2
+				\end{matrix}
+			}
+			\infer[left label=Link]1{
+			\Gamma\vdash\link{m_{1}}{e_{2}}:\tau_2
+			}
+		\end{prooftree}
+	\]
 
-  \[
-    \begin{prooftree}
-      \infer[left label=Empty]0{
-      \Gamma\vdash\varepsilon:\bullet
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{\Gamma'=\Gamma(\modid)}
-      \infer[left label=ModID]1{
-      \Gamma\vdash\modid:\Gamma'
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          \Gamma\vdash e_1:\tau_1 \\
-          (x, \tau_1)\cons\Gamma\vdash m_2:\Gamma_2
-        \end{matrix}
-      }
-      \infer[left label=LetE]1{
-      \Gamma\vdash\Lete\:x\:e_1\:m_2:(x,\tau_1)\cons\Gamma_2
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          \Gamma\vdash m_1:\Gamma_1 \\
-          (\modid, \Gamma_1)\cons\Gamma\vdash m_2:\Gamma_2
-        \end{matrix}
-      }
-      \infer[left label=LetM]1{
-      \Gamma\vdash\Letm\:\modid\:m_{1}\:m_{2}:(\modid,\Gamma_1)\cons\Gamma_2
-      }
-    \end{prooftree}
-  \]
-  \caption{The typing judgment.}
-  \label{fig:typjudge}
+	\[
+		\begin{prooftree}
+			\infer[left label=Empty]0{
+			\Gamma\vdash\varepsilon:\bullet
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{\Gamma'=\Gamma(\modid)}
+			\infer[left label=ModID]1{
+			\Gamma\vdash\modid:\Gamma'
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					\Gamma\vdash e_1:\tau_1 \\
+					(x, \tau_1)\cons\Gamma\vdash m_2:\Gamma_2
+				\end{matrix}
+			}
+			\infer[left label=LetE]1{
+			\Gamma\vdash\Lete\:x\:e_1\:m_2:(x,\tau_1)\cons\Gamma_2
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					\Gamma\vdash m_1:\Gamma_1 \\
+					(\modid, \Gamma_1)\cons\Gamma\vdash m_2:\Gamma_2
+				\end{matrix}
+			}
+			\infer[left label=LetM]1{
+			\Gamma\vdash\Letm\:\modid\:m_{1}\:m_{2}:(\modid,\Gamma_1)\cons\Gamma_2
+			}
+		\end{prooftree}
+	\]
+	\caption{The typing judgment.}
+	\label{fig:typjudge}
 \end{figure}
 
 \subsection{Type Safety}
 \begin{clm}[Type Safety]
-  For all $e\in\Expr$, if $\bullet\vdash e:\tau$ for some $\tau$, then there exists some $v\in\Value$ such that $(e,\bullet)\semarrow v$.
-  Likewise, if $\bullet\vdash m:\Gamma$ for some $\Gamma$, then there exists some $\ctx\in\Ctx$ such that $(m,\bullet)\Downarrow\ctx$.
+	For all $e\in\Expr$, if $\bullet\vdash e:\tau$ for some $\tau$, then there exists some $v\in\Value$ such that $(e,\bullet)\semarrow v$.
+	Likewise, if $\bullet\vdash m:\Gamma$ for some $\Gamma$, then there exists some $\ctx\in\Ctx$ such that $(m,\bullet)\Downarrow\ctx$.
 \end{clm}
 \begin{proof}[Proof sketch]
-  We prove this through unary logical relations and induction on the typing judgment.
+	We prove this through unary logical relations and induction on the typing judgment.
 
-  \begin{tabular}{rclr}
-    \textbf{Value Relation}                   &              &                                                                                                        & \fbox{$\ValRel{\tau}$}                                   \\
-    $\ValRel{\iota}$                          & $\triangleq$ & $\{()\}$                                                                                                                                                          \\
-    $\ValRel{\tau_1\rightarrow\tau_2}$        & $\triangleq$ & $\{\langle\lambda x.e,\ctx\rangle|\forall v\in\ValRel{\tau_1}:(e,(x,v)\cons\ctx)\in\ExprRel{\tau_2}\}$                                                            \\
-    \\
-    \textbf{Expression Relation}              &              &                                                                                                        & \fbox{$\ExprRel{\tau}$}                                  \\
-    $\ExprRel{\tau}$                          & $\triangleq$ & $\{(e,\ctx)|\exists v\in\ValRel{\tau}:(e,\ctx)\semarrow v\}$                                                                                                      \\
-    \\
-    \textbf{Context Relation}                 &              &                                                                                                        & \fbox{$\CtxRel{\Gamma}$}                                 \\
-    $\CtxRel{\bullet}$                        & $\triangleq$ & $\{\bullet\}$                                                                                                                                                     \\
-    $\CtxRel{(x,\tau_1)\cons\Gamma_2}$        & $\triangleq$ & $\{(x,v_1)\cons\ctx_2|v_1\in\ValRel{\tau_1}\land\ctx_2\in\CtxRel{\Gamma_2}\}$                                                                                     \\
-    $\CtxRel{(\modid,\Gamma_1)\cons\Gamma_2}$ & $\triangleq$ & $\{(\modid,\ctx_1)\cons\ctx_2|\ctx_1\in\CtxRel{\Gamma_1}\land\ctx_2\in\CtxRel{\Gamma_2}\}$                                                                        \\
-    \\
-    \textbf{Module Relation}                  &              &                                                                                                        & \fbox{$\ModRel{\Gamma}$}                                 \\
-    $\ModRel{\Gamma}$                         & $\triangleq$ & $\{(m,\ctx)|\exists\ctx'\in\CtxRel{\Gamma}:(m,\ctx)\semarrow\ctx'\}$                                                                                              \\
-    \\
-    \textbf{Semantic Typing}                  &              &                                                                                                        & \fbox{$\Gamma\vDash e:\tau$ and $\Gamma\vDash m:\Gamma$} \\
-    $\Gamma\vDash e:\tau$                     & $\triangleq$ & $\forall\ctx\in\CtxRel{\Gamma}:(e,\ctx)\in\ExprRel{\tau}$                                                                                                         \\
-    $\Gamma\vDash m:\Gamma'$                  & $\triangleq$ & $\forall\ctx\in\CtxRel{\Gamma}:(m,\ctx)\in\ModRel{\Gamma'}$
-  \end{tabular}
+	\begin{tabular}{rclr}
+		\textbf{Value Relation}                   &              &                                                                                                        & \fbox{$\ValRel{\tau}$}                                   \\
+		$\ValRel{\iota}$                          & $\triangleq$ & $\{()\}$                                                                                                                                                          \\
+		$\ValRel{\tau_1\rightarrow\tau_2}$        & $\triangleq$ & $\{\langle\lambda x.e,\ctx\rangle|\forall v\in\ValRel{\tau_1}:(e,(x,v)\cons\ctx)\in\ExprRel{\tau_2}\}$                                                            \\
+		\\
+		\textbf{Expression Relation}              &              &                                                                                                        & \fbox{$\ExprRel{\tau}$}                                  \\
+		$\ExprRel{\tau}$                          & $\triangleq$ & $\{(e,\ctx)|\exists v\in\ValRel{\tau}:(e,\ctx)\semarrow v\}$                                                                                                      \\
+		\\
+		\textbf{Context Relation}                 &              &                                                                                                        & \fbox{$\CtxRel{\Gamma}$}                                 \\
+		$\CtxRel{\bullet}$                        & $\triangleq$ & $\{\bullet\}$                                                                                                                                                     \\
+		$\CtxRel{(x,\tau_1)\cons\Gamma_2}$        & $\triangleq$ & $\{(x,v_1)\cons\ctx_2|v_1\in\ValRel{\tau_1}\land\ctx_2\in\CtxRel{\Gamma_2}\}$                                                                                     \\
+		$\CtxRel{(\modid,\Gamma_1)\cons\Gamma_2}$ & $\triangleq$ & $\{(\modid,\ctx_1)\cons\ctx_2|\ctx_1\in\CtxRel{\Gamma_1}\land\ctx_2\in\CtxRel{\Gamma_2}\}$                                                                        \\
+		\\
+		\textbf{Module Relation}                  &              &                                                                                                        & \fbox{$\ModRel{\Gamma}$}                                 \\
+		$\ModRel{\Gamma}$                         & $\triangleq$ & $\{(m,\ctx)|\exists\ctx'\in\CtxRel{\Gamma}:(m,\ctx)\semarrow\ctx'\}$                                                                                              \\
+		\\
+		\textbf{Semantic Typing}                  &              &                                                                                                        & \fbox{$\Gamma\vDash e:\tau$ and $\Gamma\vDash m:\Gamma$} \\
+		$\Gamma\vDash e:\tau$                     & $\triangleq$ & $\forall\ctx\in\CtxRel{\Gamma}:(e,\ctx)\in\ExprRel{\tau}$                                                                                                         \\
+		$\Gamma\vDash m:\Gamma'$                  & $\triangleq$ & $\forall\ctx\in\CtxRel{\Gamma}:(m,\ctx)\in\ModRel{\Gamma'}$
+	\end{tabular}
 
-  \vphantom{}
+	\vphantom{}
 
-  We want to prove that:
-  \[\Gamma\vdash e:\tau\Rightarrow\Gamma\vDash e:\tau\]
-  \[\Gamma\vdash m:\Gamma'\Rightarrow\Gamma\vDash m:\Gamma'\]
-  by induction on $\vdash$.
+	We want to prove that:
+	\[\Gamma\vdash e:\tau\Rightarrow\Gamma\vDash e:\tau\]
+	\[\Gamma\vdash m:\Gamma'\Rightarrow\Gamma\vDash m:\Gamma'\]
+	by induction on $\vdash$.
 
-  For the base cases of $\iota$ and $\bullet$, the proof is trivial.
-  For inductive cases, we need to show \emph{compatibility} lemmas.
-  That is, we must show that the typing rules for syntactic typing hold for semantic typing as well.
-  Then by the inductive hypothesis and compatibility, the result follows.
+	For the base cases of $\iota$ and $\bullet$, the proof is trivial.
+	For inductive cases, we need to show \emph{compatibility} lemmas.
+	That is, we must show that the typing rules for syntactic typing hold for semantic typing as well.
+	Then by the inductive hypothesis and compatibility, the result follows.
 \end{proof}
 
 \subsection{Type Inference}
@@ -639,32 +638,32 @@ Therefore, type inference in this language is simple, as the shape of the typing
 
 First we define the syntax for type constraints.
 \begin{figure}[h!]
-  \centering
-  \begin{tabular}{rrcll}
-    Type Variable      & $\alpha$ & $\in$         & $\TyVar$                                                                 \\
-    Module Path        & $p$      & $\rightarrow$ & $\epsilon$                       & empty string                          \\
-                       &          & $\vbar$       & $p\modid$                        & concatenation with module identifier  \\
-    Types              & $\tau$   & $\rightarrow$ & $\iota$ | $\tau\rightarrow\tau$  & unit/function types                   \\
-                       &          & $\vbar$       & $\alpha$                         & type variables                        \\
-                       &          & $\vbar$       & $[].p.x$                         & types from the external environment   \\
-    Type Environment   & $\Gamma$ & $\rightarrow$ & $\bullet$                        & empty environment                     \\
-                       &          & $\vbar$       & $(x,\tau)\cons \Gamma$           & value binding                         \\
-                       &          & $\vbar$       & $(\modid,\Gamma)\cons \Gamma$    & module binding                        \\
-                       &          & $\vbar$       & $[].p$                           & modules from the external environment \\
-    Type Constraint    & $u$      & $\rightarrow$ & $\tau\A{=}\tau$                  & equality constraint                   \\
-    Set of Constraints & $U$      & $\subseteq$   & $\{u|u\text{ type constraint}\}$
-  \end{tabular}
-  \caption{Definition of type constraints.}
-  \label{fig:typeqdom}
+	\centering
+	\begin{tabular}{rrcll}
+		Type Variable      & $\alpha$ & $\in$         & $\TyVar$                                                                 \\
+		Module Path        & $p$      & $\rightarrow$ & $\epsilon$                       & empty string                          \\
+		                   &          & $\vbar$       & $p\modid$                        & concatenation with module identifier  \\
+		Types              & $\tau$   & $\rightarrow$ & $\iota$ | $\tau\rightarrow\tau$  & unit/function types                   \\
+		                   &          & $\vbar$       & $\alpha$                         & type variables                        \\
+		                   &          & $\vbar$       & $[].p.x$                         & types from the external environment   \\
+		Type Environment   & $\Gamma$ & $\rightarrow$ & $\bullet$                        & empty environment                     \\
+		                   &          & $\vbar$       & $(x,\tau)\cons \Gamma$           & value binding                         \\
+		                   &          & $\vbar$       & $(\modid,\Gamma)\cons \Gamma$    & module binding                        \\
+		                   &          & $\vbar$       & $[].p$                           & modules from the external environment \\
+		Type Constraint    & $u$      & $\rightarrow$ & $\tau\A{=}\tau$                  & equality constraint                   \\
+		Set of Constraints & $U$      & $\subseteq$   & $\{u|u\text{ type constraint}\}$
+	\end{tabular}
+	\caption{Definition of type constraints.}
+	\label{fig:typeqdom}
 \end{figure}
 
 Next we define the module access operation $\Gamma(\modid)$ and the type access operation $\Gamma(x)$:
 \begin{align*}
-  \bullet(\modid)                   & \triangleq\bot           &            &  & \bullet(x)                  & \triangleq\bot                   \\
-  ((x,\_)\cons\Gamma)(\modid)       & \triangleq\Gamma(\modid) &            &  & ((\modid,\_)\cons\Gamma)(x) & \triangleq\Gamma(x)              \\
-  ((\modid,\Gamma)\cons\_)(\modid)  & \triangleq\Gamma         &            &  & ((x,\tau)\cons\_)(x)        & \triangleq\tau                   \\
-  ((\modid',\_)\cons\Gamma)(\modid) & \triangleq\Gamma(\modid) & (d'\neq d) &  & ((x',\_)\cons\Gamma)(x)     & \triangleq\Gamma(x) & (x'\neq x) \\
-  ([].p)(\modid)                    & \triangleq[].pd          &            &  & ([].p)(x)                   & \triangleq[].p.x
+	\bullet(\modid)                   & \triangleq\bot           &            &  & \bullet(x)                  & \triangleq\bot                   \\
+	((x,\_)\cons\Gamma)(\modid)       & \triangleq\Gamma(\modid) &            &  & ((\modid,\_)\cons\Gamma)(x) & \triangleq\Gamma(x)              \\
+	((\modid,\Gamma)\cons\_)(\modid)  & \triangleq\Gamma         &            &  & ((x,\tau)\cons\_)(x)        & \triangleq\tau                   \\
+	((\modid',\_)\cons\Gamma)(\modid) & \triangleq\Gamma(\modid) & (d'\neq d) &  & ((x',\_)\cons\Gamma)(x)     & \triangleq\Gamma(x) & (x'\neq x) \\
+	([].p)(\modid)                    & \triangleq[].pd          &            &  & ([].p)(x)                   & \triangleq[].p.x
 \end{align*}
 
 Now we can define the constraint generation algorithms $V_1(\Gamma,e,\alpha)$ and $V_2(\Gamma,m)$.
@@ -674,19 +673,19 @@ Likewise, the \textbf{let} $(\Gamma,U)$ \texttt{=} $\_$ \textbf{in} $\_$ notatio
 \begin{flushright}\fbox{$V_1(\Gamma,e,\alpha)=U$ and $V_2(\Gamma,m)=(\Gamma,U)$}\end{flushright}
 \hspace{-2.5em}
 \begin{tabular}{rclrcl}
-  $V_1(\Gamma,(),\alpha)$              & $\triangleq$ & $\{\alpha\A{=}\iota\}$                                                            & $V_2(\Gamma,\varepsilon)$             & $\triangleq$ & $(\bullet,\varnothing)$                                                                      \\
-  $V_1(\Gamma,x,\alpha)$               & $\triangleq$ & \textbf{let} $\tau$ \texttt{=} $\Gamma(x)$ \textbf{in}                            & $V_2(\Gamma,\modid)$                  & $\triangleq$ & \textbf{let} $\Gamma'$ \texttt{=} $\Gamma(d)$ \textbf{in}                                    \\
-                                       &              & $\{\alpha\A{=}\tau\}$                                                             &                                       &              & $(\Gamma',\varnothing)$                                                                      \\
-  $V_1(\Gamma,\lambda x.e,\alpha)$     & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2$ \texttt{=} \textit{fresh} \textbf{in}            & $V_2(\Gamma,\Lete\:x\:e_1\:m_2)$      & $\triangleq$ & \textbf{let} $\alpha_1$ \texttt{=} \textit{fresh} \textbf{in}                                \\
-                                       &              & \textbf{let} $U$ \texttt{=} $V_1((x,\alpha_1)\cons\Gamma,e,\alpha_2)$ \textbf{in} &                                       &              & \textbf{let} $U_1$ \texttt{=} $V_1(\Gamma,e_1,\alpha_1)$ \textbf{in}                         \\
-                                       &              & $\{\alpha\A{=}\alpha_1\rightarrow\alpha_2\}\cup U$                                &                                       &              & \textbf{let} $(\Gamma_2,U_2)$ \texttt{=} $V_2((x,\alpha_1)\cons\Gamma,m_2)$ \textbf{in}      \\
-  $V_1(\Gamma,e_1\:e_2,\alpha)$        & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2$ \texttt{=} \textit{fresh} \textbf{in}            &                                       &              & $((x,\alpha_1)\cons\Gamma_2,U_1\cup U_2)$                                                    \\
-                                       &              & \textbf{let} $U_1$ \texttt{=} $V_1(\Gamma,e_1,\alpha_1)$ \textbf{in}              & $V_2(\Gamma,\Letm\:\modid\:m_1\:m_2)$ & $\triangleq$ & \textbf{let} $(\Gamma_1,U_1)$ \texttt{=} $V_2(\Gamma,m_1)$ \textbf{in}                       \\
-                                       &              & \textbf{let} $U_2$ \texttt{=} $V_1(\Gamma,e_2,\alpha_2)$ \textbf{in}              &                                       &              & \textbf{let} $(\Gamma_2,U_2)$ \texttt{=} $V_2((\modid,\Gamma_1)\cons\Gamma,m_2)$ \textbf{in} \\
-                                       &              & $\{\alpha_1\A{=}\alpha_2\rightarrow\alpha\}\cup U_1\cup U_2$                      &                                       &              & $((\modid,\Gamma_1)\cons\Gamma_2,U_1\cup U_2)$                                               \\
-  $V_1(\Gamma,\link{m_1}{e_2},\alpha)$ & $\triangleq$ & \textbf{let} $(\Gamma_1,U_1)$ \texttt{=} $V_2(\Gamma,m_1)$ \textbf{in}                                                                                                                                                                  \\
-                                       &              & \textbf{let} $U_2$ \texttt{=} $V_1(\Gamma_1,e_2,\alpha)$ \textbf{in}                                                                                                                                                                    \\
-                                       &              & $U_1\cup U_2$                                                                                                                                                                                                                           \\
+	$V_1(\Gamma,(),\alpha)$              & $\triangleq$ & $\{\alpha\A{=}\iota\}$                                                            & $V_2(\Gamma,\varepsilon)$             & $\triangleq$ & $(\bullet,\varnothing)$                                                                      \\
+	$V_1(\Gamma,x,\alpha)$               & $\triangleq$ & \textbf{let} $\tau$ \texttt{=} $\Gamma(x)$ \textbf{in}                            & $V_2(\Gamma,\modid)$                  & $\triangleq$ & \textbf{let} $\Gamma'$ \texttt{=} $\Gamma(d)$ \textbf{in}                                    \\
+	                                     &              & $\{\alpha\A{=}\tau\}$                                                             &                                       &              & $(\Gamma',\varnothing)$                                                                      \\
+	$V_1(\Gamma,\lambda x.e,\alpha)$     & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2$ \texttt{=} \textit{fresh} \textbf{in}            & $V_2(\Gamma,\Lete\:x\:e_1\:m_2)$      & $\triangleq$ & \textbf{let} $\alpha_1$ \texttt{=} \textit{fresh} \textbf{in}                                \\
+	                                     &              & \textbf{let} $U$ \texttt{=} $V_1((x,\alpha_1)\cons\Gamma,e,\alpha_2)$ \textbf{in} &                                       &              & \textbf{let} $U_1$ \texttt{=} $V_1(\Gamma,e_1,\alpha_1)$ \textbf{in}                         \\
+	                                     &              & $\{\alpha\A{=}\alpha_1\rightarrow\alpha_2\}\cup U$                                &                                       &              & \textbf{let} $(\Gamma_2,U_2)$ \texttt{=} $V_2((x,\alpha_1)\cons\Gamma,m_2)$ \textbf{in}      \\
+	$V_1(\Gamma,e_1\:e_2,\alpha)$        & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2$ \texttt{=} \textit{fresh} \textbf{in}            &                                       &              & $((x,\alpha_1)\cons\Gamma_2,U_1\cup U_2)$                                                    \\
+	                                     &              & \textbf{let} $U_1$ \texttt{=} $V_1(\Gamma,e_1,\alpha_1)$ \textbf{in}              & $V_2(\Gamma,\Letm\:\modid\:m_1\:m_2)$ & $\triangleq$ & \textbf{let} $(\Gamma_1,U_1)$ \texttt{=} $V_2(\Gamma,m_1)$ \textbf{in}                       \\
+	                                     &              & \textbf{let} $U_2$ \texttt{=} $V_1(\Gamma,e_2,\alpha_2)$ \textbf{in}              &                                       &              & \textbf{let} $(\Gamma_2,U_2)$ \texttt{=} $V_2((\modid,\Gamma_1)\cons\Gamma,m_2)$ \textbf{in} \\
+	                                     &              & $\{\alpha_1\A{=}\alpha_2\rightarrow\alpha\}\cup U_1\cup U_2$                      &                                       &              & $((\modid,\Gamma_1)\cons\Gamma_2,U_1\cup U_2)$                                               \\
+	$V_1(\Gamma,\link{m_1}{e_2},\alpha)$ & $\triangleq$ & \textbf{let} $(\Gamma_1,U_1)$ \texttt{=} $V_2(\Gamma,m_1)$ \textbf{in}                                                                                                                                                                  \\
+	                                     &              & \textbf{let} $U_2$ \texttt{=} $V_1(\Gamma_1,e_2,\alpha)$ \textbf{in}                                                                                                                                                                    \\
+	                                     &              & $U_1\cup U_2$                                                                                                                                                                                                                           \\
 \end{tabular}
 
 \vphantom{}
@@ -695,333 +694,333 @@ We want to prove that the constraint generation algorithm is correct.
 
 First, for $\external\in\TyEnv$, define the access operations $\external.p$ and $\external.p.x$ (which may fail):
 \begin{align*}
-  \external.\epsilon & \triangleq\external &  &  & \external.p\modid & \triangleq(\external.p)(\modid) &  &  & \external.p.x & \triangleq(\external.p)(x)
+	\external.\epsilon & \triangleq\external &  &  & \external.p\modid & \triangleq(\external.p)(\modid) &  &  & \external.p.x & \triangleq(\external.p)(x)
 \end{align*}
 and define the injection operations $\Gamma[\external]$ and $\tau[\external]$:
 \begin{align*}
-  (\bullet)[\external]                     & \triangleq\bullet                                           &  &  & ((x,\tau)\cons\Gamma)[\external]     & \triangleq(x,\tau[\external])\cons\Gamma[\external]     \\
-  ((\modid,\Gamma)\cons\Gamma')[\external] & \triangleq(\modid,\Gamma[\external])\cons\Gamma'[\external] &  &  & ([].p)[\external]                    & \triangleq\external.p                                   \\
-  (\iota)[\external]                       & \triangleq\iota                                             &  &  & (\tau_1\rightarrow\tau_2)[\external] & \triangleq\tau_1[\external]\rightarrow\tau_2[\external] \\
-  (\alpha)[\external]                      & \triangleq\alpha                                            &  &  & ([].p.x)[\external]                  & \triangleq\external.p.x
+	(\bullet)[\external]                     & \triangleq\bullet                                           &  &  & ((x,\tau)\cons\Gamma)[\external]     & \triangleq(x,\tau[\external])\cons\Gamma[\external]     \\
+	((\modid,\Gamma)\cons\Gamma')[\external] & \triangleq(\modid,\Gamma[\external])\cons\Gamma'[\external] &  &  & ([].p)[\external]                    & \triangleq\external.p                                   \\
+	(\iota)[\external]                       & \triangleq\iota                                             &  &  & (\tau_1\rightarrow\tau_2)[\external] & \triangleq\tau_1[\external]\rightarrow\tau_2[\external] \\
+	(\alpha)[\external]                      & \triangleq\alpha                                            &  &  & ([].p.x)[\external]                  & \triangleq\external.p.x
 \end{align*}
 
 Let $\Subst\triangleq\fin{\TyVar}{\Type}$ be the set of substitutions.
 For $S\in\Subst$, define:
 \begin{align*}
-  S\iota               & \triangleq\iota                  &                                  &  & S(\tau_1\rightarrow\tau_2)   & \triangleq S\tau_1\rightarrow S\tau_2                                         \\
-  S\alpha              & \triangleq\alpha                 & \text{when }\alpha\not\in dom(S) &  & S\alpha                      & \triangleq \tau                          & \text{when }\alpha\mapsto\tau\in S \\
-  S[].\_               & \triangleq [].\_                 &                                  &  & S\bullet                     & \triangleq\bullet                                                             \\
-  S(x,\tau)\cons\Gamma & \triangleq(x,S\tau)\cons S\Gamma &                                  &  & S(\modid,\Gamma)\cons\Gamma' & \triangleq(\modid,S\Gamma)\cons S\Gamma'
+	S\iota               & \triangleq\iota                  &                                  &  & S(\tau_1\rightarrow\tau_2)   & \triangleq S\tau_1\rightarrow S\tau_2                                         \\
+	S\alpha              & \triangleq\alpha                 & \text{when }\alpha\not\in dom(S) &  & S\alpha                      & \triangleq \tau                          & \text{when }\alpha\mapsto\tau\in S \\
+	S[].\_               & \triangleq [].\_                 &                                  &  & S\bullet                     & \triangleq\bullet                                                             \\
+	S(x,\tau)\cons\Gamma & \triangleq(x,S\tau)\cons S\Gamma &                                  &  & S(\modid,\Gamma)\cons\Gamma' & \triangleq(\modid,S\Gamma)\cons S\Gamma'
 \end{align*}
 Define:
 \[(S,\external)\vDash U\triangleq\forall(\tau_1\A{=}\tau_2)\in U:(S\tau_1)[\external]= (S\tau_2)[\external]\]
 Then we can show that:
 \begin{clm}[Correnctness of $V$]
-  For $e\in\Expr$, $m\in\Module$, $\Gamma,\external\in\TyEnv$, $\alpha\in\TyVar$, $S\in\Subst$:
-  \begin{align*}
-    (S,\external)\vDash U \Leftrightarrow & (S\Gamma)[\external]\vdash e:(S\alpha)[\external]  & \text{when }V_1(\Gamma,e,\alpha)=U    \\
-    (S,\external)\vDash U \Leftrightarrow & (S\Gamma)[\external]\vdash m:(S\Gamma')[\external] & \text{when }V_2(\Gamma,m)=(\Gamma',U)
-  \end{align*}
+	For $e\in\Expr$, $m\in\Module$, $\Gamma,\external\in\TyEnv$, $\alpha\in\TyVar$, $S\in\Subst$:
+	\begin{align*}
+		(S,\external)\vDash U \Leftrightarrow & (S\Gamma)[\external]\vdash e:(S\alpha)[\external]  & \text{when }V_1(\Gamma,e,\alpha)=U    \\
+		(S,\external)\vDash U \Leftrightarrow & (S\Gamma)[\external]\vdash m:(S\Gamma')[\external] & \text{when }V_2(\Gamma,m)=(\Gamma',U)
+	\end{align*}
 \end{clm}
 \begin{proof}[Proof sketch]
-  Mutual induction on $e,m$.
+	Mutual induction on $e,m$.
 \end{proof}
 
 Note that by including $[].p$ in type environments, we can naturally generate constraints about the external environment $[]$.
 Also, by injection, we can utilize constraints generated \emph{in advance} to obtain constraints generated from a more informed environment.
 We extend injection to the output of the constraint-generating algorithm:
 \begin{align*}
-  \bot[\external]       & \triangleq\bot                                                                                                      \\
-  U[\external]          & \triangleq\{\tau_1[\external]\A{=}\tau_2[\external]|(\tau_1\A{=}\tau_2)\in U\} & \text{when all injections succeed} \\
-  U[\external]          & \triangleq\bot                                                                 & \text{when injection fails}        \\
-  (\Gamma,U)[\external] & \triangleq(\Gamma[\external],U[\external])
+	\bot[\external]       & \triangleq\bot                                                                                                      \\
+	U[\external]          & \triangleq\{\tau_1[\external]\A{=}\tau_2[\external]|(\tau_1\A{=}\tau_2)\in U\} & \text{when all injections succeed} \\
+	U[\external]          & \triangleq\bot                                                                 & \text{when injection fails}        \\
+	(\Gamma,U)[\external] & \triangleq(\Gamma[\external],U[\external])
 \end{align*}
 Then we can prove:
 \begin{clm}[Advance]
-  For $e\in\Expr$, $m\in\Module$, $\Gamma,\external\in\TyEnv$, $\alpha\in\TyVar$:
-  \begin{align*}
-    V_1(\Gamma[\external],e,\alpha) & =V_1(\Gamma,e,\alpha)[\external] \\
-    V_2(\Gamma[\external],m)        & =V_2(\Gamma,m)[\external]
-  \end{align*}
+	For $e\in\Expr$, $m\in\Module$, $\Gamma,\external\in\TyEnv$, $\alpha\in\TyVar$:
+	\begin{align*}
+		V_1(\Gamma[\external],e,\alpha) & =V_1(\Gamma,e,\alpha)[\external] \\
+		V_2(\Gamma[\external],m)        & =V_2(\Gamma,m)[\external]
+	\end{align*}
 \end{clm}
 \begin{proof}[Proof sketch]
-  Structural induction on $\Gamma$.
+	Structural induction on $\Gamma$.
 \end{proof}
 
 \section{For the Language with First-Class Modules}
 \begin{figure}[htb]
-  \centering
-  \begin{tabular}{rrcll}
-    Identifiers & $x$ & $\in$         & $\ExprVar$                                                     \\
-    Expression  & $e$ & $\rightarrow$ & $x$ $\vbar$ $\lambda x.e$ $\vbar$ $e$ $e$ & $\lambda$-calculus \\
-                &     & $\vbar$       & $\link{e}{e}$                             & linked expression  \\
-                &     & $\vbar$       & $\varepsilon$                             & empty module       \\
-                &     & $\vbar$       & $\Lete$ $x$ $e$ $e$                       & value binding
-  \end{tabular}
-  \caption{Abstract syntax of the language where modules are first-class.}
-  \label{fig:extsyntax}
+	\centering
+	\begin{tabular}{rrcll}
+		Identifiers & $x$ & $\in$         & $\ExprVar$                                                     \\
+		Expression  & $e$ & $\rightarrow$ & $x$ $\vbar$ $\lambda x.e$ $\vbar$ $e$ $e$ & $\lambda$-calculus \\
+		            &     & $\vbar$       & $\link{e}{e}$                             & linked expression  \\
+		            &     & $\vbar$       & $\varepsilon$                             & empty module       \\
+		            &     & $\vbar$       & $\Lete$ $x$ $e$ $e$                       & value binding
+	\end{tabular}
+	\caption{Abstract syntax of the language where modules are first-class.}
+	\label{fig:extsyntax}
 \end{figure}
 \subsection{Operational Semantics}
 \begin{figure}[h!]
-  \centering
-  \begin{tabular}{rrcll}
-    Environment/Context & $\ctx$ & $\in$         & $\Ctx$                                                                   \\
-    Value               & $v$    & $\in$         & $\Value \triangleq\Ctx+\ExprVar\times\Expr\times\Ctx$                    \\
-    Context             & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack      \\
-                        &        & $\vbar$       & $(x,v)\cons \ctx$                                     & value binding    \\
-    Value               & $v$    & $\rightarrow$ & $\ctx$                                                & exported context \\
-                        &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure
-  \end{tabular}
-  \caption{Definition of the semantic domains.}
-  \label{fig:extsimpdom}
+	\centering
+	\begin{tabular}{rrcll}
+		Environment/Context & $\ctx$ & $\in$         & $\Ctx$                                                                   \\
+		Value               & $v$    & $\in$         & $\Value \triangleq\Ctx+\ExprVar\times\Expr\times\Ctx$                    \\
+		Context             & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack      \\
+		                    &        & $\vbar$       & $(x,v)\cons \ctx$                                     & value binding    \\
+		Value               & $v$    & $\rightarrow$ & $\ctx$                                                & exported context \\
+		                    &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure
+	\end{tabular}
+	\caption{Definition of the semantic domains.}
+	\label{fig:extsimpdom}
 \end{figure}
 
 \begin{figure}[h!]
-  \footnotesize
-  \begin{flushright}
-    \fbox{$(e,\ctx)\semarrow v$}
-  \end{flushright}
-  \centering
-  \vspace{0pt} % -0.75em}
-  \[
-    \begin{prooftree}
-      \hypo{v=\ctx(x)}
-      \infer[left label=Id]1{
-      (x, \ctx)
-      \semarrow
-      v
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \infer[left label=Fn]0{
-      (\lambda x.e, \ctx)
-      \semarrow
-      \langle\lambda x.e, \ctx\rangle
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          (e_{1}, \ctx)
-          \semarrow
-          \langle\lambda x.e_{\lambda}, \ctx_{\lambda}\rangle \\
-          (e_{2}, \ctx)
-          \semarrow
-          v                                                   \\
-          (e_{\lambda}, (x, v)\cons \ctx_{\lambda})
-          \semarrow
-          v'
-        \end{matrix}
-      }
-      \infer[left label={App}]1{
-      (e_{1}\:e_{2}, \ctx)
-      \semarrow
-      v'
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          (e_{1}, \ctx)
-          \semarrow
-          \ctx' \\
-          (e_{2}, \ctx')
-          \semarrow
-          v
-        \end{matrix}
-      }
-      \infer[left label=Link]1{
-      (\link{e_{1}}{e_{2}}, \ctx)
-      \semarrow
-      v
-      }
-    \end{prooftree}
-  \]
+	\footnotesize
+	\begin{flushright}
+		\fbox{$(e,\ctx)\semarrow v$}
+	\end{flushright}
+	\centering
+	\vspace{0pt} % -0.75em}
+	\[
+		\begin{prooftree}
+			\hypo{v=\ctx(x)}
+			\infer[left label=Id]1{
+			(x, \ctx)
+			\semarrow
+			v
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\infer[left label=Fn]0{
+			(\lambda x.e, \ctx)
+			\semarrow
+			\langle\lambda x.e, \ctx\rangle
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					(e_{1}, \ctx)
+					\semarrow
+					\langle\lambda x.e_{\lambda}, \ctx_{\lambda}\rangle \\
+					(e_{2}, \ctx)
+					\semarrow
+					v                                                   \\
+					(e_{\lambda}, (x, v)\cons \ctx_{\lambda})
+					\semarrow
+					v'
+				\end{matrix}
+			}
+			\infer[left label={App}]1{
+			(e_{1}\:e_{2}, \ctx)
+			\semarrow
+			v'
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					(e_{1}, \ctx)
+					\semarrow
+					\ctx' \\
+					(e_{2}, \ctx')
+					\semarrow
+					v
+				\end{matrix}
+			}
+			\infer[left label=Link]1{
+			(\link{e_{1}}{e_{2}}, \ctx)
+			\semarrow
+			v
+			}
+		\end{prooftree}
+	\]
 
-  \[
-    \begin{prooftree}
-      \infer[left label=Empty]0{
-      (\varepsilon, \ctx)
-      \semarrow
-      \bullet
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          (e_{1}, \ctx)
-          \semarrow
-          v \\
-          (e_{2}, (x, v)\cons \ctx)
-          \semarrow
-          \ctx'
-        \end{matrix}
-      }
-      \infer[left label=Bind]1{
-      (\Lete\:x\:e_1\:e_2, \ctx)
-      \semarrow
-      (x,v)\cons\ctx'
-      }
-    \end{prooftree}
-  \]
-  \caption{The big-step operational semantics.}
-  \label{fig:extsimpreach}
+	\[
+		\begin{prooftree}
+			\infer[left label=Empty]0{
+			(\varepsilon, \ctx)
+			\semarrow
+			\bullet
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					(e_{1}, \ctx)
+					\semarrow
+					v \\
+					(e_{2}, (x, v)\cons \ctx)
+					\semarrow
+					\ctx'
+				\end{matrix}
+			}
+			\infer[left label=Bind]1{
+			(\Lete\:x\:e_1\:e_2, \ctx)
+			\semarrow
+			(x,v)\cons\ctx'
+			}
+		\end{prooftree}
+	\]
+	\caption{The big-step operational semantics.}
+	\label{fig:extsimpreach}
 \end{figure}
 \subsection{Typing}
 The definitions for types are in Figure \ref{fig:exttypdom} and the typing rules are in Figure \ref{fig:exttypjudge}.
 The definitions for subtyping are in Figure \ref{fig:subtyping}.
 
 \begin{figure}[h!]
-  \centering
-  \begin{tabular}{rrcll}
-    Types              & $\tau$   & $\rightarrow$ & $\Gamma$               & module type       \\
-                       &          & $\vbar$       & $\tau\rightarrow\tau$  & function type     \\
-    Typing Environment & $\Gamma$ & $\rightarrow$ & $\bullet$              & empty environment \\
-                       &          & $\vbar$       & $(x,\tau)\cons \Gamma$ & type binding
-  \end{tabular}
-  \caption{Definition of types.}
-  \label{fig:exttypdom}
+	\centering
+	\begin{tabular}{rrcll}
+		Types              & $\tau$   & $\rightarrow$ & $\Gamma$               & module type       \\
+		                   &          & $\vbar$       & $\tau\rightarrow\tau$  & function type     \\
+		Typing Environment & $\Gamma$ & $\rightarrow$ & $\bullet$              & empty environment \\
+		                   &          & $\vbar$       & $(x,\tau)\cons \Gamma$ & type binding
+	\end{tabular}
+	\caption{Definition of types.}
+	\label{fig:exttypdom}
 \end{figure}
 
 \begin{figure}[h!]
-  \footnotesize
-  \begin{flushright}
-    \fbox{$\Gamma\vdash e:\tau$}
-  \end{flushright}
-  \centering
-  \vspace{0pt} % -0.75em}
-  \[
-    \begin{prooftree}
-      \hypo{\tau=\Gamma(x)}
-      \infer[left label=Id]1{
-      \Gamma\vdash x:\tau
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{(x,\tau_1)\cons\Gamma\vdash e:\tau_2}
-      \infer[left label=Fn]1{
-      \Gamma\vdash\lambda x.e:\tau_1\rightarrow\tau_2
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          \Gamma\vdash e_1:\tau_1\rightarrow\tau \\
-          \Gamma\vdash e_2:\tau_2                \\
-          \tau_1\ge\tau_2
-        \end{matrix}
-      }
-      \infer[left label={App}]1{
-      \Gamma\vdash e_{1}\:e_{2}:\tau
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          \Gamma\vdash e_1:\Gamma_1 \\
-          \Gamma_1\vdash e_2:\tau_2
-        \end{matrix}
-      }
-      \infer[left label=Link]1{
-      \Gamma\vdash\link{e_{1}}{e_{2}}:\tau_2
-      }
-    \end{prooftree}
-  \]
+	\footnotesize
+	\begin{flushright}
+		\fbox{$\Gamma\vdash e:\tau$}
+	\end{flushright}
+	\centering
+	\vspace{0pt} % -0.75em}
+	\[
+		\begin{prooftree}
+			\hypo{\tau=\Gamma(x)}
+			\infer[left label=Id]1{
+			\Gamma\vdash x:\tau
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{(x,\tau_1)\cons\Gamma\vdash e:\tau_2}
+			\infer[left label=Fn]1{
+			\Gamma\vdash\lambda x.e:\tau_1\rightarrow\tau_2
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					\Gamma\vdash e_1:\tau_1\rightarrow\tau \\
+					\Gamma\vdash e_2:\tau_2                \\
+					\tau_1\ge\tau_2
+				\end{matrix}
+			}
+			\infer[left label={App}]1{
+			\Gamma\vdash e_{1}\:e_{2}:\tau
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					\Gamma\vdash e_1:\Gamma_1 \\
+					\Gamma_1\vdash e_2:\tau_2
+				\end{matrix}
+			}
+			\infer[left label=Link]1{
+			\Gamma\vdash\link{e_{1}}{e_{2}}:\tau_2
+			}
+		\end{prooftree}
+	\]
 
-  \[
-    \begin{prooftree}
-      \infer[left label=Empty]0{
-      \Gamma\vdash\varepsilon:\bullet
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          \Gamma\vdash e_1:\tau_1 \\
-          (x, \tau_1)\cons\Gamma\vdash e_2:\Gamma_2
-        \end{matrix}
-      }
-      \infer[left label=Bind]1{
-      \Gamma\vdash\Lete\:x\:e_1\:e_2:(x,\tau_1)\cons\Gamma_2
-      }
-    \end{prooftree}
-  \]
-  \caption{The typing judgment.}
-  \label{fig:exttypjudge}
+	\[
+		\begin{prooftree}
+			\infer[left label=Empty]0{
+			\Gamma\vdash\varepsilon:\bullet
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					\Gamma\vdash e_1:\tau_1 \\
+					(x, \tau_1)\cons\Gamma\vdash e_2:\Gamma_2
+				\end{matrix}
+			}
+			\infer[left label=Bind]1{
+			\Gamma\vdash\Lete\:x\:e_1\:e_2:(x,\tau_1)\cons\Gamma_2
+			}
+		\end{prooftree}
+	\]
+	\caption{The typing judgment.}
+	\label{fig:exttypjudge}
 \end{figure}
 \begin{figure}[h!]
-  \footnotesize
-  \begin{flushright}
-    \fbox{$\tau\ge\tau$}
-  \end{flushright}
-  \centering
-  \vspace{0pt} % -0.75em}
-  \[
-    \begin{prooftree}
-      \infer[left label=Empty]0{
-      \bullet\ge\bullet
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          \Gamma(x)\ge\tau \\
-          \Gamma-x\ge\Gamma'
-        \end{matrix}
-      }
-      \infer[left label=Bind]1{
-      \Gamma\ge(x,\tau)\cons\Gamma'
-      }
-    \end{prooftree}\qquad
-    \begin{prooftree}
-      \hypo{
-        \begin{matrix}
-          \tau_2\ge\tau_1 \\
-          \tau_1'\ge\tau_2'
-        \end{matrix}
-      }
-      \infer[left label=Fn]1{
-      \tau_1\rightarrow\tau_1'\ge
-      \tau_2\rightarrow\tau_2'
-      }
-    \end{prooftree}
-  \]
-  \caption{The subtype relation.}
-  \label{fig:subtyping}
+	\footnotesize
+	\begin{flushright}
+		\fbox{$\tau\ge\tau$}
+	\end{flushright}
+	\centering
+	\vspace{0pt} % -0.75em}
+	\[
+		\begin{prooftree}
+			\infer[left label=Empty]0{
+			\bullet\ge\bullet
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					\Gamma(x)\ge\tau \\
+					\Gamma-x\ge\Gamma'
+				\end{matrix}
+			}
+			\infer[left label=Bind]1{
+			\Gamma\ge(x,\tau)\cons\Gamma'
+			}
+		\end{prooftree}\qquad
+		\begin{prooftree}
+			\hypo{
+				\begin{matrix}
+					\tau_2\ge\tau_1 \\
+					\tau_1'\ge\tau_2'
+				\end{matrix}
+			}
+			\infer[left label=Fn]1{
+			\tau_1\rightarrow\tau_1'\ge
+			\tau_2\rightarrow\tau_2'
+			}
+		\end{prooftree}
+	\]
+	\caption{The subtype relation.}
+	\label{fig:subtyping}
 \end{figure}
 
 \subsection{Type Safety}
 \begin{clm}[Type Safety]
-  For all $e\in\Expr$, if $\bullet\vdash e:\tau$ for some $\tau$, then there exists some $v\in\Value$ such that $(e,\bullet)\semarrow v$.
+	For all $e\in\Expr$, if $\bullet\vdash e:\tau$ for some $\tau$, then there exists some $v\in\Value$ such that $(e,\bullet)\semarrow v$.
 \end{clm}
 \begin{proof}[Proof sketch]
-  We prove this through unary logical relations and induction on the typing judgment.
+	We prove this through unary logical relations and induction on the typing judgment.
 
-  \begin{tabular}{rclr}
-    \textbf{Value Relation}            &              &                                                                                                        & \fbox{$\ValRel{\tau}$}       \\
-    $\ValRel{\bullet}$                 & $\triangleq$ & $\Ctx$                                                                                                                                \\
-    $\ValRel{(x,\tau)\cons\Gamma}$     & $\triangleq$ & $\{\ctx|\ctx(x)\in\ValRel{\tau}\land\ctx\in\ValRel{\Gamma-x}\}$                                                                   \\
-    $\ValRel{\tau_1\rightarrow\tau_2}$ & $\triangleq$ & $\{\langle\lambda x.e,\ctx\rangle|\forall v\in\ValRel{\tau_1}:(e,(x,v)\cons\ctx)\in\ExprRel{\tau_2}\}$                                \\
-    \\
-    \textbf{Expression Relation}       &              &                                                                                                        & \fbox{$\ExprRel{\tau}$}      \\
-    $\ExprRel{\tau}$                   & $\triangleq$ & $\{(e,\ctx)|\exists v\in\ValRel{\tau}:(e,\ctx)\semarrow v\}$                                                                          \\
-    \\
-    \textbf{Semantic Typing}           &              &                                                                                                        & \fbox{$\Gamma\vDash e:\tau$} \\
-    $\Gamma\vDash e:\tau$              & $\triangleq$ & $\forall\ctx\in\ValRel{\Gamma}:(e,\ctx)\in\ExprRel{\tau}$
-  \end{tabular}
+	\begin{tabular}{rclr}
+		\textbf{Value Relation}            &              &                                                                                                        & \fbox{$\ValRel{\tau}$}       \\
+		$\ValRel{\bullet}$                 & $\triangleq$ & $\Ctx$                                                                                                                                \\
+		$\ValRel{(x,\tau)\cons\Gamma}$     & $\triangleq$ & $\{\ctx|\ctx(x)\in\ValRel{\tau}\land\ctx\in\ValRel{\Gamma-x}\}$                                                                       \\
+		$\ValRel{\tau_1\rightarrow\tau_2}$ & $\triangleq$ & $\{\langle\lambda x.e,\ctx\rangle|\forall v\in\ValRel{\tau_1}:(e,(x,v)\cons\ctx)\in\ExprRel{\tau_2}\}$                                \\
+		\\
+		\textbf{Expression Relation}       &              &                                                                                                        & \fbox{$\ExprRel{\tau}$}      \\
+		$\ExprRel{\tau}$                   & $\triangleq$ & $\{(e,\ctx)|\exists v\in\ValRel{\tau}:(e,\ctx)\semarrow v\}$                                                                          \\
+		\\
+		\textbf{Semantic Typing}           &              &                                                                                                        & \fbox{$\Gamma\vDash e:\tau$} \\
+		$\Gamma\vDash e:\tau$              & $\triangleq$ & $\forall\ctx\in\ValRel{\Gamma}:(e,\ctx)\in\ExprRel{\tau}$
+	\end{tabular}
 
-  \vphantom{}
+	\vphantom{}
 
-  We want to prove that:
-  \[\Gamma\vdash e:\tau\Rightarrow\Gamma\vDash e:\tau\]
-  by induction on $\vdash$.
+	We want to prove that:
+	\[\Gamma\vdash e:\tau\Rightarrow\Gamma\vDash e:\tau\]
+	by induction on $\vdash$.
 
-  For the base case of $\bullet$, the proof is trivial.
-  For inductive cases, we need to show \emph{compatibility} lemmas.
-  That is, we must show that the typing rules for syntactic typing hold for semantic typing as well.
-  For this, we need the \emph{subtyping} lemma:
-  \[\tau_1\ge\tau_2\Rightarrow\ValRel{\tau_1}\supseteq\ValRel{\tau_2}\]
-  Then by the inductive hypothesis and compatibility, the result follows.
+	For the base case of $\bullet$, the proof is trivial.
+	For inductive cases, we need to show \emph{compatibility} lemmas.
+	That is, we must show that the typing rules for syntactic typing hold for semantic typing as well.
+	For this, we need the \emph{subtyping} lemma:
+	\[\tau_1\ge\tau_2\Rightarrow\ValRel{\tau_1}\supseteq\ValRel{\tau_2}\]
+	Then by the inductive hypothesis and compatibility, the result follows.
 \end{proof}
 
 \subsection{Type Inference}
@@ -1030,29 +1029,29 @@ When modules are first-class, type variables can go in the place of type environ
 
 First we define the syntax for type constraints.
 \begin{figure}[h!]
-  \centering
-  \begin{tabular}{rrcll}
-    Type Variable      & $\alpha$ & $\in$         & $\TyVar$                                                               \\
-    Path               & $p$      & $\rightarrow$ & $\epsilon$                       & empty string                        \\
-                       &          & $\vbar$       & $p x$                            & concatenation with identifier       \\
-    Types              & $\tau$   & $\rightarrow$ & $\Gamma$ | $\tau\rightarrow\tau$ & module/function types               \\
-    Type Environment   & $\Gamma$ & $\rightarrow$ & $\bullet$                        & empty environment                   \\
-                       &          & $\vbar$       & $(x,\tau)\cons \Gamma$           & binding                             \\
-                       &          & $\vbar$       & $\alpha.p$                       & type variable                       \\
-                       &          & $\vbar$       & $[].p$                           & types from the external environment \\
-    Type Constraint    & $u$      & $\rightarrow$ & $\tau\A{=}\tau$                  & equality constraint                 \\
-                       &          & $\vbar$       & $\tau\A{\ge}\tau$                & subtyping constraint                \\
-    Set of Constraints & $U$      & $\subseteq$   & $\{u|u\text{ type constraint}\}$
-  \end{tabular}
-  \caption{Definition of type constraints.}
-  \label{fig:typeqdom}
+	\centering
+	\begin{tabular}{rrcll}
+		Type Variable      & $\alpha$ & $\in$         & $\TyVar$                                                               \\
+		Path               & $p$      & $\rightarrow$ & $\epsilon$                       & empty string                        \\
+		                   &          & $\vbar$       & $p x$                            & concatenation with identifier       \\
+		Types              & $\tau$   & $\rightarrow$ & $\Gamma$ | $\tau\rightarrow\tau$ & module/function types               \\
+		Type Environment   & $\Gamma$ & $\rightarrow$ & $\bullet$                        & empty environment                   \\
+		                   &          & $\vbar$       & $(x,\tau)\cons \Gamma$           & binding                             \\
+		                   &          & $\vbar$       & $\alpha.p$                       & type variable                       \\
+		                   &          & $\vbar$       & $[].p$                           & types from the external environment \\
+		Type Constraint    & $u$      & $\rightarrow$ & $\tau\A{=}\tau$                  & equality constraint                 \\
+		                   &          & $\vbar$       & $\tau\A{\ge}\tau$                & subtyping constraint                \\
+		Set of Constraints & $U$      & $\subseteq$   & $\{u|u\text{ type constraint}\}$
+	\end{tabular}
+	\caption{Definition of type constraints.}
+	\label{fig:typeqdom}
 \end{figure}
 
 Next we define the type access operation $\tau(x)$:
 \begin{align*}
-  \bullet(x)              & \triangleq\bot      &                      &  & (\alpha.p)(x)        & \triangleq\alpha.px \\
-  ((x,\tau)\cons\_)(x)    & \triangleq\tau      &                      &  & ([].p)(x)            & \triangleq[].px     \\
-  ((x',\_)\cons\Gamma)(x) & \triangleq\Gamma(x) & \text{when }x'\neq x &  & (\_\rightarrow\_)(x) & \triangleq\bot
+	\bullet(x)              & \triangleq\bot      &                      &  & (\alpha.p)(x)        & \triangleq\alpha.px \\
+	((x,\tau)\cons\_)(x)    & \triangleq\tau      &                      &  & ([].p)(x)            & \triangleq[].px     \\
+	((x',\_)\cons\Gamma)(x) & \triangleq\Gamma(x) & \text{when }x'\neq x &  & (\_\rightarrow\_)(x) & \triangleq\bot
 \end{align*}
 
 Now we can define the constraint generation algorithm $V(\Gamma,e,\alpha)$.
@@ -1062,16 +1061,16 @@ Also note that we write $\alpha$ for $\alpha.\epsilon$ as well.
 \begin{flushright}\fbox{$V(\Gamma,e,\alpha)=U$}\end{flushright}
 \hspace{-2.5em}
 \begin{tabular}{rclrcl}
-  $V(\Gamma,\varepsilon,\alpha)$ & $\triangleq$ & $\{\alpha\A{=}\bullet\}$                                                             & $V(\Gamma,\link{e_1}{e_2},\alpha)$         & $\triangleq$ & \textbf{let} $\alpha_1$ \texttt{=} \textit{fresh} \textbf{in}                       \\
-  $V(\Gamma,x,\alpha)$           & $\triangleq$ & \textbf{let} $\tau$ \texttt{=} $\Gamma(x)$ \textbf{in}                               &                                            &              & \textbf{let} $U_1$ \texttt{=} $V(\Gamma,e_1,\alpha_1)$ \textbf{in}                  \\
-                                 &              & $\{\alpha\A{=}\tau\}$                                                                &                                            &              & \textbf{let} $U_2$ \texttt{=} $V(\alpha_1,e_2,\alpha)$  \textbf{in}                 \\
-  $V(\Gamma,\lambda x.e,\alpha)$ & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2$ \texttt{=} \textit{fresh} \textbf{in}               &                                            &              & $U_1\cup U_2$                                                                       \\
-                                 &              & \textbf{let} $U$ \texttt{=} $V((x,\alpha_1)\cons\Gamma,e,\alpha_2)$ \textbf{in}      & $V(\Gamma,\Lete\:\modid\:e_1\:e_2,\alpha)$ & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2$ \texttt{=} \textit{fresh} \textbf{in}              \\
-                                 &              & $\{\alpha\A{=}\alpha_1\rightarrow\alpha_2\}\cup U$                                   &                                            &              & \textbf{let} $U_1$ \texttt{=} $V(\Gamma,e_1,\alpha_1)$ \textbf{in}                  \\
-  $V(\Gamma,e_1\:e_2,\alpha)$    & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2,\alpha_3$ \texttt{=} \textit{fresh} \textbf{in}      &                                            &              & \textbf{let} $U_2$ \texttt{=} $V((x,\alpha_1)\cons\Gamma,e_2,\alpha_2)$ \textbf{in} \\
-                                 &              & \textbf{let} $U_1$ \texttt{=} $V(\Gamma,e_1,\alpha_1)$ \textbf{in}                   &                                            &              & $\{\alpha\A{=}(x,\alpha_1)\cons\alpha_2\}\cup U_1\cup U_2$                          \\
-                                 &              & \textbf{let} $U_2$ \texttt{=} $V(\Gamma,e_2,\alpha_2)$ \textbf{in}                                                                                                                                                                     \\
-                                 &              & $\{\alpha_1\A{=}\alpha_3\rightarrow\alpha,\alpha_3\A{\ge}\alpha_2\}\cup U_1\cup U_2$
+	$V(\Gamma,\varepsilon,\alpha)$ & $\triangleq$ & $\{\alpha\A{=}\bullet\}$                                                             & $V(\Gamma,\link{e_1}{e_2},\alpha)$         & $\triangleq$ & \textbf{let} $\alpha_1$ \texttt{=} \textit{fresh} \textbf{in}                       \\
+	$V(\Gamma,x,\alpha)$           & $\triangleq$ & \textbf{let} $\tau$ \texttt{=} $\Gamma(x)$ \textbf{in}                               &                                            &              & \textbf{let} $U_1$ \texttt{=} $V(\Gamma,e_1,\alpha_1)$ \textbf{in}                  \\
+	                               &              & $\{\alpha\A{=}\tau\}$                                                                &                                            &              & \textbf{let} $U_2$ \texttt{=} $V(\alpha_1,e_2,\alpha)$  \textbf{in}                 \\
+	$V(\Gamma,\lambda x.e,\alpha)$ & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2$ \texttt{=} \textit{fresh} \textbf{in}               &                                            &              & $U_1\cup U_2$                                                                       \\
+	                               &              & \textbf{let} $U$ \texttt{=} $V((x,\alpha_1)\cons\Gamma,e,\alpha_2)$ \textbf{in}      & $V(\Gamma,\Lete\:\modid\:e_1\:e_2,\alpha)$ & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2$ \texttt{=} \textit{fresh} \textbf{in}              \\
+	                               &              & $\{\alpha\A{=}\alpha_1\rightarrow\alpha_2\}\cup U$                                   &                                            &              & \textbf{let} $U_1$ \texttt{=} $V(\Gamma,e_1,\alpha_1)$ \textbf{in}                  \\
+	$V(\Gamma,e_1\:e_2,\alpha)$    & $\triangleq$ & \textbf{let} $\alpha_1,\alpha_2,\alpha_3$ \texttt{=} \textit{fresh} \textbf{in}      &                                            &              & \textbf{let} $U_2$ \texttt{=} $V((x,\alpha_1)\cons\Gamma,e_2,\alpha_2)$ \textbf{in} \\
+	                               &              & \textbf{let} $U_1$ \texttt{=} $V(\Gamma,e_1,\alpha_1)$ \textbf{in}                   &                                            &              & $\{\alpha\A{=}(x,\alpha_1)\cons\alpha_2\}\cup U_1\cup U_2$                          \\
+	                               &              & \textbf{let} $U_2$ \texttt{=} $V(\Gamma,e_2,\alpha_2)$ \textbf{in}                                                                                                                                                                     \\
+	                               &              & $\{\alpha_1\A{=}\alpha_3\rightarrow\alpha,\alpha_3\A{\ge}\alpha_2\}\cup U_1\cup U_2$
 \end{tabular}
 
 \vphantom{}
@@ -1080,61 +1079,57 @@ We want to prove that the constraint generation algorithm is correct.
 
 First, for $\tau\in\Type$, define the access operation $\tau.p$ (which may fail):
 \begin{align*}
-  \tau.\epsilon & \triangleq\tau &  &  & \tau.px & \triangleq(\tau.p)(x)
+	\tau.\epsilon & \triangleq\tau &  &  & \tau.px & \triangleq(\tau.p)(x)
 \end{align*}
 and define the injection operation $\tau[\external]$:
 \begin{align*}
-  (\bullet)[\external]                 & \triangleq\bullet                                       &  &  & ((x,\tau)\cons\Gamma)[\external] & \triangleq(x,\tau[\external])\cons\Gamma[\external] \\
-  (\alpha.p)[\external]                & \triangleq\alpha.p                                      &  &  & ([].p)[\external]                & \triangleq\external.p                               \\
-  (\tau_1\rightarrow\tau_2)[\external] & \triangleq\tau_1[\external]\rightarrow\tau_2[\external]
+	(\bullet)[\external]                 & \triangleq\bullet                                       &  &  & ((x,\tau)\cons\Gamma)[\external] & \triangleq(x,\tau[\external])\cons\Gamma[\external] \\
+	(\alpha.p)[\external]                & \triangleq\alpha.p                                      &  &  & ([].p)[\external]                & \triangleq\external.p                               \\
+	(\tau_1\rightarrow\tau_2)[\external] & \triangleq\tau_1[\external]\rightarrow\tau_2[\external]
 \end{align*}
 
 Let $\Subst\triangleq\fin{\TyVar}{\Type}$ be the set of substitutions.
 For $S\in\Subst$, define:
 \begin{align*}
-  S\bullet    & \triangleq\bullet  &                                  &  & S(\tau_1\rightarrow\tau_2) & \triangleq S\tau_1\rightarrow S\tau_2                                      \\
-  S(\alpha.p) & \triangleq\alpha.p & \text{when }\alpha\not\in dom(S) &  & S(\alpha.p)                & \triangleq \tau.p                     & \text{when }\alpha\mapsto\tau\in S \\
-  S([].p)     & \triangleq [].p
+	S\bullet    & \triangleq\bullet  &                                  &  & S(\tau_1\rightarrow\tau_2) & \triangleq S\tau_1\rightarrow S\tau_2                                      \\
+	S(\alpha.p) & \triangleq\alpha.p & \text{when }\alpha\not\in dom(S) &  & S(\alpha.p)                & \triangleq \tau.p                     & \text{when }\alpha\mapsto\tau\in S \\
+	S([].p)     & \triangleq [].p
 \end{align*}
 Define:
 \begin{align*}
-  (S,\external)\vDash U\triangleq & \forall(\tau_1\A{=}\tau_2)\in U:(S\tau_1)[\external]= (S\tau_2)[\external]\text{ and} \\
-                                  & \forall(\tau_1\A{\ge}\tau_2)\in U:(S\tau_1)[\external]\ge(S\tau_2)[\external]
+	(S,\external)\vDash U\triangleq & \forall(\tau_1\A{=}\tau_2)\in U:(S\tau_1)[\external]= (S\tau_2)[\external]\text{ and} \\
+	                                & \forall(\tau_1\A{\ge}\tau_2)\in U:(S\tau_1)[\external]\ge(S\tau_2)[\external]
 \end{align*}
 where subtyping rules are the same as Figure \ref{fig:subtyping} and subtyping between type variables are not defined.
 
 Then we can show that:
 \begin{clm}[Correnctness of $V$]
-  For $e\in\Expr$, $\Gamma,\external\in\TyEnv$, $\alpha\in\TyVar$, $S\in\Subst$:
-  \begin{align*}
-    (S,\external)\vDash V(\Gamma,e,\alpha) \Leftrightarrow & (S\Gamma)[\external]\vdash e:(S\alpha)[\external]
-  \end{align*}
+	For $e\in\Expr$, $\Gamma,\external\in\TyEnv$, $\alpha\in\TyVar$, $S\in\Subst$:
+	\begin{align*}
+		(S,\external)\vDash V(\Gamma,e,\alpha) \Leftrightarrow & (S\Gamma)[\external]\vdash e:(S\alpha)[\external]
+	\end{align*}
 \end{clm}
 \begin{proof}[Proof sketch]
-  Structural induction on $e$.
+	Structural induction on $e$.
 \end{proof}
 
 Note that by including $[].p$ in type environments, we can naturally generate constraints about the external environment $[]$.
 Also, by injection, we can utilize constraints generated \emph{in advance} to obtain constraints generated from a more informed environment.
 We extend injection to the output of the constraint-generating algorithm:
 \begin{align*}
-  \bot[\external] \triangleq & \bot                                                                                                          \\
-  U[\external]    \triangleq & \{\tau_1[\external]\A{=}\tau_2[\external]|(\tau_1\A{=}\tau_2)\in U\}\cup                                      \\
-                             & \{\tau_1[\external]\A{\ge}\tau_2[\external]|(\tau_1\A{\ge}\tau_2)\in U\} & \text{when all injections succeed} \\
-  U[\external]    \triangleq & \bot                                                                     & \text{when injection fails}
+	\bot[\external] \triangleq & \bot                                                                                                          \\
+	U[\external]    \triangleq & \{\tau_1[\external]\A{=}\tau_2[\external]|(\tau_1\A{=}\tau_2)\in U\}\cup                                      \\
+	                           & \{\tau_1[\external]\A{\ge}\tau_2[\external]|(\tau_1\A{\ge}\tau_2)\in U\} & \text{when all injections succeed} \\
+	U[\external]    \triangleq & \bot                                                                     & \text{when injection fails}
 \end{align*}
 Then we can prove:
 \begin{clm}[Advance]
-  For $e\in\Expr$, $\Gamma,\external\in\TyEnv$, $\alpha\in\TyVar$:
-  \[V(\Gamma[\external],e,\alpha)=V(\Gamma,e,\alpha)[\external]\]
+	For $e\in\Expr$, $\Gamma,\external\in\TyEnv$, $\alpha\in\TyVar$:
+	\[V(\Gamma[\external],e,\alpha)=V(\Gamma,e,\alpha)[\external]\]
 \end{clm}
 \begin{proof}[Proof sketch]
-  Structural induction on $\Gamma$.
+	Structural induction on $\Gamma$.
 \end{proof}
 
 \end{document}
-%%% Local Variables: 
-%%% coding: utf-8
-%%% mode: latex
-%%% TeX-engine: xetex
-%%% End:
+
