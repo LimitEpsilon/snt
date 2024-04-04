@@ -16,7 +16,7 @@
 		Expression  & $e$ & $\rightarrow$ & $x$ $\vbar$ $\lambda x.e$ $\vbar$ $e$ $e$ & $\lambda$-calculus  \\
 		            &     & $\vbar$       & $e\synlink e$                             & linked expression   \\
 		            &     & $\vbar$       & $\varepsilon$                             & empty module        \\
-		            &     & $\vbar$       & $x\texttt{=}e$ ; $e$                      & (recursive) binding
+		            &     & $\vbar$       & $x\:\texttt{=}\:e$ ; $e$                  & (recursive) binding
 	\end{tabular}
 	\caption{Abstract syntax of the language.}
 	\label{fig:syntax}
@@ -83,7 +83,7 @@
 			\hypo{\ell\not\in\FLoc(\ctx)}
 			\hypo{\evjudg{(x,\ell)\cons\ctx}{e_1}{v_1}}
 			\hypo{\evjudg{(x, \mu.\closeloc{\ell}{v_1})\cons \ctx}{e_1}{\ctx_2}}
-			\infer{2,1}{\evjudg{\ctx}{x=e_1; e_2}{(x,\mu.\closeloc{\ell}{v_1})\cons\ctx_2}}
+			\infer{2,1}{\evjudg{\ctx}{x\:\texttt{=}\:e_1; e_2}{(x,\mu.\closeloc{\ell}{v_1})\cons\ctx_2}}
 		\end{InfRule}
 	\]
 	\caption{The big-step operational semantics.}
@@ -202,7 +202,8 @@ As a consequence, the big-step operational semantics will be \emph{deterministic
 		\end{InfRule}
 	\]
 	\caption{The equivalence relation between weak values in the original semantics and values in the semantics with memory.
-		$f\in\fin{\Loc}{\Loc}$ tells what the free locations in $w$ that were \emph{opened} should be mapped to in memory.}
+		$f\in\fin{\Loc}{\Loc}$ tells what the free locations in $w$ that were \emph{opened} should be mapped to in memory.
+    $\mem$ is omitted for brevity.}
 	\label{fig:equivrel}
 \end{figure}
 
@@ -219,7 +220,9 @@ and the following theorem:
 	\end{align*}
 \end{thm}
 
-The actual definition for $\sim$ is given in Figure \ref{fig:equivrel}.
+The definition for $w\sim(\ctx,\mem,L)$ is:
+\[w\sim_\bot(\ctx,\mem)\text{ and }\FLoc(w)\subseteq L\]
+where the definition for $\sim_f$ is given in Figure \ref{fig:equivrel}.
 
 The proof of Theorem \ref{thm:equivsem} uses some useful lemmas, such as:
 \begin{lem}[Free locations not in $f$ are free in memory]
@@ -346,23 +349,23 @@ The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
 \section{CFA}
 \begin{center}
 	\begin{tabular}{rrcl}
-		Program point        & $p$                & $\in$         & $\mathbb{P}\triangleq\{\text{finite set of program points}\}$                              \\
-		Labelled expression  & $pe$               & $\in$         & $\mathbb{P}\times\Expr$                                                                    \\
-		Labelled location    & $\llabel{p}{\ell}$ & $\in$         & $\mathbb{P}\times\Loc$                                                                     \\
-		Collecting semantics & $t$                & $\in$         & $\mathbb{T}\triangleq\mathbb{P}\rightarrow\pset(\Ctx+\Ctx\times\Value)$                    \\
-		Labelled expression  & $pe$               & $\rightarrow$ & $\plabel{p}{e}$                                                                            \\
-		Expression           & $e$                & $\rightarrow$ & $x$ | $\lambda x.pe$ | $pe$ $pe$ | ${pe}\synlink{pe}$ | $\varepsilon$ | $x\texttt{=}pe;pe$
+		Program point        & $p$                & $\in$         & $\mathbb{P}\triangleq\{\text{finite set of program points}\}$                                  \\
+		Labelled expression  & $pe$               & $\in$         & $\mathbb{P}\times\Expr$                                                                        \\
+		Labelled location    & $\llabel{p}{\ell}$ & $\in$         & $\mathbb{P}\times\Loc$                                                                         \\
+		Collecting semantics & $t$                & $\in$         & $\mathbb{T}\triangleq\mathbb{P}\rightarrow\pset(\Ctx+\Ctx\times\Value)$                        \\
+		Labelled expression  & $pe$               & $\rightarrow$ & $\plabel{p}{e}$                                                                                \\
+		Expression           & $e$                & $\rightarrow$ & $x$ | $\lambda x.pe$ | $pe$ $pe$ | ${pe}\synlink{pe}$ | $\varepsilon$ | $x\:\texttt{=}\:pe;pe$
 	\end{tabular}
 \end{center}
 \begin{align*}
 	                           &                                                                                                                                                                                            & \fbox{$\Step:\mathbb{T}\rightarrow\mathbb{T}$}                   \\
 	\Step(\ptree)   \triangleq & \bigcup_{p\in\mathbb{P}}\step(\ptree,p)                                                                                                                                                                                                                       \\
 	                           &                                                                                                                                                                                            & \fbox{$\step:(\mathbb{T}\times\mathbb{P})\rightarrow\mathbb{T}$} \\
-	\step(\ptree,p) \triangleq & [p\mapsto\{(\ctx,v)|\ctx\in \ptree(p)\text{ and }\ctx(x)=v\}]                                                                                                                              & \text{when }\plabel{p}{x}                                        \\
+	\step(\ptree,p) \triangleq & [p\mapsto\{(\ctx,v)|\ctx\in\ptree(p)\text{ and }\ctx(x)=v\}]                                                                                                                               & \text{when }\plabel{p}{x}                                        \\
 	\cup                       & [p\mapsto\{(\ctx,\openloc{\mu.v}{v})|\ctx\in \ptree(p)\text{ and }\ctx(x)=\mu.v\}]                                                                                                                                                                            \\
 	\step(\ptree,p) \triangleq & [p\mapsto\{(\ctx,\langle\lambda x.p',\ctx\rangle)|\ctx\in \ptree(p)\}]                                                                                                                     & \text{when }\plabel{p}{\lambda x.p'}                             \\
-	\step(\ptree,p) \triangleq & [p_1\mapsto\{\ctx|\ctx\in \ptree(p)\}]                                                                                                                                                     & \text{when }\plabel{p}{p_1\:p_2}                                 \\
-	\cup                       & [p_2\mapsto\{\ctx|\ctx\in \ptree(p)\}]                                                                                                                                                                                                                        \\
+	\step(\ptree,p) \triangleq & [p_1\mapsto\{\ctx\in\Ctx|\ctx\in \ptree(p)\}]                                                                                                                                              & \text{when }\plabel{p}{p_1\:p_2}                                 \\
+	\cup                       & [p_2\mapsto\{\ctx\in\Ctx|\ctx\in \ptree(p)\}]                                                                                                                                                                                                                 \\
 	\cup                       & \bigcup_{\ctx\in \ptree(p)}\bigcup_{(\ctx,\langle\lambda x.p',\ctx_1\rangle)\in \ptree(p_1)}[p'\mapsto\{(x,v_2)\cons\ctx_1|(\ctx,v_2)\in \ptree(p_2)\}]                                                                                                       \\
 	\cup                       & [p\mapsto\bigcup_{\ctx\in \ptree(p)}\bigcup_{(\ctx,\langle\lambda x.p',\ctx_1\rangle)\in \ptree(p_1)}\bigcup_{(\ctx,v_2)\in \ptree(p_2)}\{(\ctx,v)|((x,v_2)\cons\ctx_1,v)\in \ptree(p')\}]                                                                    \\
 	\cup                       & [p\mapsto\bigcup_{\ctx\in \ptree(p)}\{(\ctx,\CallE(\event_1,v_2))|(\ctx,\event_1)\in \ptree(p_1)\text{ and }(\ctx,v_2)\in \ptree(p_2)\}]                                                                                                                      \\
@@ -370,7 +373,7 @@ The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
 	\cup                       & [p_2\mapsto\bigcup_{\ctx\in \ptree(p)}\{\ctx_1|(\ctx,\ctx_1)\in \ptree(p_1)\}]                                                                                                                                                                                \\
 	\cup                       & [p\mapsto\bigcup_{\ctx\in \ptree(p)}\bigcup_{(\ctx,\ctx_1)\in \ptree(p_1)}\{(\ctx,v_2)|(\ctx_1,v_2)\in \ptree(p_2)\}]                                                                                                                                         \\
 	\step(\ptree,p) \triangleq & [p\mapsto\{(\ctx,\bullet)|\ctx\in \ptree(p)\}]                                                                                                                                             & \text{when }\plabel{p}{\varepsilon}                              \\
-	\step(\ptree,p) \triangleq & [p_1\mapsto\{(x,\llabel{p_1}{\ell})\cons\ctx|\ctx\in \ptree(p)\text{ and }\ell\not\in\FLoc(\ctx)\}]                                                                                        & \text{when }\plabel{p}{x\texttt{=}p_1;p_2}                       \\
+	\step(\ptree,p) \triangleq & [p_1\mapsto\{(x,\llabel{p_1}{\ell})\cons\ctx|\ctx\in \ptree(p)\text{ and }\ell\not\in\FLoc(\ctx)\}]                                                                                        & \text{when }\plabel{p}{x\:\texttt{=}\:p_1;p_2}                   \\
 	\cup                       & [p_2\mapsto\{(x,\llabel{p_1}{\mu}.\closeloc{\ell}{v_1})\cons\ctx|\ctx\in \ptree(p)\text{ and }((x,\llabel{p_1}{\ell})\cons\ctx,v_1)\in \ptree(p_1)\}]                                                                                                         \\
 	\cup                       & [p\mapsto\bigcup_{\ctx\in \ptree(p)}\{(\ctx,(x,\llabel{p_1}{\mu}.\closeloc{\ell}{v_1})\cons\ctx_2)|((x,\llabel{p_1}{\mu}.\closeloc{\ell}{v_1})\cons\ctx,\ctx_2)\in \ptree(p_2)\}]
 \end{align*}
@@ -388,6 +391,73 @@ That is, $(\ctx,v)$ is contained in $t_0(p)$ if and only if $\evjudg{\ctx}{p}{v}
 		Abstract event       & $\Abs{\event}$                 & $\rightarrow$ & $\Abs{\InitE}$ | $\Abs{\ReadE}(p,x)$ | $\Abs{\CallE}(p,p)$
 	\end{tabular}
 \end{center}
+\begin{figure}[h!]
+	\centering
+	\small
+	\begin{flushright}
+    \fbox{$\ctx\le(\Abs\ctx,\Abs\ptree)$}
+	\end{flushright}
+	\[
+		\begin{InfRule}{Conc-Nil}
+      \infer0{\bullet\le\Abs\ctx}
+		\end{InfRule}\:
+    \begin{InfRule}{Conc-ENil}
+      \hypo{\event\le(\Abs\ctx,\varnothing)}
+      \infer1{[\event]\le\Abs\ctx}
+    \end{InfRule}\:
+		\begin{InfRule}{Conc-ConsLoc}
+			\hypo{p\in\Abs\ctx.1(x)}
+			\hypo{\ctx\le\Abs\ctx}
+      \infer2{(x,\llabel{p}{\ell})\cons\ctx\le\Abs\ctx}
+		\end{InfRule}\:
+    \begin{InfRule}{Conc-ConsWVal}
+      \hypo{p\in\Abs\ctx.1(x)}
+      \hypo{w\le\Abs\ptree(p).2}
+      \hypo{\ctx\le\Abs\ctx}
+			\infer3{(x,w)\cons\ctx\le\Abs\ctx}
+		\end{InfRule}
+	\]
+  \begin{flushright}
+    \fbox{$w\le(\Abs{v},\Abs\ptree)$}
+	\end{flushright}
+	\[
+		\begin{InfRule}{Conc-Clos}
+      \hypo{\langle\lambda x.p,p'\rangle\in\Abs{v}.2}
+			\hypo{\ctx\le\Abs\ptree(p').1}
+      \infer2{\langle\lambda x.p,\ctx\rangle\le\Abs{v}}
+		\end{InfRule}\:
+		\begin{InfRule}{Conc-Rec}
+      \hypo{\forall\ell,\:\openloc{\llabel{p}{\ell}}{v}\le\Abs{v}}
+      \infer1{\llabel{p}{\mu}.v\le\Abs{v}}
+		\end{InfRule}
+  \]
+
+	\[
+    \begin{InfRule}{Conc-Init}
+      \hypo{\Abs\InitE\in\Abs{v}.1.2}
+      \infer1{\InitE\le\Abs{v}}
+    \end{InfRule}\:
+    \begin{InfRule}{Conc-Read}
+      \hypo{\Abs\ReadE(p,x)\in\Abs{v}.1.2}
+      \hypo{[\event]\le\Abs\ptree(p).1}
+      \infer2{\ReadE(\event,x)\le\Abs{v}}
+    \end{InfRule}\:
+    \begin{InfRule}{Conc-Call}
+      \hypo{\Abs\CallE(p_1,p_2)\in\Abs{v}.1.2}
+      \hypo{\event\le\Abs\ptree(p_1).2}
+      \hypo{v\le\Abs\ptree(p_2).2}
+      \infer3{\CallE(\event,v)\le\Abs{v}}
+    \end{InfRule}
+  \]
+  \caption{The concretization relation between weak values and abstract values. $\Abs\ptree$ is omitted.}
+	\label{fig:concretrel}
+\end{figure}
+
+The concretization function $\gamma$ that sends an element of $\Abs{\mathbb{T}}$ to $\mathbb{T}$ is defined as:
+\[\gamma(\Abs\ptree)\triangleq\lambda p.\{\ctx|\ctx\le(\Abs\ptree(p).1,\Abs\ptree)\}\cup\{(\ctx,v)|\ctx\le(\Abs\ptree(p).1,\Abs\ptree)\text{ and }v\le(\Abs\ptree(p).2,\Abs\ptree)\}\]
+where $\le$ is the concretization relation that is inductively defined in Figure \ref{fig:concretrel}.
+
+Now the abstract semantic function can be given.
 \begin{align*}
 	                                   &                                                                                                                                          & \fbox{$\Abs\Step:\Abs{\mathbb{T}}\rightarrow\Abs{\mathbb{T}}$}                   \\
 	\Abs\Step(\Abs\ptree)   \triangleq & \bigsqcup_{p\in\mathbb{P}}\Abs\step(\Abs\ptree,p)                                                                                                                                                                           \\
@@ -404,12 +474,12 @@ That is, $(\ctx,v)$ is contained in $t_0(p)$ if and only if $\evjudg{\ctx}{p}{v}
 	\sqcup                             & [p_2\mapsto(\Abs\ptree(p_1).2.1,\bot)]                                                                                                                                                                                      \\
 	\sqcup                             & [p\mapsto(\bot,\Abs\ptree(p_2).2)]                                                                                                                                                                                          \\
 	\Abs\step(\Abs\ptree,p) \triangleq & \bot                                                                                                                                     & \text{when }\plabel{p}{\varepsilon}                                              \\
-	\Abs\step(\Abs\ptree,p) \triangleq & [p_1\mapsto(\Abs\ptree(p).1\sqcup([x\mapsto\{p_1\}],\varnothing),\bot)]                                                                  & \text{when }\plabel{p}{x\texttt{=}p_1;p_2}                                       \\
+	\Abs\step(\Abs\ptree,p) \triangleq & [p_1\mapsto(\Abs\ptree(p).1\sqcup([x\mapsto\{p_1\}],\varnothing),\bot)]                                                                  & \text{when }\plabel{p}{x\:\texttt{=}\:p_1;p_2}                                   \\
 	\sqcup                             & [p_2\mapsto(\Abs\ptree(p).1\sqcup([x\mapsto\{p_1\}],\varnothing),\bot)]                                                                                                                                                     \\
 	\sqcup                             & [p\mapsto(\bot,(\Abs\ptree(p_2).2.1\sqcup([x\mapsto\{p_1\}],\varnothing),\varnothing))]
 \end{align*}
 The abstract proof tree $\Abs{\ptree}$ computed by
-\[\Abs{\ptree}\triangleq\lfp(\lambda\Abs\ptree.\Abs\Step(\Abs\ptree)\sqcup\Abs{\ptree}_{\text{init}})\quad\text{where }\ctx_0\le(\Abs{\ptree}_{\text{init}}(p_0).1,\Abs{\ptree}_{\text{init}})\]
+\[\Abs{\ptree}\triangleq\lfp(\lambda\Abs\ptree.\Abs\Step(\Abs\ptree)\sqcup\Abs{\ptree}_{\text{init}})\quad\text{where }\ptree_{\text{init}}\sqsubseteq\gamma(\Abs{\ptree}_{\text{init}})\]
 is a sound abstraction of $\ptree$.
 
 Now we define a sound linking operator that abstracts $\semlink$.
@@ -422,13 +492,34 @@ We want to define $\Abs\semlink$ so that the following holds:
 \[\ctx_0\semlink\ptree\sqsubseteq\gamma((\Abs{\ctx}_0,\Abs{\ptree}_0)\Abs\semlink\Abs\ptree)\]
 
 This is defined by
-\[(\Abs{\ctx}_0,\Abs{\ptree}_0)\Abs\semlink\Abs\ptree\triangleq\lfp(\lambda\Abs{\ptree}_+.\Abs\Step(\Abs\Link(\Abs{\ctx}_0,\mathcal{\event}(\Abs\ptree),\Abs{\ptree}_+))\sqcup\Abs{\ptree}_0\sqcup\mathcal{V}(\Abs\ptree))\]
+\[(\Abs{\ctx}_0,\Abs{\ptree}_0)\Abs\semlink\Abs\ptree\triangleq\lfp(\lambda\Abs{\ptree}_+.\Abs\Step(\Abs{\ptree}_+)\sqcup\Abs\Link(\Abs{\ctx}_0,\mathsf{\event}(\Abs\ptree),\Abs{\ptree}_+)\sqcup\Abs{\ptree}_0\sqcup\mathsf{V}(\Abs\ptree))\]
 where
-\[\mathcal{\event}(\Abs\ptree)\in\mathbb{P}\rightarrow\pset(\Abs\Event)^2\quad\mathcal{V}(\Abs\ptree)\in\Abs{\mathbb{T}}\]
+\[\mathsf{\event}(\Abs\ptree)\in\mathbb{P}\rightarrow\pset(\Abs\Event)^2\quad\mathsf{V}(\Abs\ptree)\in\Abs{\mathbb{T}}\quad\Abs\Link(\Abs\ctx,\mathcal{E},\Abs\ptree)\in\Abs{\mathbb{T}}\]
 are defined by
-\[\mathcal{\event}(\Abs\ptree)\triangleq\lambda p.(\Abs\ptree(p).1.2,\Abs\ptree(p).2.1.2)\]
+\[
+	\mathsf{\event}(\Abs\ptree)\triangleq\lambda p.(\Abs\ptree(p).1.2,\Abs\ptree(p).2.1.2)
+	\quad
+	\mathsf{V}(\Abs\ptree)\triangleq\lambda p.((\Abs\ptree(p).1.1,\varnothing),((\Abs\ptree(p).2.1.1,\varnothing),\Abs\ptree(p).2.2))
+\]
 and
-\[\mathcal{V}(\Abs\ptree)\triangleq\lambda p.((\Abs\ptree(p).1.1,\varnothing),((\Abs\ptree(p).2.1.1,\varnothing),\Abs\ptree(p).2.2))\]
+\[\Abs\Link(\Abs\ctx,\mathcal{E},\Abs\ptree)\triangleq\bigsqcup_{\Abs\event\in\mathcal{\event}(p).1}\Abs\link_1(\Abs\ctx,\Abs\event,\Abs\ptree,p)\sqcup\bigsqcup_{\Abs\event\in\mathcal{E}(p).2}\Abs\link_2(\Abs\ctx,\Abs\event,\Abs\ptree,p)\]
+where
+\[\Abs\link_1(\Abs\ctx,\Abs\event,\Abs\ptree,p)\in\Abs{\mathbb{T}}\quad\Abs\link_2(\Abs\ctx,\Abs\event,\Abs\ptree,p)\in\Abs{\mathbb{T}}\]
+are defined by
+\begin{align*}
+	\Abs\link_1(\Abs\ctx,\Abs\event,\Abs\ptree,p) \triangleq & [p\mapsto(\Abs\ctx,\bot)]                                                                                                                & \text{when }\Abs\event=\Abs\InitE              \\
+	\Abs\link_1(\Abs\ctx,\Abs\event,\Abs\ptree,p) \triangleq & [p\mapsto\bigsqcup_{p''\in\Abs\ptree(p').1.1(x)}(\Abs\ptree(p'').2.1,\bot)]                                                              & \text{when }\Abs\event=\Abs\ReadE(p',x)        \\
+	\sqcup                                                   & [p\mapsto(([],\{\Abs\ReadE(p,x)\}),\bot)]                                                                                                & \text{if }\Abs\ptree(p).1.2\neq\varnothing     \\
+	\Abs\link_1(\Abs\ctx,\Abs\event,\Abs\ptree,p) \triangleq & \bigsqcup_{\langle\lambda x.p',p''\rangle\in\Abs\ptree(p_1).2.2}[p'\mapsto(\Abs\ptree(p'').1\sqcup([x\mapsto\{p_2\}],\varnothing),\bot)] & \text{when }\Abs\event=\Abs\CallE(p_1,p_2)     \\
+	\sqcup                                                   & [p\mapsto\bigsqcup_{\langle\lambda x.p',\_\rangle\in\Abs\ptree(p_1).2.2}(\Abs\ptree(p').2.1,\bot)]                                                                                        \\
+	\sqcup                                                   & [p\mapsto(([],\{\Abs\CallE(p_1,p_2)\}),\bot)]                                                                                            & \text{if }\Abs\ptree(p_1).2.1.2\neq\varnothing \\
+	\Abs\link_2(\Abs\ctx,\Abs\event,\Abs\ptree,p) \triangleq & [p\mapsto(\bot,(\Abs\ctx,\varnothing))]                                                                                                  & \text{when }\Abs\event=\Abs\InitE              \\
+	\Abs\link_2(\Abs\ctx,\Abs\event,\Abs\ptree,p) \triangleq & [p\mapsto\bigsqcup_{p''\in\Abs\ptree(p').1.1(x)}(\bot,\Abs\ptree(p'').2)]                                                                & \text{when }\Abs\event=\Abs\ReadE(p',x)        \\
+	\sqcup                                                   & [p\mapsto(\bot,(([],\{\Abs\ReadE(p,x)\}),\varnothing))]                                                                                  & \text{if }\Abs\ptree(p).1.2\neq\varnothing     \\
+	\Abs\link_2(\Abs\ctx,\Abs\event,\Abs\ptree,p) \triangleq & \bigsqcup_{\langle\lambda x.p',p''\rangle\in\Abs\ptree(p_1).2.2}[p'\mapsto(\Abs\ptree(p'').1\sqcup([x\mapsto\{p_2\}],\varnothing),\bot)] & \text{when }\Abs\event=\Abs\CallE(p_1,p_2)     \\
+	\sqcup                                                   & [p\mapsto\bigsqcup_{\langle\lambda x.p',\_\rangle\in\Abs\ptree(p_1).2.2}(\bot,\Abs\ptree(p').2)]                                                                                          \\
+	\sqcup                                                   & [p\mapsto(\bot,(([],\{\Abs\CallE(p_1,p_2)\}),\varnothing))]                                                                              & \text{if }\Abs\ptree(p_1).2.1.2\neq\varnothing
+\end{align*}
 
 \end{document}
 
