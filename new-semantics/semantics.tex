@@ -194,10 +194,9 @@ The big-step operational semantics is \emph{deterministic} up to $\alpha$-equiva
 			\infer1{\langle\lambda x.e,\ctx\rangle\sim_f\langle\lambda x.e,\ctx'\rangle}
 		\end{InfRule}\:
 		\begin{InfRule}{Eq-Rec}
-			\hypo{L\text{ finite}}
 			\hypo{\mem(\ell')=v'}
-			\hypo{\forall\ell\not\in L,\:v\sim_{f[\ell\mapsto\ell']}v'}
-			\infer3{\mu\ell.v\sim_f v'}
+			\hypo{v\sim_{f[\ell\mapsto\ell']}v'}
+			\infer2{\mu\ell.v\sim_f v'}
 		\end{InfRule}
 	\]
 	\caption{The equivalence relation between weak values in the original semantics and values in the semantics with memory.
@@ -361,7 +360,7 @@ The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
 	\Step(\ptree)   \triangleq & \bigcup_{p\in\mathbb{P}}\step(\ptree,p)                                                                                                                                                                                                                                                    \\
 	                           &                                                                                                                                                                                                                         & \fbox{$\step:(\mathbb{T}\times\mathbb{P})\rightarrow\mathbb{T}$} \\
 	\step(\ptree,p) \triangleq & \: [p\mapsto\{(\ctx,v)|\ctx\in\ptree(p)\text{ and }\ctx(x)=v\}]                                                                                                                                                         & \text{when }\plabel{p}{x}                                        \\
-	\cup                       & \: [p\mapsto\{(\ctx,v[\mu\ell.v/\ell])|\ctx\in \ptree(p)\text{ and }\ctx(x)=\mu\ell.v\}]                                                                                                                                                                                                   \\
+	\cup                       & \: [p\mapsto\{(\ctx,v[\mu\llabel{p'}{\ell}.v/\llabel{p'}{\ell}])|\ctx\in \ptree(p)\text{ and }\ctx(x)=\mu\llabel{p'}{\ell}.v\}]                                                                                                                                                            \\
 	\step(\ptree,p) \triangleq & \: [p\mapsto\{(\ctx,\langle\lambda x.p',\ctx\rangle)|\ctx\in \ptree(p)\}]                                                                                                                                               & \text{when }\plabel{p}{\lambda x.p'}                             \\
 	\step(\ptree,p) \triangleq & \: [p_1\mapsto\{\ctx\in\Ctx|\ctx\in \ptree(p)\}]                                                                                                                                                                        & \text{when }\plabel{p}{p_1\:p_2}                                 \\
 	\cup                       & \: [p_2\mapsto\{\ctx\in\Ctx|\ctx\in \ptree(p)\}]                                                                                                                                                                                                                                           \\
@@ -426,9 +425,9 @@ That is, $(\ctx,v)$ is contained in $t_0(p)$ if and only if $\evjudg{\ctx}{p}{v}
 			\infer2{\langle\lambda x.p,\ctx\rangle\le\Abs{v}}
 		\end{InfRule}\:
 		\begin{InfRule}{Conc-Rec}
-			\hypo{L\text{ finite}}
-			\hypo{\forall\ell\not\in L,\:v\le\Abs\ptree(p).2\text{ and }v\le\Abs{v}}
-			\infer2{\mu\ell.v\le\Abs{v}}
+			\hypo{v\le\Abs\ptree(p).2}
+			\hypo{v\le\Abs{v}}
+			\infer2{\mu\llabel{p}{\ell}.v\le\Abs{v}}
 		\end{InfRule}
 	\]
 
