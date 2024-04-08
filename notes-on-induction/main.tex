@@ -246,9 +246,9 @@ The propagation function at $a$ propagates all premisses $a'$ such that $(a',\_)
 
 Note that $F$ is monotonic, since $f_a$ is monotonic in its second argument.
 
-We want to prove that, when $F$ is an incremental proof tree computation function and $I\subseteq A$,
-\[\text{lfp}(\lambda X.F(X)\cup I)\]
-is a \emph{sound and complete} representation of all proof trees for $I\times B$.
+We want to prove that, when $F$ is an incremental proof tree computation function and $\mathsf{Init}\subseteq A$,
+\[\text{lfp}(\lambda X.F(X)\cup\mathsf{Init})\]
+is a \emph{sound and complete} representation of all proof trees for $\mathsf{Init}\times B$.
 
 \begin{theorem}[Soundness]
 	Let $F$ be an incremental proof tree computation function.
@@ -307,12 +307,12 @@ is a \emph{sound and complete} representation of all proof trees for $I\times B$
 \end{proof}
 
 \begin{theorem}[Completeness]
-	Let $F$ be an incremental proof tree computation function.
-	For $I\subseteq A$,
-	\[\text{lfp}(\lambda X.F(X)\cup I)\subseteq I(\Phi)\cup A\]
+	$F$ is an incremental proof tree computation function.
+  For $\mathsf{Init}\subseteq A$,
+  \[\text{lfp}(\lambda X.F(X)\cup\mathsf{Init})\subseteq I(\Phi)\cup A\]
 \end{theorem}
 \begin{proof}
-	We prove that $I(\Phi)\cup A$ is a post-fixed point of $\lambda X.F(X)\cup I$.
+  We prove that $I(\Phi)\cup A$ is a post-fixed point of $\lambda X.F(X)\cup\mathsf{Init}$.
 
 	Note that $F(I(\Phi)\cup A)$ can be divided into the evaluation and the propagation part.
 
@@ -323,9 +323,9 @@ is a \emph{sound and complete} representation of all proof trees for $I\times B$
 \end{proof}
 
 \begin{corollary}[Sound and complete incremental computation]
-	Let $F$ be an incremental proof tree computation function.
-	For $I\subseteq A$,
-	\[\forall a\in I, b\in B, (a,b)\in\text{lfp}(\lambda X.F(X)\cup I)\Leftrightarrow (a,b)\in I(\Phi)\]
+	$F$ is an incremental proof tree computation function.
+  For $\mathsf{Init}\subseteq A$,
+  \[\forall a\in\mathsf{Init}, b\in B, (a,b)\in\text{lfp}(\lambda X.F(X)\cup\mathsf{Init})\Leftrightarrow (a,b)\in I(\Phi)\]
 \end{corollary}
 \begin{proof}
 	From completeness, we have $(\Rightarrow)$. From soundness, we have $(\Leftarrow)$.
