@@ -208,7 +208,7 @@ The big-step operational semantics is \emph{deterministic} up to $\alpha$-equiva
 The semantics in Figure \ref{fig:bigstep} makes sense due to similarity with a conventional backpatching semantics as presented in Figure \ref{fig:membigstep}.
 We have defined a relation $\sim$ that satisfies:
 \[\sim\subseteq\Walue\times(\Malue\times\Mem\times\pset(\Loc))\qquad\bullet\sim(\bullet,\varnothing,\varnothing)\]
-and the following theorem:
+The following theorem holds:
 \begin{thm}[Equivalence of semantics]\label{thm:equivsem}
 	For all $\ctx\in\Ctx,\ctx'\in\Mtx\times\Mem\times\pset(\Loc),v\in\Value,v'\in\Malue\times\Mem\times\pset(\Loc)$, we have:
 	\begin{align*}
@@ -315,11 +315,11 @@ The concrete linking rule $\ctx_0\semlink w$, given an answer $\ctx_0$ to the $\
 \end{align*}
 Concrete linking makes sense because of the following theorem.
 First define:
-\[\eval(e,\ctx)\triangleq\{v|\ctx\vdash e\Downarrow v\}\qquad\eval(e,\Sigma)\triangleq\bigcup_{\ctx\in\Sigma}\eval(e,\ctx)\qquad\ctx_0\semlink W\triangleq\bigcup_{w\in W}(\ctx_0\semlink w)\]
+\[\eval(e,\ctx)\triangleq\{v|\ctx\vdash e\Downarrow v\}\qquad\eval(e,\Sigma)\triangleq\bigcup_{\ctx\in\Sigma}\eval(e,\ctx)\qquad\Sigma_0\semlink W\triangleq\bigcup_{\substack{\ctx_0\in\Sigma_0\\w\in W}}(\ctx_0\semlink w)\]
 Then the following holds:
-\begin{thm}[Soundness of concrete linking]\label{thm:linksound}
-	Given $e\in\Expr,\ctx\in\Ctx,v\in\Value$,
-	\[\forall\ctx_0\in\Ctx:\eval(e,\ctx_0\semlink\ctx)\subseteq\ctx_0\semlink\eval(e,\ctx)\]
+\begin{thm}[Advance]\label{thm:linksound}
+	Given $e\in\Expr,\Sigma_0,\Sigma\subseteq\Ctx$,
+	\[\eval(e,\Sigma_0\semlink\Sigma)\subseteq\Sigma_0\semlink\eval(e,\Sigma)\]
 \end{thm}
 
 The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
@@ -336,6 +336,7 @@ The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
 	Then for all $\ctx_+\in\ctx_0\semlink\ctx$, we have:
 	\[\exists w_+\in\Walue:\ctx_+(x)=w_+\land\text{unfold}(w_+)\in\ctx_0\semlink\text{unfold}(w)\]
 \end{lem}
+
 Now we can formulate modular analysis.
 A modular analysis consists of two requirements: an abstraction for the semantics with events and an abstraction for the semantic linking operator.
 \begin{thm}[Modular analysis]
@@ -343,10 +344,10 @@ A modular analysis consists of two requirements: an abstraction for the semantic
 	\begin{enumerate}
 		\item An abstract domain $\Abs\Walue$ that is concretized by a monotonic $\gamma\in\pset(\Walue)\rightarrow\Abs\Walue$
 		\item A sound $\Abs\eval$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\Rightarrow\eval(e,\Sigma_0)\subseteq\gamma(\Abs\eval(e,\Abs\ctx_0))$
-		\item A sound $\Abs\semlink$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }W\subseteq\gamma(\Abs{w})\Rightarrow\Sigma_0\semlink W\subseteq\Abs\ctx_0\Abs\semlink\Abs{w}$
+		\item A sound $\Abs\semlink$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }W\subseteq\gamma(\Abs{w})\Rightarrow\Sigma_0\semlink W\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs{w})$
 	\end{enumerate}
 	then we have:
-	\[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }\Sigma\subseteq\Abs\ctx\Rightarrow\eval(e,\Sigma_0\semlink\Sigma)\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs\eval(e,\Abs\ctx))\]
+	\[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }\Sigma\subseteq\gamma(\Abs\ctx)\Rightarrow\eval(e,\Sigma_0\semlink\Sigma)\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs\eval(e,\Abs\ctx))\]
 \end{thm}
 \begin{cor}[Modular analysis of linked program]
 	\[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }[\InitE]\in\gamma(\Abs\InitE)\Rightarrow\eval(e_1\synlink e_2,\Sigma_0)\subseteq\gamma(\Abs\eval(e_1,\Abs\ctx_0)\Abs\semlink\Abs\eval(e_2,\Abs\InitE))\]
@@ -384,10 +385,10 @@ A modular analysis consists of two requirements: an abstraction for the semantic
 	\cup                       & \: [p_2\mapsto\bigcup_{\ctx\in\ptree(p)}\{(x,\mu\llabel{p_1}{\ell}.v_1)\cons\ctx|((x,\llabel{p_1}{\ell})\cons\ctx,v_1)\in \ptree(p_1)\}]                                                                                                                                                   \\
 	\cup                       & \: [p\mapsto\bigcup_{\ctx\in \ptree(p)}\bigcup_{((x,\llabel{p_1}{\ell})\cons\ctx,v_1)\in\ptree(p_1)}\{(\ctx,(x,\mu\llabel{p_1}{\ell}.v_1)\cons\ctx_2)|((x,\mu\llabel{p_1}{\ell}.v_1)\cons\ctx,\ctx_2)\in \ptree(p_2)\}]
 \end{align*}
-The collecting semantics $\ptree$ computed by
-\[\ptree\triangleq\lfp(\lambda\ptree.\Step(\ptree)\cup\ptree_{\text{init}})\quad\text{where }\ptree_{\text{init}}=[p_0\mapsto\{\ctx_0\}]\]
-contains all derivations of the form $\evjudg{\ctx_0}{p_0}{v_0}$ for some $v_0$.
-That is, $(\ctx,v)$ is contained in $t_0(p)$ if and only if $\evjudg{\ctx}{p}{v}$ must be contained in a valid derivation for the judgment $\evjudg{\ctx_0}{p_0}{v_0}$.
+The collecting semantics $\sembracket{p_0}\Sigma_0$ computed by
+\[\sembracket{p_0}\Sigma_0\triangleq\lfp(\lambda\ptree.\Step(\ptree)\cup\ptree_{\text{init}})\quad\text{where }\ptree_{\text{init}}=[p_0\mapsto\Sigma_0]\]
+contains all derivations of the form $\evjudg{\ctx_0}{p_0}{v_0}$ for some $\ctx_0\in\Sigma_0$ and $v_0$.
+That is, $(\ctx,v)$ is contained in $\sembracket{p_0}\Sigma_0(p)$ if and only if $\evjudg{\ctx}{p}{v}$ is contained in some derivation for the judgment $\evjudg{\ctx_0}{p_0}{v_0}$.
 
 \subsection{Abstract semantics}
 \begin{center}
@@ -404,7 +405,7 @@ That is, $(\ctx,v)$ is contained in $t_0(p)$ if and only if $\evjudg{\ctx}{p}{v}
 	\centering
 	\small
 	\begin{flushright}
-		\fbox{$\ctx\le_f(\Abs\ctx,\Abs\ptree)$}
+		\fbox{$\ctx\le(\Abs\ctx,\Abs\ptree)$}
 	\end{flushright}
 	\[
 		\begin{InfRule}{Conc-Nil}
@@ -436,8 +437,8 @@ That is, $(\ctx,v)$ is contained in $t_0(p)$ if and only if $\evjudg{\ctx}{p}{v}
 			\infer2{\langle\lambda x.p,\ctx\rangle\le\Abs{v}}
 		\end{InfRule}\:
 		\begin{InfRule}{Conc-Rec}
-			\hypo{L\text{ finite}}
-			\hypo{\forall\nu\not\in L,\:v[\llabel{p}{\nu}/\llabel{p}{\ell}]\le\Abs\ptree(p).2\text{ and }v[\llabel{p}{\nu}/\llabel{p}{\ell}]\le\Abs{v}}
+			\hypo{v\le\Abs\ptree(p).2}
+			\hypo{v\le\Abs{v}}
 			\infer2{\mu\llabel{p}{\ell}.v\le\Abs{v}}
 		\end{InfRule}
 	\]
@@ -489,8 +490,8 @@ Now the abstract semantic function can be given.
 	\sqcup                             & \: [p\mapsto(\bot,(\Abs\ptree(p_2).2.1\sqcup([x\mapsto\{p_1\}],\varnothing),\varnothing))]
 \end{align*}
 The abstract semantics $\Abs{\ptree}$ computed by
-\[\Abs{\ptree}\triangleq\lfp(\lambda\Abs\ptree.\Abs\Step(\Abs\ptree)\sqcup\Abs{\ptree}_{\text{init}})\quad\text{where }\ptree_{\text{init}}\subseteq\gamma(\Abs{\ptree}_{\text{init}})\]
-is a sound abstraction of $\ptree$.
+\[\Abs{\sembracket{p_0}}(\Abs\ctx_0,\Abs\ptree_0)\triangleq\lfp(\lambda\Abs\ptree.\Abs\Step(\Abs\ptree)\sqcup\Abs{\ptree}_{\text{init}})\quad\text{where }\ptree_{\text{init}}=\Abs\ptree_0\sqcup[p_0\mapsto(\Abs\ctx_0,\bot)]\]
+is a sound abstraction of $\sembracket{p_0}\Sigma_0$ when $\Sigma_0\subseteq\gamma(\Abs\ctx_0,\Abs\ptree_0)$.
 
 \subsection{Abstract linking}
 Now we define a sound linking operator that abstracts $\semlink$.
@@ -501,14 +502,16 @@ we define:
 
 We want to define $\Abs\semlink$ so that the following holds:
 \[\ctx_0\semlink\ptree\subseteq\gamma((\Abs{\ctx}_0,\Abs{\ptree}_0)\Abs\semlink\Abs\ptree)\]
-This is equivalent to saying that the linked result $\Abs\ptree_+$ satisfies:
+This is equivalent to saying that the linked result $\Abs\ptree_+=(\Abs\ctx_0,\Abs\ptree_0)\Abs\semlink\Abs\ptree$ satisfies:
 \[\ctx_0\le(\Abs\ctx_0,\Abs\ptree_0)\text{ and }w\le(\Abs{v},\Abs\ptree)\Rightarrow w_+\le(\Abs{v}_+,\Abs\ptree_+)\]
-where $[\Abs{v},\Abs{v}_+] = [(\Abs\ptree(p).1,\varnothing),(\Abs\ptree_+(p).1,\varnothing)]$ or $[\Abs\ptree(p).2,\Abs\ptree_+(p).2]$
-for each $w_+\in\ctx_0\semlink w$ and $p\in\mathbb{P}$.
+for each $w_+\in\ctx_0\semlink w$ and $p\in\mathbb{P}$,
+where $[\Abs{v},\Abs{v}_+] \in \{[(\Abs\ptree(p).1,\varnothing),(\Abs\ptree_+(p).1,\varnothing)],[\Abs\ptree(p).2,\Abs\ptree_+(p).2]\}$.
 
-The condition for $\Abs\ptree_+$ can be deduced by tracing the induction steps on the derivation for
+The condition for $\Abs\ptree_+$ can be deduced by attempting the proof of the above in advance.
+
+We proceed by induction on the derivation for
 \[w_+\in\ctx_0\semlink w\]
-and inverting on $w\le(\Abs{v},\Abs\ptree)$.
+and inversion on $w\le(\Abs{v},\Abs\ptree)$.
 \begin{center}
 	\begin{tabular}{|l@{\hskip2pt}r@{\hskip2pt}l@{\hskip2pt}l|}
 		\hline
@@ -550,7 +553,7 @@ where $\Abs\Link(\Abs\ctx_0,\Abs\ptree,\Abs\ptree_+)$ is the least function that
 	\begin{tabular}{|l@{\hskip2pt}r@{\hskip2pt}l@{\hskip2pt}l|}
 		\hline
 		Let $\Abs\link$ & $=\Abs\Link(\Abs\ctx_0,\Abs\ptree,\Abs\ptree_+)$ & in                                                                                  &                                                              \\
-		                & For each $p\in\mathbb{P}$,                       & when $\Abs{v},\Abs{v}_+=(\Abs\ptree(p).1,\varnothing),(\Abs\link(p).1,\varnothing)$ &                                                              \\
+                    & For each $p\in\mathbb{P}$,                       & when $\Abs{v},\Abs{v}_+=(\Abs\ptree(p).1,\varnothing),(\Abs\link(p).1,\varnothing)$ &                                                              \\
 		                & or                                               & when $\Abs{v},\Abs{v}_+=\Abs\ptree(p).2,\Abs\link.2$                                &                                                              \\
 		\hline
 		If:             & $\Abs\InitE\in$                                  & $\Abs{v}.1.2$                                                                       &                                                              \\
@@ -576,6 +579,8 @@ where $\Abs\Link(\Abs\ctx_0,\Abs\ptree,\Abs\ptree_+)$ is the least function that
 		\hline
 	\end{tabular}
 \end{center}
+Note that the left-hand side contains only $\Abs\link$ and the right-hand side does not depend on the value of $\Abs\link$.
+
 Some auxiliary lemmas:
 \begin{lem}[Substitution of values]
 	\[w\le(\Abs{v},\Abs\ptree)\text{ and }u\le(\Abs\ptree(p).2,\Abs\ptree)\Rightarrow w[u/\llabel{p}{\ell}]\le(\Abs{v},\Abs\ptree)\]
