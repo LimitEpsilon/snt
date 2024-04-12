@@ -1,6 +1,6 @@
 From Basics Require Import Basics.
-From LN Require Import Defs.
-From LN Require Import SubstFacts.
+From Without_events Require Import Defs.
+From Without_events Require Import SubstFacts.
 
 Section EquivFacts.
   Variable var : Type.

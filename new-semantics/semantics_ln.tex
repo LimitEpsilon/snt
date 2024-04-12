@@ -211,7 +211,7 @@ As a consequence, the big-step operational semantics will be \emph{deterministic
 The semantics in Figure \ref{fig:bigstep} makes sense due to similarity with a conventional backpatching semantics as presented in Figure \ref{fig:membigstep}.
 We have defined a relation $\sim$ that satisfies:
 \[\sim\subseteq\Walue\times(\Malue\times\Mem\times\pset(\Loc))\qquad\bullet\sim(\bullet,\varnothing,\varnothing)\]
-and the following theorem:
+The following theorem holds:
 \begin{thm}[Equivalence of semantics]\label{thm:equivsem}
 	For all $\ctx\in\Ctx,\ctx'\in\Mtx\times\Mem\times\pset(\Loc),v\in\Value,v'\in\Malue\times\Mem\times\pset(\Loc)$, we have:
 	\begin{align*}
@@ -248,6 +248,7 @@ The proof of Theorem \ref{thm:equivsem} uses some useful lemmas, such as:
 \begin{lem}[Substitution of locations]
 	\[w\sim_f v',\mem\text{ and }\ell\in\dom(f)\text{ and }\nu\not\in\FLoc(w)\Rightarrow w[\nu/\ell]\sim_{f\circ(\nu\leftrightarrow\ell)}v',\mem\]
 \end{lem}
+\clearpage
 
 \section{Generating and Resolving Events}
 Now we formulate the semantics for generating events.
@@ -300,27 +301,23 @@ Then we need to add only one rule to the semantics in Figure \ref{fig:bigstep} f
 Now we need to formulate the \emph{concrete linking} rules.
 The concrete linking rule $\ctx_0\semlink w$, given an answer $\ctx_0$ to the $\InitE$ event, resolves all events within $w$ to obtain a set of final results.
 
-\begin{figure}
-	\begin{align*}
-		\fbox{$\semlink\in\Ctx\rightarrow\Event\rightarrow\pset(\Value)$}                                                                                                                               \\
-		\ctx_0\semlink\InitE\triangleq                         & \{\ctx_0\}                                                                                                                             \\
-		\ctx_0\semlink\ReadE(\event,x)\triangleq               & \{v_+|\ctx_+\in\ctx_0\semlink\event\land\ctx_+(x)=v_+\}                                                                                \\
-		\cup                                                   & \{\openloc{\mu.v_+}{v_+}|\ctx_+\in\ctx_0\semlink E\land\ctx_+(x)=\mu.v_+\}                                                             \\
-		\ctx_0\semlink\CallE(\event,v)\triangleq               & \{v_+'|\langle\lambda x.e,\ctx_+\rangle\in\ctx_0\semlink E\land v_+\in\ctx_0\semlink v\land(x,v_+)\cons\ctx_+\vdash e\Downarrow v_+'\} \\
-		\cup                                                   & \{\CallE(\event_+,v_+)|\event_+\in\ctx_0\semlink E\land v_+\in\ctx_0\semlink v\}                                                       \\
-		\fbox{$\semlink\in\Ctx\rightarrow\Ctx\rightarrow\pset(\Ctx)$}                                                                                                                                   \\
-		\ctx_0\semlink\bullet\triangleq                        & \{\bullet\}                                                                                                                            \\
-		\ctx_0\semlink(x,\ell)\cons\ctx\triangleq              & \{(x,\ell)\cons\ctx_+|\ctx_+\in\ctx_0\semlink\ctx\}                                                                                    \\
-		\ctx_0\semlink(x,w)\cons\ctx\triangleq                 & \{(x,w_+)\cons\ctx_+|w_+\in\ctx_0\semlink w\land\ctx_+\in\ctx_0\semlink\ctx\}                                                          \\
-		\ctx_0\semlink[E]\triangleq                            & \{\ctx_+|\ctx_+\in\ctx_0\semlink\event\}\cup\{[\event_+]|\event_+\in\ctx_0\semlink\event\}                                             \\
-		\fbox{$\semlink\in\Ctx\rightarrow\Value\rightarrow\pset(\Value)$}                                                                                                                               \\
-		\ctx_0\semlink\langle\lambda x.e,\ctx\rangle\triangleq & \{\langle\lambda x.e,\ctx_+\rangle|\ctx_+\in\ctx_0\semlink\ctx\}                                                                       \\
-		\fbox{$\semlink\in\Ctx\rightarrow\Walue\rightarrow\pset(\Walue)$}                                                                                                                               \\
-		\ctx_0\semlink\mu.v\triangleq                          & \{\mu.\closeloc{\ell}{v_+}|\ell\not\in\FLoc(v)\cup\FLoc(\ctx_0)\land v_+\in\ctx_0\semlink\openloc{\ell}{v}\}
-	\end{align*}
-	\caption{Definition for concrete linking.}
-	\label{fig:conclink}
-\end{figure}
+\begin{align*}
+	\fbox{$\semlink\in\Ctx\rightarrow\Event\rightarrow\pset(\Value)$}                                                                                                                               \\
+	\ctx_0\semlink\InitE\triangleq                         & \{\ctx_0\}                                                                                                                             \\
+	\ctx_0\semlink\ReadE(\event,x)\triangleq               & \{v_+|\ctx_+\in\ctx_0\semlink\event\land\ctx_+(x)=v_+\}                                                                                \\
+	\cup                                                   & \{\openloc{\mu.v_+}{v_+}|\ctx_+\in\ctx_0\semlink E\land\ctx_+(x)=\mu.v_+\}                                                             \\
+	\ctx_0\semlink\CallE(\event,v)\triangleq               & \{v_+'|\langle\lambda x.e,\ctx_+\rangle\in\ctx_0\semlink E\land v_+\in\ctx_0\semlink v\land(x,v_+)\cons\ctx_+\vdash e\Downarrow v_+'\} \\
+	\cup                                                   & \{\CallE(\event_+,v_+)|\event_+\in\ctx_0\semlink E\land v_+\in\ctx_0\semlink v\}                                                       \\
+	\fbox{$\semlink\in\Ctx\rightarrow\Ctx\rightarrow\pset(\Ctx)$}                                                                                                                                   \\
+	\ctx_0\semlink\bullet\triangleq                        & \{\bullet\}                                                                                                                            \\
+	\ctx_0\semlink(x,\ell)\cons\ctx\triangleq              & \{(x,\ell)\cons\ctx_+|\ctx_+\in\ctx_0\semlink\ctx\}                                                                                    \\
+	\ctx_0\semlink(x,w)\cons\ctx\triangleq                 & \{(x,w_+)\cons\ctx_+|w_+\in\ctx_0\semlink w\land\ctx_+\in\ctx_0\semlink\ctx\}                                                          \\
+	\ctx_0\semlink[E]\triangleq                            & \{\ctx_+|\ctx_+\in\ctx_0\semlink\event\}\cup\{[\event_+]|\event_+\in\ctx_0\semlink\event\}                                             \\
+	\fbox{$\semlink\in\Ctx\rightarrow\Value\rightarrow\pset(\Value)$}                                                                                                                               \\
+	\ctx_0\semlink\langle\lambda x.e,\ctx\rangle\triangleq & \{\langle\lambda x.e,\ctx_+\rangle|\ctx_+\in\ctx_0\semlink\ctx\}                                                                       \\
+	\fbox{$\semlink\in\Ctx\rightarrow\Walue\rightarrow\pset(\Walue)$}                                                                                                                               \\
+	\ctx_0\semlink\mu.v\triangleq                          & \{\mu.\closeloc{\ell}{v_+}|\ell\not\in\FLoc(v)\cup\FLoc(\ctx_0)\land v_+\in\ctx_0\semlink\openloc{\ell}{v}\}
+\end{align*}
 
 Concrete linking makes sense because of the following theorem.
 First define:
@@ -339,14 +336,30 @@ The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
 \end{lem}
 \begin{lem}[Linking is compatible with reads]
 	Let $\ctx_0$ be the external environment that is linked with some environment $\ctx$.
-	Let $v$ be the value obtained from reading $x$ from $\ctx$.
+	Let $w$ be the value obtained from reading $x$ from $\ctx$.
 	Let $\text{unfold}:\Walue\rightarrow\Value$ be defined as:
 	\[\text{unfold}(\mu.v)\triangleq\openloc{\mu.v}{v}\qquad\text{unfold}(v)\triangleq v\]
 	Then for all $\ctx_+\in\ctx_0\semlink\ctx$, we have:
-	\[\exists w_+\in\Walue:\ctx_+(x)=w_+\land\text{unfold}(w_+)\in\ctx_0\semlink v\]
+	\[\exists w_+\in\Walue:\ctx_+(x)=w_+\land\text{unfold}(w_+)\in\ctx_0\semlink\text{unfold}(w)\]
 \end{lem}
+Now we can formulate modular analysis.
+A modular analysis consists of two requirements: an abstraction for the semantics with events and an abstraction for the semantic linking operator.
+\begin{thm}[Modular analysis]
+	Assume:
+	\begin{enumerate}
+		\item An abstract domain $\Abs\Walue$ that is concretized by a monotonic $\gamma\in\pset(\Walue)\rightarrow\Abs\Walue$
+		\item A sound $\Abs\eval$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\Rightarrow\eval(e,\Sigma_0)\subseteq\gamma(\Abs\eval(e,\Abs\ctx_0))$
+		\item A sound $\Abs\semlink$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }W\subseteq\gamma(\Abs{w})\Rightarrow\Sigma_0\semlink W\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs{w})$
+	\end{enumerate}
+	then we have:
+	\[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }\Sigma\subseteq\gamma(\Abs\ctx)\Rightarrow\eval(e,\Sigma_0\semlink\Sigma)\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs\eval(e,\Abs\ctx))\]
+\end{thm}
+\begin{cor}[Modular analysis of linked program]
+	\[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }[\InitE]\in\gamma(\Abs\InitE)\Rightarrow\eval(e_1\synlink e_2,\Sigma_0)\subseteq\gamma(\Abs\eval(e_1,\Abs\ctx_0)\Abs\semlink\Abs\eval(e_2,\Abs\InitE))\]
+\end{cor}
 \clearpage
 \section{CFA}
+\subsection{Collecting semantics}
 \begin{center}
 	\begin{tabular}{rrcl}
 		Program point        & $p$                & $\in$         & $\mathbb{P}\triangleq\{\text{finite set of program points}\}$                                  \\
@@ -377,10 +390,12 @@ The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
 	\cup                       & \: [p_2\mapsto\bigcup_{\ctx\in\ptree(p)}\{(x,\mu.\closeloc{\llabel{p_1}{\ell}}{v_1})\cons\ctx|((x,\llabel{p_1}{\ell})\cons\ctx,v_1)\in \ptree(p_1)\}]                                                                                                                                                                \\
 	\cup                       & \: [p\mapsto\bigcup_{\ctx\in \ptree(p)}\bigcup_{((x,\llabel{p_1}{\ell})\cons\ctx,v_1)\in\ptree(p_1)}\{(\ctx,(x,\mu.\closeloc{\llabel{p_1}{\ell}}{v_1})\cons\ctx_2)|((x,\mu.\closeloc{\llabel{p_1}{\ell}}{v_1})\cons\ctx,\ctx_2)\in \ptree(p_2)\}]
 \end{align*}
-The proof tree $\ptree$ computed by
-\[\ptree\triangleq\lfp(\lambda\ptree.\Step(\ptree)\cup\ptree_{\text{init}})\quad\text{where }\ptree_{\text{init}}=[p_0\mapsto\{\ctx_0\}]\]
-contains all derivations of the form $\evjudg{\ctx_0}{p_0}{v_0}$ for some $v_0$.
-That is, $(\ctx,v)$ is contained in $t_0(p)$ if and only if $\evjudg{\ctx}{p}{v}$ must be contained in a valid derivation for the judgment $\evjudg{\ctx_0}{p_0}{v_0}$.
+The collecting semantics $\sembracket{p_0}\Sigma_0$ computed by
+\[\sembracket{p_0}\Sigma_0\triangleq\lfp(\lambda\ptree.\Step(\ptree)\cup\ptree_{\text{init}})\quad\text{where }\ptree_{\text{init}}=[p_0\mapsto\Sigma_0]\]
+contains all derivations of the form $\evjudg{\ctx_0}{p_0}{v_0}$ for some $\ctx_0\in\Sigma_0$ and $v_0$.
+That is, $(\ctx,v)$ is contained in $\sembracket{p_0}\Sigma_0(p)$ if and only if $\evjudg{\ctx}{p}{v}$ is contained in some derivation for the judgment $\evjudg{\ctx_0}{p_0}{v_0}$.
+
+\subsection{Abstract semantics}
 \begin{center}
 	\begin{tabular}{rrcl}
 		Abstract event       & $\Abs{\event}$                 & $\in$         & $\Abs{\Event}$                                                                     \\
@@ -479,67 +494,107 @@ Now the abstract semantic function can be given.
 	\sqcup                             & \: [p_2\mapsto(\Abs\ptree(p).1\sqcup([x\mapsto\{p_1\}],\varnothing),\bot)]                                                                                                                                                     \\
 	\sqcup                             & \: [p\mapsto(\bot,(\Abs\ptree(p_2).2.1\sqcup([x\mapsto\{p_1\}],\varnothing),\varnothing))]
 \end{align*}
-The abstract proof tree $\Abs{\ptree}$ computed by
-\[\Abs{\ptree}\triangleq\lfp(\lambda\Abs\ptree.\Abs\Step(\Abs\ptree)\sqcup\Abs{\ptree}_{\text{init}})\quad\text{where }\ptree_{\text{init}}\subseteq\gamma(\Abs{\ptree}_{\text{init}})\]
-is a sound abstraction of $\ptree$.
+The abstract semantics $\Abs{\ptree}$ computed by
+\[\Abs{\sembracket{p_0}}(\Abs\ctx_0,\Abs\ptree_0)\triangleq\lfp(\lambda\Abs\ptree.\Abs\Step(\Abs\ptree)\sqcup\Abs{\ptree}_{\text{init}})\quad\text{where }\ptree_{\text{init}}=\Abs\ptree_0\sqcup[p_0\mapsto(\Abs\ctx_0,\bot)]\]
+is a sound abstraction of $\sembracket{p_0}\Sigma_0$ when $\Sigma_0\subseteq\gamma(\Abs\ctx_0,\Abs\ptree_0)$.
 
+\subsection{Abstract linking}
 Now we define a sound linking operator that abstracts $\semlink$.
 Assume we have
 \[\ctx_0\le(\Abs{\ctx}_0,\Abs{\ptree}_0)\quad\ptree\subseteq\gamma(\Abs\ptree)\]
 we define:
-\[\ctx_0\semlink\ptree\triangleq\lambda p.\left(\ctx_0\semlink\ptree(p)\right)\]
+\[\ctx_0\semlink\ptree\triangleq\lambda p.\bigcup_{\ctx\in t(p)}(\ctx_0\semlink\ctx)\cup\bigcup_{(\ctx,v)\in t(p)}\{(\ctx_+,v_+)|\ctx_+\in\ctx_0\semlink\ctx\text{ and }v_+\in\ctx_0\semlink v\}\]
 
 We want to define $\Abs\semlink$ so that the following holds:
 \[\ctx_0\semlink\ptree\subseteq\gamma((\Abs{\ctx}_0,\Abs{\ptree}_0)\Abs\semlink\Abs\ptree)\]
+This is equivalent to saying that the linked result $\Abs\ptree_+=(\Abs\ctx_0,\Abs\ptree_0)\Abs\semlink\Abs\ptree$ satisfies:
+\[\ctx_0\le(\Abs\ctx_0,\Abs\ptree_0)\text{ and }w\le(\Abs{v},\Abs\ptree)\Rightarrow w_+\le(\Abs{v}_+,\Abs\ptree_+)\]
+for each $w_+\in\ctx_0\semlink w$ and $p\in\mathbb{P}$,
+where $[\Abs{v},\Abs{v}_+] \in \{[(\Abs\ptree(p).1,\varnothing),(\Abs\ptree_+(p).1,\varnothing)],[\Abs\ptree(p).2,\Abs\ptree_+(p).2]\}$.
 
-This is defined by
-\[(\Abs{\ctx}_0,\Abs{\ptree}_0)\Abs\semlink\Abs\ptree\triangleq\lfp(\lambda\Abs{\ptree}_+.\Abs\Step(\Abs{\ptree}_+)\sqcup\Abs\Link(\Abs{\ctx}_0,\mathsf{\event}(\Abs\ptree),\Abs{\ptree}_+)\sqcup\Abs{\ptree}_0\sqcup\mathsf{V}(\Abs\ptree))\]
-where
-\[\mathsf{\event}(\Abs\ptree)\in\mathbb{P}\rightarrow\pset(\Abs\Event)^2\quad\mathsf{V}(\Abs\ptree)\in\Abs{\mathbb{T}}\quad\Abs\Link(\Abs\ctx,\mathcal{E},\Abs\ptree)\in\Abs{\mathbb{T}}\]
-are defined by
-\[
-	\mathsf{\event}(\Abs\ptree)\triangleq\lambda p.(\Abs\ptree(p).1.2,\Abs\ptree(p).2.1.2)
-	\quad
-	\mathsf{V}(\Abs\ptree)\triangleq\lambda p.((\Abs\ptree(p).1.1,\varnothing),((\Abs\ptree(p).2.1.1,\varnothing),\Abs\ptree(p).2.2))
-\]
-and
-\[\Abs\Link(\Abs\ctx,\mathcal{E},\Abs\ptree)\triangleq\bigsqcup_{\Abs\event\in\mathcal{\event}(p).1}\Abs\link_1(\Abs\ctx,\Abs\event,\Abs\ptree,p)\sqcup\bigsqcup_{\Abs\event\in\mathcal{E}(p).2}\Abs\link_2(\Abs\ctx,\Abs\event,\Abs\ptree,p)\]
-where
-\[\Abs\link_1(\Abs\ctx,\Abs\event,\Abs\ptree,p)\in\Abs{\mathbb{T}}\quad\Abs\link_2(\Abs\ctx,\Abs\event,\Abs\ptree,p)\in\Abs{\mathbb{T}}\]
-are defined by
-\begin{align*}
-	\Abs\link_1(\Abs\ctx,\Abs\event,\Abs\ptree,p) \triangleq & \: [p\mapsto(\Abs\ctx,\bot)]                                                                                                                & \text{when }\Abs\event=\Abs\InitE              \\
-	\Abs\link_1(\Abs\ctx,\Abs\event,\Abs\ptree,p) \triangleq & \: [p\mapsto\bigsqcup_{p''\in\Abs\ptree(p').1.1(x)}(\Abs\ptree(p'').2.1,\bot)]                                                              & \text{when }\Abs\event=\Abs\ReadE(p',x)        \\
-	\sqcup                                                   & \: [p\mapsto(([],\{\Abs\ReadE(p,x)\}),\bot)]                                                                                                & \text{if }\Abs\ptree(p).1.2\neq\varnothing     \\
-	\Abs\link_1(\Abs\ctx,\Abs\event,\Abs\ptree,p) \triangleq & \: \bigsqcup_{\langle\lambda x.p',p''\rangle\in\Abs\ptree(p_1).2.2}[p'\mapsto(\Abs\ptree(p'').1\sqcup([x\mapsto\{p_2\}],\varnothing),\bot)] & \text{when }\Abs\event=\Abs\CallE(p_1,p_2)     \\
-	\sqcup                                                   & \: [p\mapsto\bigsqcup_{\langle\lambda x.p',\_\rangle\in\Abs\ptree(p_1).2.2}(\Abs\ptree(p').2.1,\bot)]                                                                                        \\
-	\sqcup                                                   & \: [p\mapsto(([],\{\Abs\CallE(p_1,p_2)\}),\bot)]                                                                                            & \text{if }\Abs\ptree(p_1).2.1.2\neq\varnothing \\
-	\Abs\link_2(\Abs\ctx,\Abs\event,\Abs\ptree,p) \triangleq & \: [p\mapsto(\bot,(\Abs\ctx,\varnothing))]                                                                                                  & \text{when }\Abs\event=\Abs\InitE              \\
-	\Abs\link_2(\Abs\ctx,\Abs\event,\Abs\ptree,p) \triangleq & \: [p\mapsto\bigsqcup_{p''\in\Abs\ptree(p').1.1(x)}(\bot,\Abs\ptree(p'').2)]                                                                & \text{when }\Abs\event=\Abs\ReadE(p',x)        \\
-	\sqcup                                                   & \: [p\mapsto(\bot,(([],\{\Abs\ReadE(p,x)\}),\varnothing))]                                                                                  & \text{if }\Abs\ptree(p).1.2\neq\varnothing     \\
-	\Abs\link_2(\Abs\ctx,\Abs\event,\Abs\ptree,p) \triangleq & \: \bigsqcup_{\langle\lambda x.p',p''\rangle\in\Abs\ptree(p_1).2.2}[p'\mapsto(\Abs\ptree(p'').1\sqcup([x\mapsto\{p_2\}],\varnothing),\bot)] & \text{when }\Abs\event=\Abs\CallE(p_1,p_2)     \\
-	\sqcup                                                   & \: [p\mapsto\bigsqcup_{\langle\lambda x.p',\_\rangle\in\Abs\ptree(p_1).2.2}(\bot,\Abs\ptree(p').2)]                                                                                          \\
-	\sqcup                                                   & \: [p\mapsto(\bot,(([],\{\Abs\CallE(p_1,p_2)\}),\varnothing))]                                                                              & \text{if }\Abs\ptree(p_1).2.1.2\neq\varnothing
-\end{align*}
+The condition for $\Abs\ptree_+$ can be deduced by attempting the proof of the above in advance.
+
+We proceed by induction on the derivation for
+\[w_+\in\ctx_0\semlink w\]
+and inversion on $w\le(\Abs{v},\Abs\ptree)$.
+\begin{center}
+	\begin{tabular}{|l@{\hskip2pt}r@{\hskip2pt}l@{\hskip2pt}l|}
+		\hline
+		When: & $w=$                                & $\InitE$,                                                                  &                                                              \\
+		Have: & $\Abs\InitE\in$                     & $\Abs{v}.1.2$                                                              &                                                              \\
+		Need: & $\Abs{v}_+\sqsupseteq$              & $\:\Abs\ctx_0$                                                             &                                                              \\
+		      & $\Abs\ptree_+\sqsupseteq$           & $\:\Abs\ptree_0$                                                           &                                                              \\
+		\hline
+		When: & $w=$                                & $\ReadE(\event,x)$,                                                        &                                                              \\
+		Have: & $\Abs\ReadE(p',x)$                  & $\in\Abs{v}.1.2$ and $[\event]\le\Abs\ptree(p').1$                         &                                                              \\
+		Need: & $\Abs{v}_+\sqsupseteq$              & $\:\Abs\ptree_+(p'').2$                                                    & for $p''\in\Abs\ptree_+(p').1.1(x)$                          \\
+		      & $\Abs{v}_+\sqsupseteq$              & $\:(([],\{\Abs\ReadE(p',x)\}),\varnothing)$                                & if $\Abs\ptree_+(p').1.2\neq\varnothing$                     \\
+		\hline
+		When: & $w=$                                & $\CallE(\event,v)$,                                                        &                                                              \\
+		Have: & $\Abs\CallE(p_1,p_2)\in$            & $\Abs{v}.1.2$ and $\event\le\Abs\ptree(p_1).2$ and $v\le\Abs\ptree(p_2).2$ &                                                              \\
+		Need: & $\Abs{v}_+\sqsupseteq$              & $\:\Abs\ptree_+(p').2$                                                     & for $\langle\lambda x.p',p''\rangle\in\Abs\ptree_+(p_1).2.2$ \\
+		      & $\Abs{v}_+\sqsupseteq$              & $\:(([],\{\Abs\CallE(p_1,p_2)\}),\varnothing)$                             & if $\Abs\ptree_+(p_1).2.1.2\neq\varnothing$                  \\
+		      & $\Abs\ptree_+(p')\sqsupseteq$       & $\:(\Abs\ptree_+(p'').1\sqcup([x\mapsto\{p_2\}],\varnothing),\varnothing)$ & for $\langle\lambda x.p',p''\rangle\in\Abs\ptree_+(p_1).2.2$ \\
+		      & $\Abs\ptree_+\sqsupseteq$           & $\:\Abs\Step(\Abs\ptree_+)$                                                &                                                              \\
+		\hline
+		When: & $w=$                                & $(x,\llabel{p'}{\ell})\cons\ctx$,                                          &                                                              \\
+		Have: & $p'\in$                             & $\Abs{v}.1.1(x)$ and $\ctx\le\Abs{v}$                                      &                                                              \\
+		Need: & $\Abs{v}_+.1.1(x)\ni$               & $\:p'$                                                                     &                                                              \\
+		\hline
+		When: & $w=$                                & $(x,w')\cons\ctx$,                                                         &                                                              \\
+		Have: & $p'\in$                             & $\Abs{v}.1.1(x)$ and $w'\in\Abs\ptree(p').1$ and $\ctx\le\Abs{v}$          &                                                              \\
+		Need: & $\Abs{v}_+.1.1(x)\ni$               & $\:p'$                                                                     &                                                              \\
+		\hline
+		When: & $w=$                                & $\langle\lambda x.p',\ctx\rangle$,                                         &                                                              \\
+		Have: & $\langle\lambda x.p',p''\rangle\in$ & $\Abs{v}.2$ and $\ctx\le\Abs\ptree(p'').1$                                 &                                                              \\
+		Need: & $\Abs{v}_+.2\ni$                    & $\:\langle\lambda x.p',p''\rangle$                                         &                                                              \\
+		\hline
+	\end{tabular}
+\end{center}
+The above conditions can be summarized by saying $\Abs\ptree_+$ is a post-fixed point of:
+\[\lambda\Abs\ptree_+.\Abs\Step(\Abs\ptree_+)\sqcup\Abs\Link(\Abs\ctx_0,\Abs\ptree,\Abs\ptree_+)\sqcup\Abs\ptree_0\]
+where $\Abs\Link(\Abs\ctx_0,\Abs\ptree,\Abs\ptree_+)$ is the least function that satisfies:
+\begin{center}
+	\begin{tabular}{|l@{\hskip2pt}r@{\hskip2pt}l@{\hskip2pt}l|}
+		\hline
+		Let $\Abs\link$ & $=\Abs\Link(\Abs\ctx_0,\Abs\ptree,\Abs\ptree_+)$ & in                                                                                  &                                                              \\
+                    & For each $p\in\mathbb{P}$,                       & when $\Abs{v},\Abs{v}_+=(\Abs\ptree(p).1,\varnothing),(\Abs\link(p).1,\varnothing)$ &                                                              \\
+		                & or                                               & when $\Abs{v},\Abs{v}_+=\Abs\ptree(p).2,\Abs\link.2$                                &                                                              \\
+		\hline
+		If:             & $\Abs\InitE\in$                                  & $\Abs{v}.1.2$                                                                       &                                                              \\
+		Then:           & $\Abs{v}_+\sqsupseteq$                           & $\:\Abs\ctx_0$                                                                      &                                                              \\
+		\hline
+		If:             & $\Abs\ReadE(p',x)$                               & $\in\Abs{v}.1.2$                                                                    &                                                              \\
+		Then:           & $\Abs{v}_+\sqsupseteq$                           & $\:\Abs\ptree_+(p'').2$                                                             & for $p''\in\Abs\ptree_+(p').1.1(x)$                          \\
+		                & $\Abs{v}_+\sqsupseteq$                           & $\:(([],\{\Abs\ReadE(p',x)\}),\varnothing)$                                         & if $\Abs\ptree_+(p').1.2\neq\varnothing$                     \\
+		\hline
+		If:             & $\Abs\CallE(p_1,p_2)\in$                         & $\Abs{v}.1.2$                                                                       &                                                              \\
+		Then:           & $\Abs{v}_+\sqsupseteq$                           & $\:\Abs\ptree_+(p').2$                                                              & for $\langle\lambda x.p',p''\rangle\in\Abs\ptree_+(p_1).2.2$ \\
+		                & $\Abs{v}_+\sqsupseteq$                           & $\:(([],\{\Abs\CallE(p_1,p_2)\}),\varnothing)$                                      & if $\Abs\ptree_+(p_1).2.1.2\neq\varnothing$                  \\
+		                & $\Abs\link(p')\sqsupseteq$                       & $\:(\Abs\ptree_+(p'').1\sqcup([x\mapsto\{p_2\}],\varnothing),\varnothing)$          & for $\langle\lambda x.p',p''\rangle\in\Abs\ptree_+(p_1).2.2$ \\
+		\hline
+		If:             & $p'\in$                                          & $\Abs{v}.1.1(x)$                                                                    &                                                              \\
+		Then:           & $\Abs{v}_+.1.1(x)\ni$                            & $\:p'$                                                                              &                                                              \\
+		\hline
+		If:             & $p'\in$                                          & $\Abs{v}.1.1(x)$                                                                    &                                                              \\
+		Then:           & $\Abs{v}_+.1.1(x)\ni$                            & $\:p'$                                                                              &                                                              \\
+		\hline
+		If:             & $\langle\lambda x.p',p''\rangle\in$              & $\Abs{v}.2$                                                                         &                                                              \\
+		Then:           & $\Abs{v}_+.2\ni$                                 & $\:\langle\lambda x.p',p''\rangle$                                                  &                                                              \\
+		\hline
+	\end{tabular}
+\end{center}
+Note that the left-hand side contains only $\Abs\link$ and the right-hand side does not depend on the value of $\Abs\link$.
+
+Some auxiliary lemmas:
 \begin{lem}[Substitution of values]
-  \[w\le(\Abs{v},\Abs\ptree)\text{ and }u\le(\Abs\ptree(p).2,\Abs\ptree)\Rightarrow w[u/\llabel{p}{\ell}]\le(\Abs{v},\Abs\ptree)\]
+	\[w\le(\Abs{v},\Abs\ptree)\text{ and }u\le(\Abs\ptree(p).2,\Abs\ptree)\Rightarrow w[u/\llabel{p}{\ell}]\le(\Abs{v},\Abs\ptree)\]
 \end{lem}
 \begin{lem}[Sound $\Abs\step$]
-  \[\forall p,\ptree,\Abs\ptree:\ptree\subseteq\gamma(\Abs\ptree)\Rightarrow\step(\ptree,p)\cup\ptree\subseteq\gamma(\Abs\step(\Abs\ptree,p)\sqcup\Abs\ptree)\]
+	\[\forall p,\ptree,\Abs\ptree:\ptree\subseteq\gamma(\Abs\ptree)\Rightarrow\step(\ptree,p)\cup\ptree\subseteq\gamma(\Abs\step(\Abs\ptree,p)\sqcup\Abs\ptree)\]
 \end{lem}
 \begin{lem}[Sound $\Abs\Step$]
-  \[\forall\ptree_{\text{init}},\Abs\ptree:\ptree_{\text{init}}\subseteq\gamma(\Abs\ptree)\text{ and }\Abs\Step(\Abs\ptree)\sqsubseteq\Abs\ptree\Rightarrow\lfp(\lambda\ptree.\Step(\ptree)\cup\ptree_{\text{init}})\subseteq\gamma(\Abs\ptree)\]
-\end{lem}
-\begin{lem}[Sound $\Abs\Link$]
-  For each $\ctx_0,\Abs\ctx_0,\Abs\ptree_0,\ptree,\Abs\ptree,\Abs\ptree_+$, if:
-
-  \begin{enumerate}
-    \item$\ctx_0\le(\Abs\ctx_0,\Abs\ptree_0)$
-    \item$\ptree\subseteq\gamma(\Abs\ptree)$
-    \item$\Abs\Step(\Abs\ptree_+)\sqcup\Abs\Link(\Abs\ctx_0,\mathsf{\event}(\Abs\ptree),\Abs\ptree_+)\sqcup\Abs\ptree_0\sqcup\mathsf{V}(\Abs\ptree)\sqsubseteq\Abs\ptree_+$
-  \end{enumerate}
-  we have:
-  \[\forall w,w_+\in\ctx_0\semlink w,p:[w\in\ptree(p)\Rightarrow w_+\le(\Abs\ptree_+(p).1,\Abs\ptree_+)]\text{ and }[(\_,w)\in\ptree(p)\Rightarrow w_+\le(\Abs\ptree_+(p).2,\Abs\ptree_+)]\]
+	\[\forall\ptree_{\text{init}},\Abs\ptree:\ptree_{\text{init}}\subseteq\gamma(\Abs\ptree)\text{ and }\Abs\Step(\Abs\ptree)\sqsubseteq\Abs\ptree\Rightarrow\lfp(\lambda\ptree.\Step(\ptree)\cup\ptree_{\text{init}})\subseteq\gamma(\Abs\ptree)\]
 \end{lem}
 \end{document}
 

@@ -1,8 +1,8 @@
 From Basics Require Import Basics.
-From LN Require Import Defs.
-From LN Require Import Syntax.
-From LN Require Import SubstFacts.
-From LN Require Import EnvSemantics.
+From Without_events Require Import Defs.
+From Without_events Require Import Syntax.
+From Without_events Require Import SubstFacts.
+From Without_events Require Import EnvSemantics.
 From Equations Require Import Equations.
 
 Inductive tyenv {var} :=

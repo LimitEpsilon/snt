@@ -1,7 +1,7 @@
 From Basics Require Import Basics.
-From LN Require Import Defs.
-From LN Require Import Syntax.
-From LN Require Import SubstFacts.
+From Without_events Require Import Defs.
+From Without_events Require Import Syntax.
+From Without_events Require Import SubstFacts.
 
 Variant read_env_res {var loc lang} :=
   | Env_err

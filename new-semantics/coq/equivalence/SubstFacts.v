@@ -1,5 +1,5 @@
 From Basics Require Import Basics.
-From LN Require Import Defs.
+From Without_events Require Import Defs.
 
 Section SubstFacts.
   Variable var : Type.
