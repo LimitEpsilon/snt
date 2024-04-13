@@ -78,6 +78,44 @@ Section SubstFacts.
     end.
   Qed.
 
+  Definition open_wvl_inc_floc_wvl (w : wvl var loc lang) :=
+    forall i u x, In x (floc_wvl w) ->
+      In x (floc_wvl (open_wvl_wvl i u w)).
+
+  Definition open_wvl_inc_floc_nv (σ : nv var loc lang) :=
+    forall i u x, In x (floc_nv σ) ->
+      In x (floc_nv (open_wvl_nv i u σ)).
+
+  Definition open_wvl_inc_floc_vl (v : vl var loc lang) :=
+    forall i u x, In x (floc_vl v) ->
+      In x (floc_vl (open_wvl_vl i u v)).
+
+  Definition open_wvl_inc_floc_vnt (E : vnt var loc lang) :=
+    forall i u x, In x (floc_vnt E) ->
+      In x (floc_vnt (open_wvl_vnt i u E)).
+  
+  Lemma open_wvl_inc_floc :
+    (forall w, open_wvl_inc_floc_wvl w) /\
+    (forall σ, open_wvl_inc_floc_nv σ) /\
+    (forall v, open_wvl_inc_floc_vl v) /\
+    (forall E, open_wvl_inc_floc_vnt E).
+  Proof.
+    apply pre_val_ind; ii; ss.
+    all: repeat first [
+      des_goal; eqb2eq loc; clarify|
+      des_goal; eqb2eq nat; clarify|
+      rewrite in_app_iff in *; auto].
+    all: repeat match goal with
+    | _ => solve [eauto]
+    | H : open_wvl_inc_floc_wvl _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | H : open_wvl_inc_floc_nv _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | H : open_wvl_inc_floc_vl _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | H : open_wvl_inc_floc_vnt _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | _ => progress (des; clarify)
+    | _ => progress (ss)
+    end.
+  Qed.
+
   Definition close_floc_wvl `{Eq loc} (w : wvl var loc lang) :=
     forall i ℓ x, In x (floc_wvl (close_wvl i ℓ w)) ->
       (x <> ℓ /\ In x (floc_wvl w)).
@@ -532,7 +570,7 @@ Section SubstFacts.
       open_wvl_vnt i (subst_loc_wvl ν ℓ u) (subst_loc_vnt ν ℓ E)
   .
 
-  Lemma open_wvl_subst_loc `{Name loc} :
+  Lemma open_wvl_subst_loc `{Eq loc} :
     (forall w, open_wvl_subst_loc_wvl w) /\
     (forall σ, open_wvl_subst_loc_nv σ) /\
     (forall v, open_wvl_subst_loc_vl v) /\
@@ -733,6 +771,44 @@ Section SubstFacts.
     apply pre_val_ind; ii; ss; subst_loc_close_tac.
     repeat des_goal; repeat eqb2eq loc; clarify;
     subst_loc_close_tac.
+  Qed.
+  
+  Definition floc_subst_loc_wvl `{Eq loc} (w : wvl var loc lang) :=
+    forall ℓ u x
+      (IN : In x (floc_wvl (subst_loc_wvl u ℓ w))),
+    (x <> ℓ /\ In x (floc_wvl w)) \/ x = u.
+
+  Definition floc_subst_loc_nv `{Eq loc} (σ : nv var loc lang) :=
+    forall ℓ u x
+      (IN : In x (floc_nv (subst_loc_nv u ℓ σ))),
+    (x <> ℓ /\ In x (floc_nv σ)) \/ x = u.
+
+  Definition floc_subst_loc_vl `{Eq loc} (v : vl var loc lang) :=
+    forall ℓ u x
+      (IN : In x (floc_vl (subst_loc_vl u ℓ v))),
+    (x <> ℓ /\ In x (floc_vl v)) \/ x = u.
+
+  Definition floc_subst_loc_vnt `{Eq loc} (E : vnt var loc lang) :=
+    forall ℓ u x
+      (IN : In x (floc_vnt (subst_loc_vnt u ℓ E))),
+    (x <> ℓ /\ In x (floc_vnt E)) \/ x = u.
+
+  Lemma floc_subst_loc `{Eq loc} :
+    (forall w, floc_subst_loc_wvl w) /\
+    (forall σ, floc_subst_loc_nv σ) /\
+    (forall v, floc_subst_loc_vl v) /\
+    (forall E, floc_subst_loc_vnt E).
+  Proof.
+    apply pre_val_ind; ii; ss;
+    try solve [exploit H0; eauto].
+    all: repeat des_hyp; repeat rewrite in_app_iff in *; des;
+    repeat eqb2eq loc; subst; try solve [auto];
+    match goal with
+    | H : floc_subst_loc_nv _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | H : floc_subst_loc_wvl _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | H : floc_subst_loc_vl _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    | H : floc_subst_loc_vnt _ |- _ => solve [exploit H; eauto; ii; des; auto]
+    end.
   Qed.
 
   Definition floc_subst_wvl_wvl `{Eq loc} (w : wvl var loc lang) :=

@@ -31,6 +31,12 @@ events/Defs.vos events/Defs.vok events/Defs.required_vos: events/Defs.v basics/B
 events/EnvSemantics.vo events/EnvSemantics.glob events/EnvSemantics.v.beautified events/EnvSemantics.required_vo: events/EnvSemantics.v basics/Basics.vo events/Defs.vo events/Syntax.vo events/SubstFacts.vo
 events/EnvSemantics.vio: events/EnvSemantics.v basics/Basics.vio events/Defs.vio events/Syntax.vio events/SubstFacts.vio
 events/EnvSemantics.vos events/EnvSemantics.vok events/EnvSemantics.required_vos: events/EnvSemantics.v basics/Basics.vos events/Defs.vos events/Syntax.vos events/SubstFacts.vos
+events/LinkDefs.vo events/LinkDefs.glob events/LinkDefs.v.beautified events/LinkDefs.required_vo: events/LinkDefs.v basics/Basics.vo events/Defs.vo events/Syntax.vo events/EnvSemantics.vo
+events/LinkDefs.vio: events/LinkDefs.v basics/Basics.vio events/Defs.vio events/Syntax.vio events/EnvSemantics.vio
+events/LinkDefs.vos events/LinkDefs.vok events/LinkDefs.required_vos: events/LinkDefs.v basics/Basics.vos events/Defs.vos events/Syntax.vos events/EnvSemantics.vos
+events/LinkFacts.vo events/LinkFacts.glob events/LinkFacts.v.beautified events/LinkFacts.required_vo: events/LinkFacts.v basics/Basics.vo events/Defs.vo events/Syntax.vo events/SubstFacts.vo events/EnvSemantics.vo events/LinkDefs.vo
+events/LinkFacts.vio: events/LinkFacts.v basics/Basics.vio events/Defs.vio events/Syntax.vio events/SubstFacts.vio events/EnvSemantics.vio events/LinkDefs.vio
+events/LinkFacts.vos events/LinkFacts.vok events/LinkFacts.required_vos: events/LinkFacts.v basics/Basics.vos events/Defs.vos events/Syntax.vos events/SubstFacts.vos events/EnvSemantics.vos events/LinkDefs.vos
 events/SubstFacts.vo events/SubstFacts.glob events/SubstFacts.v.beautified events/SubstFacts.required_vo: events/SubstFacts.v basics/Basics.vo events/Defs.vo
 events/SubstFacts.vio: events/SubstFacts.v basics/Basics.vio events/Defs.vio
 events/SubstFacts.vos events/SubstFacts.vok events/SubstFacts.required_vos: events/SubstFacts.v basics/Basics.vos events/Defs.vos
