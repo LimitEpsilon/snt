@@ -180,7 +180,7 @@ Section LinkFacts.
       rewrite <- subst_loc_unroll.
       apply read_env_map with (φ := φ) in READ.
       econstructor; eauto.
-      apply read_env_subst; auto.
+      erewrite read_env_subst_loc; eauto. ss.
     - specialize (IHLINK1 φ INJ ν ℓ').
       specialize (IHLINK2 φ INJ ν ℓ').
       eapply link_CallEval; eauto.
@@ -281,7 +281,7 @@ Section LinkFacts.
       rewrite <- subst_wvl_unroll; auto.
       apply read_env_map with (φ := φ) in READ.
       econstructor; eauto.
-      erewrite read_env_wvl; eauto; ss.
+      erewrite read_env_subst_wvl; eauto. ss.
     - specialize (IHLINK1 φ INJ u u' LINKu ℓ' nIN U U').
       specialize (IHLINK2 φ INJ u u' LINKu ℓ' nIN U U').
       eapply link_CallEval; eauto.
@@ -373,30 +373,32 @@ Section LinkFacts.
   Qed.
 
   Lemma link_read `{Name loc} `{Eq var} (σ0 : nv var loc _) (Σ0 : env σ0) :
-    forall (σ : nv var loc _) x (w w' σ' : wvl var loc _)
-      (LINK : σ0 ⋊ σ ∋ σ')
-      (READ : read_env σ x = Env_wvl w),
+    forall (σ : nv var loc _) (σ' : wvl var loc _)
+      (LINK : σ0 ⋊ σ ∋ σ'),
     match σ' with
     | wvl_v (vl_exp σ') =>
-      read_env σ' x = Env_wvl w' -> (σ0 ⋊ unroll w ∋ unroll w')
+      forall x w' (READ : read_env σ' x = Env_wvl w'),
+        exists w, read_env σ x = Env_wvl w /\ (σ0 ⋊ unroll w ∋ unroll w')
     | _ => False
     end.
   Proof.
-    induction σ; ii; ss; repeat des_goal; inv LINK; clarify.
-    - intros. repeat econstructor; eauto.
-    - intros. ss; clarify. econstructor.
-      instantiate (1 := nv_ev E').
-      eapply link_holeEvent; auto. ss.
-    - ss; des_ifs; eqb2eq var.
-      ii. exploit IHσ; eauto.
+    induction σ; ii; ss;
+    repeat des_goal; inv LINK; clarify; ii.
+    - exists (Read E x).
+      split; eauto. ss.
+      econstructor; eauto.
+      econstructor; eauto.
+    - exists (Read E x).
+      split; auto.
+      econstructor; eauto.
+      eapply link_holeEvent; eauto.
     - ss; des_ifs; eqb2eq var; clarify.
-      + ii; clarify;
-        match goal with
-        | |- context [unroll ?w] =>
-          destruct w; ss
-        end.
+      exploit IHσ; eauto.
+    - ss; des_ifs; eqb2eq var; clarify.
+      + exists w. split; auto.
+        destruct w; ss.
         * eapply link_vl in LINKw as HINT.
-          destruct w'; clarify.
+          des_hyp; clarify.
         * inv LINKw; ss.
           assert (subst_intro_vl _ _ _ (close_vl 0 ℓ v')) by eapply subst_intro.
           rw. instantiate (1 := ℓ).
