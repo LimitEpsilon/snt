@@ -72,10 +72,10 @@ Section EquivLink.
       erewrite <- equiv_semantics; eauto.
       eapply eval_map in EVAL; eauto; ss.
       eapply link_lc in LINK1 as EE.
-      eapply linked_lc_wvl in LINK1 as Σ; eauto.
+      eapply linked_lc in LINK1 as Σ; eauto.
       inv EE. inv VAL. inv Σ. inv VAL.
       eapply link_lc in LINK2 as V.
-      eapply linked_lc_wvl in LINK2 as V'; eauto.
+      eapply linked_lc in LINK2 as V'; eauto.
       inv V. inv V'.
       repeat constructor; eapply map_lc; eauto.
     - econstructor; eauto.
@@ -84,7 +84,7 @@ Section EquivLink.
       assert (map_close_vl _ _ _ v') by eapply map_close. rw; eauto.
       assert (close_open_loc_eq_vl _ _ _ (map_vl φ v')) by eapply close_open_loc_eq. rw.
       assert (value (map_vl φ v')) as V'.
-      { eapply map_lc; eauto. eapply linked_lc_wvl in LINK; eauto. inv LINK; auto. }
+      { eapply map_lc; eauto. eapply linked_lc in LINK; eauto. inv LINK; auto. }
       assert (open_loc_lc_vl _ _ _ (map_vl φ v') V') by (eapply open_loc_lc; eauto). rw.
       set (compose loc (swap id ℓ' (φ ℓ)) φ) as φ'.
       replace (map_nv φ σ0) with (map_nv φ' σ0).
@@ -131,8 +131,8 @@ Section EquivLink.
     - econstructor; eauto.
       erewrite equiv_semantics; eauto.
       econstructor; eauto.
-      eapply linked_lc_wvl in IHLINK2; eauto.
-      eapply linked_lc_wvl in IHLINK1; eauto.
+      eapply linked_lc in IHLINK2; eauto.
+      eapply linked_lc in IHLINK1; eauto.
       inv IHLINK1. inv VAL. auto.
     - gensym_tac (floc_nv σ0 ++ floc_vl v ++ floc_vl v' ++ L) ℓ.
       assert (close_vl 0 ℓ (open_loc_vl 0 ℓ v') = v') as RR.

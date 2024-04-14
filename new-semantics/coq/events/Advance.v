@@ -183,7 +183,7 @@ Section Advance.
     erewrite <- equiv_semantics in EVAL; eauto.
     erewrite <- equiv_link in LINK'; eauto.
     eapply Link_lc in LINK. inv LINK. inv VAL. auto.
-    eapply linked_lc_wvl in LINK; eauto. inv LINK. inv VAL. auto.
+    eapply linked_lc in LINK; eauto. inv LINK. inv VAL. auto.
   Qed.
 End Advance.
 

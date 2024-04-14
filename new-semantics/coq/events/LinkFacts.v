@@ -54,7 +54,7 @@ Section LinkFacts.
     | _ => instantiate (1 := [])
     end.
 
-  Lemma linked_lc_wvl `{Name loc} `{Eq var}
+  Lemma linked_lc `{Name loc} `{Eq var}
     (σ0 : nv var loc _) (Σ0 : env σ0) (w : wvl var loc _) :
     forall w' (LINK : link σ0 w w'), wvalue w'.
   Proof.
