@@ -304,7 +304,7 @@ Proof.
   des_ifs; eqb2eq loc; clarify.
 Qed.
 
-Section EquivDefs.
+Section SimDefs.
   Variable var : Type.
   Variable loc : Type.
   Variable lang : Type.
@@ -322,45 +322,45 @@ Section EquivDefs.
   Definition memory := loc -> option mvalue.
 
   (* local coercions were for this definition *)
-  (* definition of equivalence *)
-  Inductive equiv `{Eq loc} : wvl var loc lang -> (loc -> option loc) -> mvalue -> memory -> Prop :=
-  | equiv_mt f m
-  : equiv nv_mt f ([] : menv) m
-  | equiv_bloc x ℓ (σ : nv var loc lang) f (σ' : menv) ℓ' m
+  (* definition of simulation *)
+  Inductive sim `{Eq loc} : wvl var loc lang -> (loc -> option loc) -> mvalue -> memory -> Prop :=
+  | sim_mt f m
+  : sim nv_mt f ([] : menv) m
+  | sim_bloc x ℓ (σ : nv var loc lang) f (σ' : menv) ℓ' m
     (SPECf : f ℓ = Some ℓ')
     (BOUND : m ℓ' <> None)
-    (EQUIV : equiv σ f σ' m)
-  : equiv (nv_floc x ℓ σ) f ((x, ℓ') :: σ' : menv) m
-  | equiv_floc x ℓ (σ : nv var loc lang) f (σ' : menv) m
+    (SIM : sim σ f σ' m)
+  : sim (nv_floc x ℓ σ) f ((x, ℓ') :: σ' : menv) m
+  | sim_floc x ℓ (σ : nv var loc lang) f (σ' : menv) m
     (SPECf : f ℓ = None)
     (FREE : m ℓ = None)
-    (EQUIV : equiv σ f σ' m)
-  : equiv (nv_floc x ℓ σ) f ((x, ℓ) :: σ' : menv) m
-  | equiv_bval x w (σ : nv var loc lang) f ℓ' v' (σ' : menv) m
+    (SIM : sim σ f σ' m)
+  : sim (nv_floc x ℓ σ) f ((x, ℓ) :: σ' : menv) m
+  | sim_bval x w (σ : nv var loc lang) f ℓ' v' (σ' : menv) m
     (BOUND : m ℓ' = Some v')
-    (EQUIVw : equiv w f v' m)
-    (EQUIVσ : equiv σ f σ' m)
-  : equiv (nv_bval x w σ) f ((x, ℓ') :: σ' : menv) m
-  | equiv_recv (L : list loc) v f v' ℓ' m
+    (SIMw : sim w f v' m)
+    (SIMσ : sim σ f σ' m)
+  : sim (nv_bval x w σ) f ((x, ℓ') :: σ' : menv) m
+  | sim_recv (L : list loc) v f v' ℓ' m
     (BOUND : m ℓ' = Some v')
-    (EQUIV : forall ℓ (FREE : ~ In ℓ L),
-      equiv (wvl_v (open_loc_vl 0 ℓ v)) (ℓ !-> ℓ' ; f) v' m)
-  : equiv (wvl_recv v) f v' m
-  | equiv_clos e (σ : nv var loc lang) f (σ' : menv) m
-    (EQUIV : equiv σ f σ' m)
-  : equiv (vl_clos e σ) f (mvalue_clos e σ') m
+    (SIM : forall ℓ (FREE : ~ In ℓ L),
+      sim (wvl_v (open_loc_vl 0 ℓ v)) (ℓ !-> ℓ' ; f) v' m)
+  : sim (wvl_recv v) f v' m
+  | sim_clos e (σ : nv var loc lang) f (σ' : menv) m
+    (SIM : sim σ f σ' m)
+  : sim (vl_clos e σ) f (mvalue_clos e σ') m
   .
-End EquivDefs.
+End SimDefs.
 
 Arguments mvalue_exp {var loc lang}.
 Arguments mvalue_clos {var loc lang}.
-Arguments equiv {var loc lang _}.
-Arguments equiv_mt {var loc lang}.
-Arguments equiv_bloc {var loc lang}.
-Arguments equiv_floc {var loc lang}.
-Arguments equiv_bval {var loc lang}.
-Arguments equiv_recv {var loc lang}.
-Arguments equiv_clos {var loc lang}.
+Arguments sim {var loc lang _}.
+Arguments sim_mt {var loc lang}.
+Arguments sim_bloc {var loc lang}.
+Arguments sim_floc {var loc lang}.
+Arguments sim_bval {var loc lang}.
+Arguments sim_recv {var loc lang}.
+Arguments sim_clos {var loc lang}.
 
 (* one-to-one, or injective, function *)
 Definition oto {A B} (φ : A -> B) := forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν.
