@@ -28,11 +28,6 @@ Section PreDefs.
   Combined Scheme pre_val_ind from wvl_ind_mut, nv_ind_mut, vl_ind_mut.
 End PreDefs.
 
-Arguments pre_val_ind var loc lang Pw Pσ Pv 
-  IHwvl_v IHwvl_recv
-  IHnv_mt IHnv_bloc IHnv_floc IHnv_bloc
-  IHvl_exp IHvl_clos : rename.
-
 Arguments wvl_v {var loc lang}.
 Arguments wvl_recv {var loc lang}.
 Arguments nv_mt {var loc lang}.
@@ -246,11 +241,6 @@ Section LCDefs.
 
   Combined Scheme val_ind from wvalue_ind_mut, env_ind_mut, value_ind_mut.
 End LCDefs.
-
-Arguments val_ind var loc lang Pw Pσ Pv 
-  IHwvalue_v IHwvalue_recv
-  IHenv_mt IHenv_floc IHenv_bloc
-  IHvalue_exp IHvalue_clos : rename.
 
 Arguments wvalue {var loc lang}.
 Arguments wvalue_v {var loc lang}.

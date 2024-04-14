@@ -1,4 +1,4 @@
--docroot my-ln-formalization
+-docroot modular-theories
 -R basics Basics
 basics
 

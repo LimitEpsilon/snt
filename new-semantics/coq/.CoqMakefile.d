@@ -1,9 +1,9 @@
-basics/Basics.vo basics/Basics.glob basics/Basics.v.beautified basics/Basics.required_vo: basics/Basics.v basics/tactics.vo
-basics/Basics.vio: basics/Basics.v basics/tactics.vio
-basics/Basics.vos basics/Basics.vok basics/Basics.required_vos: basics/Basics.v basics/tactics.vos
-basics/tactics.vo basics/tactics.glob basics/tactics.v.beautified basics/tactics.required_vo: basics/tactics.v 
-basics/tactics.vio: basics/tactics.v 
-basics/tactics.vos basics/tactics.vok basics/tactics.required_vos: basics/tactics.v 
+basics/Basics.vo basics/Basics.glob basics/Basics.v.beautified basics/Basics.required_vo: basics/Basics.v basics/sflib.vo
+basics/Basics.vio: basics/Basics.v basics/sflib.vio
+basics/Basics.vos basics/Basics.vok basics/Basics.required_vos: basics/Basics.v basics/sflib.vos
+basics/sflib.vo basics/sflib.glob basics/sflib.v.beautified basics/sflib.required_vo: basics/sflib.v 
+basics/sflib.vio: basics/sflib.v 
+basics/sflib.vos basics/sflib.vok basics/sflib.required_vos: basics/sflib.v 
 equivalence/Defs.vo equivalence/Defs.glob equivalence/Defs.v.beautified equivalence/Defs.required_vo: equivalence/Defs.v basics/Basics.vo
 equivalence/Defs.vio: equivalence/Defs.v basics/Basics.vio
 equivalence/Defs.vos equivalence/Defs.vok equivalence/Defs.required_vos: equivalence/Defs.v basics/Basics.vos

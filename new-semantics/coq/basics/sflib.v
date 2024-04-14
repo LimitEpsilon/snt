@@ -1,8 +1,15 @@
+(* *********************************************************************)
+(*                                                                     *)
+(*           Software Foundations Laboratory's Lemmas & Tactic         *)
+(*               based on Viktor and Gil's lemmas & tactic             *)
+(*                                                                     *)
+(* *********************************************************************)
+
 (** This file collects a number of basic lemmas and tactics for better
     proof automation, structuring large proofs, or rewriting.  Most of
     the rewriting support is ported from ssreflect. *)
 
-(** Symbols starting with [basic_tac__] are internal. *)
+(** Symbols starting with [sflib__] are internal. *)
 
 Require Import Bool List Arith ZArith String Program.
 (* Require Export paconotation newtac. *)
@@ -26,19 +33,19 @@ Notation "f <*> g" := (compose f g) (at level 49, left associativity).
 Coercion is_true (b : bool) : Prop := b = true.
 
 (** Hints for auto *)
-Lemma basic_tac__true_is_true : true.
+Lemma sflib__true_is_true : true.
 Proof. reflexivity. Qed.
 
-Lemma basic_tac__not_false_is_true : ~ false.
+Lemma sflib__not_false_is_true : ~ false.
 Proof. discriminate. Qed.
 
-Lemma basic_tac__negb_rewrite: forall {b}, negb b -> b = false.
+Lemma sflib__negb_rewrite: forall {b}, negb b -> b = false.
 Proof. intros []; (reflexivity || discriminate). Qed.
 
-Lemma basic_tac__andb_split: forall {b1 b2}, b1 && b2 -> b1 /\ b2.
+Lemma sflib__andb_split: forall {b1 b2}, b1 && b2 -> b1 /\ b2.
 Proof. intros [] []; try discriminate; auto. Qed.
 
-#[export] Hint Resolve basic_tac__true_is_true basic_tac__not_false_is_true: core.
+#[export] Hint Resolve sflib__true_is_true sflib__not_false_is_true: core.
 
 (* ************************************************************************** *)
 (** * Basic automation tactics *)
@@ -46,36 +53,36 @@ Proof. intros [] []; try discriminate; auto. Qed.
 
 (** Set up for basic simplification *)
 
-Create HintDb basic_tac discriminated.
+Create HintDb sflib discriminated.
 
 (** Adaptation of the ss-reflect "[done]" tactic. *)
 
-Ltac basic_tac__basic_done :=
-  solve [trivial with basic_tac | apply sym_equal; trivial | discriminate | contradiction].
+Ltac sflib__basic_done :=
+  solve [trivial with sflib | apply sym_equal; trivial | discriminate | contradiction].
 
-Ltac done := unfold not in *; trivial with basic_tac; hnf; intros;
-  solve [try basic_tac__basic_done; split;
-         try basic_tac__basic_done; split;
-         try basic_tac__basic_done; split;
-         try basic_tac__basic_done; split;
-         try basic_tac__basic_done; split; basic_tac__basic_done
+Ltac done := unfold not in *; trivial with sflib; hnf; intros;
+  solve [try sflib__basic_done; split;
+         try sflib__basic_done; split;
+         try sflib__basic_done; split;
+         try sflib__basic_done; split;
+         try sflib__basic_done; split; sflib__basic_done
     | match goal with H : _ -> False |- _ => solve [case H; trivial] end].
 
 (** A variant of the ssr "done" tactic that performs "eassumption". *)
 
 Ltac edone := try eassumption; trivial; hnf; intros;
-  solve [try eassumption; try basic_tac__basic_done; split;
-         try eassumption; try basic_tac__basic_done; split;
-         try eassumption; try basic_tac__basic_done; split;
-         try eassumption; try basic_tac__basic_done; split;
-         try eassumption; try basic_tac__basic_done; split;
-         try eassumption; basic_tac__basic_done
+  solve [try eassumption; try sflib__basic_done; split;
+         try eassumption; try sflib__basic_done; split;
+         try eassumption; try sflib__basic_done; split;
+         try eassumption; try sflib__basic_done; split;
+         try eassumption; try sflib__basic_done; split;
+         try eassumption; sflib__basic_done
     | match goal with H : ~ _ |- _ => solve [case H; trivial] end].
 
 Tactic Notation "by"  tactic(tac) := (tac; done).
 Tactic Notation "eby" tactic(tac) := (tac; edone).
 
-Ltac basic_tac__complaining_inj f H :=
+Ltac sflib__complaining_inj f H :=
   let X := fresh in
   (match goal with | [|- ?P ] => set (X := P) end);
   injection H;
@@ -84,30 +91,30 @@ Ltac basic_tac__complaining_inj f H :=
   subst X;
   try subst.
 
-Ltac basic_tac__clarify1 :=
+Ltac sflib__clarify1 :=
   try subst;
   repeat match goal with
-  | [H: is_true (andb _ _) |- _] => case (basic_tac__andb_split H); clear H; intros ? H
-  | [H: is_true (negb ?x) |- _] => rewrite (basic_tac__negb_rewrite H) in *
+  | [H: is_true (andb _ _) |- _] => case (sflib__andb_split H); clear H; intros ? H
+  | [H: is_true (negb ?x) |- _] => rewrite (sflib__negb_rewrite H) in *
   | [H: is_true ?x        |- _] => rewrite H in *
   | [H: ?x = true         |- _] => rewrite H in *
   | [H: ?x = false        |- _] => rewrite H in *
-  | [H: ?f _             = ?f _             |- _] => basic_tac__complaining_inj f H
-  | [H: ?f _ _           = ?f _ _           |- _] => basic_tac__complaining_inj f H
-  | [H: ?f _ _ _         = ?f _ _ _         |- _] => basic_tac__complaining_inj f H
-  | [H: ?f _ _ _ _       = ?f _ _ _ _       |- _] => basic_tac__complaining_inj f H
-  | [H: ?f _ _ _ _ _     = ?f _ _ _ _ _     |- _] => basic_tac__complaining_inj f H
-  | [H: ?f _ _ _ _ _ _   = ?f _ _ _ _ _ _   |- _] => basic_tac__complaining_inj f H
-  | [H: ?f _ _ _ _ _ _ _ = ?f _ _ _ _ _ _ _ |- _] => basic_tac__complaining_inj f H
+  | [H: ?f _             = ?f _             |- _] => sflib__complaining_inj f H
+  | [H: ?f _ _           = ?f _ _           |- _] => sflib__complaining_inj f H
+  | [H: ?f _ _ _         = ?f _ _ _         |- _] => sflib__complaining_inj f H
+  | [H: ?f _ _ _ _       = ?f _ _ _ _       |- _] => sflib__complaining_inj f H
+  | [H: ?f _ _ _ _ _     = ?f _ _ _ _ _     |- _] => sflib__complaining_inj f H
+  | [H: ?f _ _ _ _ _ _   = ?f _ _ _ _ _ _   |- _] => sflib__complaining_inj f H
+  | [H: ?f _ _ _ _ _ _ _ = ?f _ _ _ _ _ _ _ |- _] => sflib__complaining_inj f H
   end; try done.
 
 (** Perform injections & discriminations on all hypotheses *)
 
 Ltac clarify :=
-  basic_tac__clarify1;
+  sflib__clarify1;
   repeat match goal with
-    | H1: ?x = Some _, H2: ?x = None   |- _ => rewrite H2 in H1; basic_tac__clarify1
-    | H1: ?x = Some _, H2: ?x = Some _ |- _ => rewrite H2 in H1; basic_tac__clarify1
+    | H1: ?x = Some _, H2: ?x = None   |- _ => rewrite H2 in H1; sflib__clarify1
+    | H1: ?x = Some _, H2: ?x = Some _ |- _ => rewrite H2 in H1; sflib__clarify1
   end.
 
 (** Kill simple goals that require up to two econstructor calls. *)
@@ -152,18 +159,18 @@ Tactic Notation "case_eq" constr(x) "as" simple_intropattern(H) :=
 (** * Basic simplication tactics *)
 (* ************************************************************************** *)
 
-Ltac basic_tac__clarsimp1 :=
-  clarify; (autorewrite with basic_tac in * ); try done;
+Ltac sflib__clarsimp1 :=
+  clarify; (autorewrite with sflib in * ); try done;
   match goal with
-  | [H: is_true ?x |- _] => rewrite H in *; basic_tac__clarsimp1
-  | [H: ?x = true |- _] => rewrite H in *; basic_tac__clarsimp1
-  | [H: ?x = false |- _] => rewrite H in *; basic_tac__clarsimp1
-  | _ => clarify; auto 1 with basic_tac
+  | [H: is_true ?x |- _] => rewrite H in *; sflib__clarsimp1
+  | [H: ?x = true |- _] => rewrite H in *; sflib__clarsimp1
+  | [H: ?x = false |- _] => rewrite H in *; sflib__clarsimp1
+  | _ => clarify; auto 1 with sflib
   end.
 
-Ltac clarsimp := intros; simpl in *; basic_tac__clarsimp1.
+Ltac clarsimp := intros; simpl in *; sflib__clarsimp1.
 
-Ltac autos   := clarsimp; auto with basic_tac.
+Ltac autos   := clarsimp; auto with sflib.
 
 (* hdesH, hdes: more general des *)
 
@@ -222,7 +229,7 @@ Ltac desc :=
       match p with | NW _ => red in x' | _ => idtac end;
       match q with | NW _ => red in y' | _ => idtac end
     | H : is_true (_ && _) |- _ =>
-          let H' := fresh H in case (basic_tac__andb_split H); clear H; intros H H'
+          let H' := fresh H in case (sflib__andb_split H); clear H; intros H H'
     | H : ?x = ?x   |- _ => clear H
   end.
 
@@ -422,9 +429,9 @@ Tactic Notation "dup" hyp(H) :=
 (* Tactic Notation "dup" hyp(H) tactic(tac) := *)
 (*   let H' := fresh H in assert (H' := H); tac H'. *)
 
-Ltac clarassoc := clarsimp; autorewrite with basic_tac basic_tacA in *; try done.
+Ltac clarassoc := clarsimp; autorewrite with sflib sflibA in *; try done.
 
-Ltac basic_tac__hacksimp1 :=
+Ltac sflib__hacksimp1 :=
    clarsimp;
    match goal with
      | H: _ |- _ => solve [rewrite H; clear H; clarsimp
@@ -437,7 +444,7 @@ Ltac hacksimp :=
    try match goal with
    | H: _ |- _ => solve [rewrite H; clear H; clarsimp
                               |rewrite <- H; clear H; clarsimp]
-   | |- context[if ?p then _ else _] => solve [destruct p; basic_tac__hacksimp1]
+   | |- context[if ?p then _ else _] => solve [destruct p; sflib__hacksimp1]
    | _ => solve [f_equal; clarsimp]
    end.
 
@@ -716,6 +723,8 @@ Tactic Notation "extensionalities" ident(a) ident(b) ident(c) ident(d) ident(e) 
 
 (* short for common tactics *)
 
+(* Deprecated in Coq 8.18 *)
+(* Tactic Notation "inst" := instantiate. *)
 Tactic Notation "econs" := econstructor.
 Tactic Notation "econs" int_or_var(x) := econstructor x.
 Tactic Notation "i" := intros.
@@ -777,20 +786,27 @@ Ltac clear_upto H :=
   repeat (match goal with [Hcrr : _ |- _ ] => first [ check_equal Hcrr H; fail 2
  | clear Hcrr ] end).
 
-Definition _Evar_basic_tac_ (A:Type) (x:A) := x.
+Definition _Evar_sflib_ (A:Type) (x:A) := x.
+
+(* Deprecated in Coq 8.18 *)
+(* Tactic Notation "hide_evar" int_or_var(n) := let QQ := fresh "QQ" in *)
+(*  hget_evar n; intro;                                                 *)
+(*  lazymatch goal with [ H := ?X |- _] =>                              *)
+(*    set (QQ := X) in *; fold (_Evar_sflib_ X) in QQ; clear H          *)
+(*  end.                                                                *)
 
 Ltac hide_evars :=
   repeat match goal with
-  | [ |- context [?x] ] => is_evar x; set x in *;
+  | [ |- context [?x] ] => is_evar x; set x;
     lazymatch goal with [ H := x |- _ ] =>
-      fold (_Evar_basic_tac_ x) in H
+      fold (_Evar_sflib_ x) in H
     end
   end.
 
 Ltac show_evars :=
   repeat match goal with
-  | [ H := @_Evar_basic_tac_ _ _ |- _ ] =>
-    unfold _Evar_basic_tac_ in H;
+  | [ H := @_Evar_sflib_ _ _ |- _ ] =>
+    unfold _Evar_sflib_ in H;
     unfold H in *;
     clear H
   end.
@@ -832,6 +848,30 @@ Ltac inst_pairs :=
     |instantiate (3 := (_, _))
     |instantiate (2 := (_, _))
     |instantiate (1 := (_, _))].
+
+(* Problem: unfold fst doesn't always result in a lambda *)
+(* Ltac fold_proj := *)
+(*   try match goal with |- context[fun _ : ?A * ?B => _] => *)
+(*     first [fold (@fst A B) | fold (@snd A B)]; fail *)
+(*   end. *)
+(* Ltac fold_projH H := *)
+(*   match type of H with | context[fun _ : ?A * ?B => _] => *)
+(*     first [fold (@fst A B) in H | fold (@snd A B) in H]; fail *)
+(*   end. *)
+(* Ltac simpl_proj := *)
+(*   unfold fst in *; Hdo fold_projH; fold_proj. *)
+
+(* Lemma simpl_fst: forall A (a: A) B (b: B), *)
+(*   fst (a, b) = a. *)
+(* Proof. *)
+(*   auto. *)
+(* Qed. *)
+
+(* Lemma simpl_snd: forall B (b: B) A (a: A), *)
+(*   snd (a, b) = b. *)
+(* Proof. *)
+(*   auto. *)
+(* Qed. *)
 
 Ltac simpl_proj :=
   do 5 (simpl (fst (_, _)) in *; simpl (snd (_, _)) in *).
@@ -923,6 +963,8 @@ Tactic Notation "econsby" tactic(tac) :=
         |econstructor 19; (by tac)
         |econstructor 20; (by tac)
   ].
+
+(** My custom tactics *)
 
 Ltac contradict :=
   let contra := fresh "contra" in

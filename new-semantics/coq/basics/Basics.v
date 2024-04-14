@@ -4,7 +4,7 @@ From Coq Require Export Arith.Arith.
 From Coq Require Export Arith.EqNat.
 From Coq Require Export Lia.
 From Coq Require Export Lists.List.
-From Basics Require Export tactics.
+From Basics Require Export sflib.
 
 Notation "x :: y" := (cons x y)
                      (at level 60, right associativity).
