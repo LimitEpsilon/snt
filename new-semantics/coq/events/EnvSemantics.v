@@ -239,7 +239,7 @@ Proof.
   - specialize (IHEVAL2 φ INJ ν ℓ').
     assert (map_close_vl _ _ _ v1) as RR by (eapply map_close; auto).
     rewrite RR in *; auto. clear RR.
-    gensym_tac (ℓ' :: φ ℓ :: ν :: floc_nv (map_nv φ σ)) ℓ''. clear Heqℓ''.
+    gensym_tac (ℓ' :: φ ℓ :: ν :: floc_nv (map_nv φ σ)) ℓ''.
     assert (~ In ℓ'' (floc_vl (map_vl φ v1))) as HINT.
     { intro. apply eval_map with (φ := φ) in EVAL1; auto.
       eapply eval_floc_dec in EVAL1; eauto. ss. des; ss. }
@@ -260,6 +260,7 @@ Proof.
       repeat match goal with
       | _ => eqb2eq loc
       | H : φ _ = φ _ |- _ => apply INJ in H
+      | _ => clean_set
       | _ => clarify
       end.
       instantiate (1 := ℓ').
@@ -278,14 +279,16 @@ Proof.
       { eapply map_ext.
         ii. subst φ'. unfold compose, swap, id.
         des_ifs; eqb2eq loc; clarify.
-        eapply floc_map in DOM; eauto. contradict.
+        eapply floc_map in DOM; eauto.
+        instantiate (1 := φ) in DOM.
+        clean_set. contradict.
         exploit INJ; eauto. ii; clarify. } }
     { eapply subst_loc_close; auto. }
     { eapply subst_loc_close_eq; auto. }
   - specialize (IHEVAL2 φ INJ ν ℓ').
     assert (map_close_vl _ _ _ v1) as RR by (eapply map_close; auto).
     rewrite RR in *; auto. clear RR.
-    gensym_tac (ℓ' :: φ ℓ :: ν :: floc_nv (map_nv φ σ)) ℓ''. clear Heqℓ''.
+    gensym_tac (ℓ' :: φ ℓ :: ν :: floc_nv (map_nv φ σ)) ℓ''.
     assert (~ In ℓ'' (floc_vl (map_vl φ v1))) as HINT.
     { intro. apply eval_map with (φ := φ) in EVAL1; auto.
       eapply eval_floc_dec in EVAL1; eauto. ss. des; ss. }
@@ -306,6 +309,7 @@ Proof.
       repeat match goal with
       | _ => eqb2eq loc
       | H : φ _ = φ _ |- _ => apply INJ in H
+      | _ => clean_set
       | _ => clarify
       end.
       instantiate (1 := ℓ').
@@ -324,7 +328,9 @@ Proof.
       { eapply map_ext.
         ii. subst φ'. unfold compose, swap, id.
         des_ifs; eqb2eq loc; clarify.
-        eapply floc_map in DOM; eauto. contradict.
+        eapply floc_map in DOM; eauto.
+        instantiate (1 := φ) in DOM.
+        clean_set. contradict.
         exploit INJ; eauto. ii; clarify. } }
     { eapply subst_loc_close; auto. }
     { eapply subst_loc_close_eq; auto. }
@@ -361,7 +367,7 @@ Proof.
   - specialize (IHEVAL2 φ INJ u U ℓ').
     assert (map_close_vl _ _ _ v1) as RR by (eapply map_close; auto).
     rewrite RR in *; auto. clear RR.
-    gensym_tac (ℓ' :: φ ℓ :: floc_wvl u ++ floc_nv (map_nv φ σ)) ℓ''. clear Heqℓ''.
+    gensym_tac (ℓ' :: φ ℓ :: floc_wvl u ++ floc_nv (map_nv φ σ)) ℓ''.
     assert (~ In ℓ'' (floc_vl (map_vl φ v1))) as HINT.
     { intro. apply eval_map with (φ := φ) in EVAL1; auto.
       eapply eval_floc_dec in EVAL1; eauto. ss. des; ss. }
@@ -382,6 +388,7 @@ Proof.
       repeat match goal with
       | _ => eqb2eq loc
       | H : φ _ = φ _ |- _ => apply INJ in H
+      | _ => clean_set
       | _ => clarify
       end.
       instantiate (1 := ℓ').
@@ -400,14 +407,16 @@ Proof.
       { eapply map_ext.
         ii. subst φ'. unfold compose, swap, id.
         des_ifs; eqb2eq loc; clarify.
-        eapply floc_map in DOM; eauto. contradict.
+        eapply floc_map in DOM; eauto.
+        instantiate (1 := φ) in DOM.
+        clean_set. contradict.
         exploit INJ; eauto. ii; clarify. } }
     { eapply subst_wvl_close; auto. }
     { eapply subst_loc_close_eq; auto. }
   - specialize (IHEVAL2 φ INJ u U ℓ').
     assert (map_close_vl _ _ _ v1) as RR by (eapply map_close; auto).
     rewrite RR in *; auto. clear RR.
-    gensym_tac (ℓ' :: φ ℓ :: floc_wvl u ++ floc_nv (map_nv φ σ)) ℓ''. clear Heqℓ''.
+    gensym_tac (ℓ' :: φ ℓ :: floc_wvl u ++ floc_nv (map_nv φ σ)) ℓ''.
     assert (~ In ℓ'' (floc_vl (map_vl φ v1))) as HINT.
     { intro. apply eval_map with (φ := φ) in EVAL1; auto.
       eapply eval_floc_dec in EVAL1; eauto. ss. des; ss. }
@@ -428,6 +437,7 @@ Proof.
       repeat match goal with
       | _ => eqb2eq loc
       | H : φ _ = φ _ |- _ => apply INJ in H
+      | _ => clean_set
       | _ => clarify
       end.
       instantiate (1 := ℓ').
@@ -446,7 +456,9 @@ Proof.
       { eapply map_ext.
         ii. subst φ'. unfold compose, swap, id.
         des_ifs; eqb2eq loc; clarify.
-        eapply floc_map in DOM; eauto. contradict.
+        eapply floc_map in DOM; eauto.
+        instantiate (1 := φ) in DOM.
+        clean_set. contradict.
         exploit INJ; eauto. ii; clarify. } }
     { eapply subst_wvl_close; auto. }
     { eapply subst_loc_close_eq; auto. }

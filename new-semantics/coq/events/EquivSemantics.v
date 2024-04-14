@@ -178,14 +178,14 @@ Lemma equiv_r {var loc} `{Eq var} `{Name loc}
 Proof.
   induction EVAL; ii; ss;
   try solve [econstructor; eauto].
-  - gensym_tac (floc_nv σ ++ floc_vl v1 ++ L) ℓ. clear Heqℓ.
+  - gensym_tac (floc_nv σ ++ floc_vl v1 ++ L) ℓ.
     assert (close_vl 0 ℓ (open_loc_vl 0 ℓ v1) = v1) as RR.
     { assert (open_loc_close_vl _ _ _ v1) by eapply open_loc_close.
       rw. eapply close_fresh; eauto. }
     rewrite <- RR.
     eapply ev_bind; eauto.
     rw. auto.
-  - gensym_tac (floc_nv σ ++ floc_vl v1 ++ L) ℓ. clear Heqℓ.
+  - gensym_tac (floc_nv σ ++ floc_vl v1 ++ L) ℓ.
     assert (close_vl 0 ℓ (open_loc_vl 0 ℓ v1) = v1) as RR.
     { assert (open_loc_close_vl _ _ _ v1) by eapply open_loc_close.
       rw. eapply close_fresh; eauto. }

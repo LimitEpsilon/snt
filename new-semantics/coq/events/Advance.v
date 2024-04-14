@@ -83,7 +83,7 @@ Section Advance.
       ii; des; eexists.
       split. eapply Ev_linkevent; eauto. auto.
     - exists nv_mt. split; econstructor; eauto.
-    - gensym_tac (L ++ floc_nv σ0 ++ floc_nv σ1 ++ floc_vl v1) ν. clear Heqν.
+    - gensym_tac (L ++ floc_nv σ0 ++ floc_nv σ1 ++ floc_vl v1) ν.
       match goal with
       | IH : forall _, ~ In _ ?L -> _, ν : loc, nIN : ~ In ν ?L |- _ =>
         exploit (IH ν nIN);
@@ -117,7 +117,7 @@ Section Advance.
         assert (subst_loc_fresh_vl _ _ _ v1) as RR' by eapply subst_loc_fresh.
         rewrite RR' in LINK1; eauto. }
       assert (σ0 ⋊ wvl_recv (close_vl 0 ν v1') ∋ wvl_recv v1).
-      { gensym_tac (floc_nv σ0 ++ floc_nv σ1 ++ floc_vl v1 ++ floc_vl (close_vl 0 ν v1')) ℓ. clear Heqℓ.
+      { gensym_tac (floc_nv σ0 ++ floc_nv σ1 ++ floc_vl v1 ++ floc_vl (close_vl 0 ν v1')) ℓ.
         replace v1 with (close_vl 0 ℓ (open_loc_vl 0 ℓ v1)).
         econstructor; eauto.
         assert (open_loc_close_vl _ _ _ v1) by eapply open_loc_close.
@@ -134,7 +134,7 @@ Section Advance.
         * exists (nv_bval x (wvl_recv (close_vl 0 ν v1')) σ3).
           split. econstructor; eauto.
           econstructor; eauto.
-    - gensym_tac (L ++ floc_nv σ0 ++ floc_nv σ1 ++ floc_vl v1) ν. clear Heqν.
+    - gensym_tac (L ++ floc_nv σ0 ++ floc_nv σ1 ++ floc_vl v1) ν.
       match goal with
       | IH : forall _, ~ In _ ?L -> _, ν : loc, nIN : ~ In ν ?L |- _ =>
         exploit (IH ν nIN);
@@ -168,7 +168,7 @@ Section Advance.
         assert (subst_loc_fresh_vl _ _ _ v1) as RR' by eapply subst_loc_fresh.
         rewrite RR' in LINK1; eauto. }
       assert (σ0 ⋊ wvl_recv (close_vl 0 ν v1') ∋ wvl_recv v1).
-      { gensym_tac (floc_nv σ0 ++ floc_nv σ1 ++ floc_vl v1 ++ floc_vl (close_vl 0 ν v1')) ℓ. clear Heqℓ.
+      { gensym_tac (floc_nv σ0 ++ floc_nv σ1 ++ floc_vl v1 ++ floc_vl (close_vl 0 ν v1')) ℓ.
         replace v1 with (close_vl 0 ℓ (open_loc_vl 0 ℓ v1)).
         econstructor; eauto.
         assert (open_loc_close_vl _ _ _ v1) by eapply open_loc_close.

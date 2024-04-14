@@ -352,7 +352,7 @@ Proof.
     inv EQUIV0. ss.
     eapply fin_pres in EVAL2' as dom2; eauto.
     destruct dom2 as (dom2 & DOM2).
-    gensym_tac (dom2 ++ L2') ν. clear Heqν.
+    gensym_tac (dom2 ++ L2') ν.
     exploit (IHEVAL3 φ ((x, ν) :: σ'0) (ν !-> v2' ; m2') L2').
     exists (ν :: dom2).
     ii; ss; split_nIn; unfold update; des_ifs; eqb2eq loc; clarify; eauto.

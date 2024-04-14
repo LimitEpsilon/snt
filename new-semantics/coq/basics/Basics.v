@@ -171,26 +171,19 @@ Ltac split_nIn :=
   end.
 
 Ltac gensym_tac L ℓ :=
-  remember (gensym L) as ℓ;
+  set (gensym L) as ℓ;
   match goal with
-  | RR : _ = gensym ?l |- _ =>
-    let x := fresh "GENSYM" in
-    pose proof (gensym_spec l) as x;
-    rewrite <- RR in *;
+  | ℓ := gensym ?l |- _ =>
+    assert (~ In ℓ l) by (subst ℓ; apply gensym_spec; auto);
     split_nIn
   end.
 
-(* Total order *)
-Class TotalOrder (T : Type) `{Eq T} : Type :=
-{
-  leb : T -> T -> bool;
-  leb_refl : forall t, leb t t = true;
-  leb_trans : forall t t' t'' (LE : leb t t' = true) (LE' : leb t' t'' = true), leb t t'' = true;
-  leb_sym : forall t t' (LE : leb t t' = true) (LE' : leb t' t = true), t = t';
-  leb_or : forall t t', leb t t' || leb t' t = true
-}.
+Ltac clean_set :=
+  match goal with
+  | ℓ := _ |- _ =>
+    match goal with
+    | H : _ = ℓ |- _ => repeat rewrite <- H in *; clear H
+    | H : ℓ = _ |- _ => repeat rewrite H in *; clear H
+    end
+  end.
 
-Definition lt {T} `{TotalOrder T} (t1 t2 : T) :=
-  leb t1 t2 = true /\ eqb t1 t2 = false.
-
-Notation "t1 '<<' t2" := (lt t1 t2) (at level 71).

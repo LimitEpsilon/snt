@@ -191,12 +191,12 @@ Section LinkFacts.
     - assert (map_close_vl _ _ _ v') as RR by (eapply map_close; auto).
       rewrite RR; eauto. clear RR.
       gensym_tac (ℓ' :: φ ℓ :: ν :: floc_nv (map_nv φ σ0) ++ floc_vl (map_vl φ v)) ℓ''.
-      clear Heqℓ''.
       assert (~ In ℓ'' (floc_vl (map_vl φ v'))) as HINT.
       { intro. apply link_map with (φ := φ) in LINK; auto; ss.
         eapply link_floc_dec in LINK; eauto. des; ss.
         assert (map_open_loc_vl _ _ _ v) as RR by (eapply map_open_loc; eauto).
-        rewrite RR in *. eapply open_floc in LINK. des; ss; clarify. }
+        rewrite RR in *. eapply open_floc in LINK. des; ss; clarify.
+        rewrite LINK in *. clarify. }
       replace
         (close_vl 0 (φ ℓ) (map_vl φ v')) with
         (close_vl 0 ℓ'' (subst_loc_vl ℓ'' (φ ℓ) (map_vl φ v'))) by
@@ -215,6 +215,7 @@ Section LinkFacts.
         repeat match goal with
         | _ => eqb2eq loc
         | H : φ _ = φ _ |- _ => apply INJ in H
+        | _ => clean_set
         | _ => clarify
         end.
         instantiate (1 := ℓ').
@@ -237,12 +238,16 @@ Section LinkFacts.
         { eapply map_ext.
           ii. subst φ'. unfold compose, swap, id.
           des_ifs; eqb2eq loc; clarify.
-          eapply floc_map in DOM; eauto. contradict.
+          eapply floc_map in DOM; eauto.
+          instantiate (1 := φ) in DOM.
+          clean_set. contradict.
           exploit INJ; eauto. ii; clarify. }
         { eapply map_ext.
           ii. subst φ'. unfold compose, swap, id.
           des_ifs; eqb2eq loc; clarify.
-          eapply floc_map in DOM; eauto. contradict.
+          eapply floc_map in DOM; eauto.
+          instantiate (1 := φ) in DOM.
+          clean_set. contradict.
           exploit INJ; eauto. ii; clarify. }
         { symmetry. eqb2eq loc. auto. }
         { subst φ'. unfold compose, swap, id.
@@ -292,12 +297,12 @@ Section LinkFacts.
     - assert (map_close_vl _ _ _ v') as RR by (eapply map_close; auto).
       rewrite RR; eauto. clear RR.
       gensym_tac (ℓ' :: φ ℓ :: floc_wvl u ++ floc_nv (map_nv φ σ0) ++ floc_vl (map_vl φ v)) ℓ''.
-      clear Heqℓ''.
       assert (~ In ℓ'' (floc_vl (map_vl φ v'))) as HINT.
       { intro. apply link_map with (φ := φ) in LINK; auto; ss.
         eapply link_floc_dec in LINK; eauto. des; ss.
         assert (map_open_loc_vl _ _ _ v) as RR by (eapply map_open_loc; eauto).
-        rewrite RR in *. eapply open_floc in LINK. des; ss; clarify. }
+        rewrite RR in *. eapply open_floc in LINK. des; ss; clarify.
+        rewrite LINK in *. clarify. }
       assert (~ In ℓ'' (floc_wvl u')) as HINT'.
       { intro. eapply link_floc_dec in LINKu; eauto. des; ss. }
       replace
@@ -315,7 +320,9 @@ Section LinkFacts.
         { eapply map_ext.
           ii. subst φ'. unfold compose, swap, id.
           des_ifs; eqb2eq loc; clarify.
-          eapply floc_map in DOM; eauto. contradict.
+          eapply floc_map in DOM; eauto.
+          instantiate (1 := φ) in DOM.
+          clean_set. contradict.
           exploit INJ; eauto. ii; clarify. }
         exploit (IHLINK φ' _ u u'); eauto; try instantiate (1 := ℓ').
         subst φ'. unfold compose, swap, id.
@@ -323,6 +330,7 @@ Section LinkFacts.
         repeat match goal with
         | _ => eqb2eq loc
         | H : φ _ = φ _ |- _ => apply INJ in H
+        | _ => clean_set
         | _ => clarify
         end.
         all: rrw; auto.
@@ -344,7 +352,9 @@ Section LinkFacts.
         { eapply map_ext.
           ii. subst φ'. unfold compose, swap, id.
           des_ifs; eqb2eq loc; clarify.
-          eapply floc_map in DOM; eauto. contradict.
+          eapply floc_map in DOM; eauto.
+          instantiate (1 := φ) in DOM.
+          clean_set. contradict.
           exploit INJ; eauto. ii; clarify. }
         { subst φ'. unfold compose, swap, id.
           rewrite eqb_refl. des_goal; eqb2eq loc; clarify. } }
