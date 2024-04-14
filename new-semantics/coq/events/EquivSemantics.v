@@ -68,10 +68,8 @@ Proof.
     assert (value (map_vl φ v1)) as V1' by (eapply map_lc; auto).
     assert (wvalue (wvl_recv (close_vl 0 ℓ v1))) as V1''.
     econstructor. instantiate (1 := []). ii.
-    assert (close_open_loc_eq_vl _ _ _ v1) by eapply close_open_loc_eq.
-    rw.
-    assert (open_loc_lc_vl _ _ _ v1 V1) by (eapply open_loc_lc; eauto).
-    rw.
+    assert (close_open_loc_eq_vl _ _ _ v1) by eapply close_open_loc_eq. rw.
+    assert (open_loc_lc_vl _ _ _ v1 V1) by (eapply open_loc_lc; eauto). rw.
     eapply subst_loc_lc. auto.
     repeat match goal with
     | IH : env ?σ -> _ |- _ =>
@@ -86,10 +84,8 @@ Proof.
       eapply eval_floc_dec in EVAL1; eauto. ss. des; ss. }
     assert (map_close_vl _ _ _ v1) by eapply map_close.
     rw; eauto.
-    assert (close_open_loc_eq_vl _ _ _ (map_vl φ v1)) by eapply close_open_loc_eq.
-    rw.
-    assert (open_loc_lc_vl _ _ _ (map_vl φ v1) V1') by (eapply open_loc_lc; eauto).
-    rw.
+    assert (close_open_loc_eq_vl _ _ _ (map_vl φ v1)) by eapply close_open_loc_eq. rw.
+    assert (open_loc_lc_vl _ _ _ (map_vl φ v1) V1') by (eapply open_loc_lc; eauto). rw.
     set (compose loc (swap id ℓ'' (φ ℓ)) φ) as φ'.
     replace (map_nv φ σ) with (map_nv φ' σ).
     replace (subst_loc_vl ℓ'' (φ ℓ) (map_vl φ v1)) with (map_vl φ' v1).
@@ -137,12 +133,9 @@ Proof.
     assert (~ In ℓ'' (floc_vl (map_vl φ v1))) as HINT.
     { intro. apply eval_map with (φ := φ) in EVAL1; auto.
       eapply eval_floc_dec in EVAL1; eauto. ss. des; ss. }
-    assert (map_close_vl _ _ _ v1) by eapply map_close.
-    rw; eauto.
-    assert (close_open_loc_eq_vl _ _ _ (map_vl φ v1)) by eapply close_open_loc_eq.
-    rw.
-    assert (open_loc_lc_vl _ _ _ (map_vl φ v1) V1') by (eapply open_loc_lc; eauto).
-    rw.
+    assert (map_close_vl _ _ _ v1) by eapply map_close. rw; eauto.
+    assert (close_open_loc_eq_vl _ _ _ (map_vl φ v1)) by eapply close_open_loc_eq. rw.
+    assert (open_loc_lc_vl _ _ _ (map_vl φ v1) V1') by (eapply open_loc_lc; eauto). rw.
     set (compose loc (swap id ℓ'' (φ ℓ)) φ) as φ'.
     replace (map_nv φ σ) with (map_nv φ' σ).
     replace (subst_loc_vl ℓ'' (φ ℓ) (map_vl φ v1)) with (map_vl φ' v1).
@@ -328,4 +321,7 @@ Proof.
     assert (open_loc_subst_wvl_vl _ _ _ v1) by (eapply open_loc_subst_wvl; eauto).
     rw; eauto.
 Qed.
+
+Notation " σ '⊢' t '⇓' v " := (Eval σ t v)
+  (at level 100, t at next level, v at next level, right associativity).
 

@@ -6,6 +6,7 @@ From With_events Require Import EnvSemantics.
 From With_events Require Import EquivSemantics.
 From With_events Require Import LinkDefs.
 From With_events Require Import LinkFacts.
+From With_events Require Import EquivLink.
 
 Section Advance.
   Variable var : Type.
@@ -16,19 +17,19 @@ Section Advance.
   #[local] Coercion wvl_v : vl >-> wvl.
 
   Lemma advance_Eval `{Name loc} `{Eq var}
-    (σ0 σ' : nv var loc _) (Σ0 : env σ0) v' t (EVAL : Eval σ' t v') :
+    (σ0 σ' : nv var loc _) (Σ0 : env σ0) v' t (EVAL : σ' ⊢ t ⇓ v') :
     forall (σ : nv var loc _) (LINK : σ0 ⋊ σ ∋ σ'),
       exists v, Eval σ t v /\ (σ0 ⋊ v ∋ v').
   Proof.
     induction EVAL; ii; ss.
-    - exploit link_read; eauto; ss.
+    - exploit Link_read; eauto; ss.
       intro READ'. specialize (READ' x v READ).
       des; ss.
       eexists; split; eauto.
       destruct w; ss.
       + econstructor 1; auto.
       + econstructor 2; auto.
-    - exploit link_read; eauto; ss.
+    - exploit Link_read; eauto; ss.
       intro READ'. specialize (READ' x (wvl_recv v) READ).
       des; ss.
       eexists; split; eauto.
@@ -44,15 +45,9 @@ Section Advance.
       + exists (Call E v2').
         split. eapply Ev_appevent; eauto.
         econstructor; eauto.
-        erewrite equiv_semantics.
-        eauto.
-        eapply linked_lc_wvl in LINK; eauto. inv LINK. inv VAL.
-        eapply Eval_lc in EVAL1; auto. inv EVAL1.
-        eapply Eval_lc in EVAL2; auto.
-        repeat (constructor; auto).
       + inv LINK1.
         exploit IHEVAL3; eauto.
-        eapply link_bval; eauto.
+        eapply Link_bval; eauto.
         intros (v' & EVAL' & LINK').
         exists v'. split; try econstructor; eauto.
     - exploit IHEVAL1; eauto.
@@ -62,7 +57,7 @@ Section Advance.
       destruct v1'; try solve [inv LINK1].
       eexists. split.
       eapply Ev_appevent; eauto.
-      eapply link_CallEvent; eauto.
+      eapply Link_CallEvent; eauto.
     - exploit IHEVAL1; eauto.
       intros (v1' & EVAL1' & LINK1).
       destruct v1'; try solve [inv LINK1].
@@ -79,7 +74,7 @@ Section Advance.
       destruct v1'; try solve [inv LINK1].
       specialize (IHEVAL2 (nv_ev E)).
       exploit IHEVAL2.
-      apply link_holeEvent; auto.
+      apply Link_holeEvent; auto.
       ii; des; eexists.
       split. eapply Ev_linkevent; eauto. auto.
     - exists nv_mt. split; econstructor; eauto.
@@ -87,10 +82,10 @@ Section Advance.
       match goal with
       | IH : forall _, ~ In _ ?L -> _, ν : loc, nIN : ~ In ν ?L |- _ =>
         exploit (IH ν nIN);
-        first [eapply link_floc; eauto | idtac]
+        first [eapply Link_floc; eauto | idtac]
       end.
       intros (v1' & EVAL1 & LINK1).
-      eapply link_lc in LINK as Σ1. inv Σ1. inv VAL.
+      eapply Link_lc in LINK as Σ1. inv Σ1. inv VAL.
       eapply Eval_lc in EVAL1 as V1; try solve [econstructor; eauto].
       assert (forall ℓ (FREE : ~ In ℓ (floc_nv σ1)),
         open_loc_vl 0 ℓ (close_vl 0 ν v1') = subst_loc_vl ℓ ν v1') as RR.
@@ -107,7 +102,7 @@ Section Advance.
         rewrite RR; eauto. }
       assert (forall ℓ (FREE : ~ In ℓ (floc_nv σ1)),
         σ0 ⋊ open_loc_vl 0 ℓ (close_vl 0 ν v1') ∋ open_loc_vl 0 ℓ v1).
-      { intros. apply link_subst_loc with (ν := ℓ) (ℓ' := ν) in LINK1; eauto.
+      { intros. apply Link_subst_loc with (ν := ℓ) (ℓ' := ν) in LINK1; eauto.
         assert (open_loc_subst_loc_vl _ _ _ v1) as RR' by eapply open_loc_subst_loc.
         simpl in LINK1. rewrite RR' in LINK1. clear RR'.
         rewrite eqb_refl in LINK1.
@@ -117,12 +112,7 @@ Section Advance.
         assert (subst_loc_fresh_vl _ _ _ v1) as RR' by eapply subst_loc_fresh.
         rewrite RR' in LINK1; eauto. }
       assert (σ0 ⋊ wvl_recv (close_vl 0 ν v1') ∋ wvl_recv v1).
-      { gensym_tac (floc_nv σ0 ++ floc_nv σ1 ++ floc_vl v1 ++ floc_vl (close_vl 0 ν v1')) ℓ.
-        replace v1 with (close_vl 0 ℓ (open_loc_vl 0 ℓ v1)).
-        econstructor; eauto.
-        assert (open_loc_close_vl _ _ _ v1) by eapply open_loc_close.
-        rw.
-        eapply close_fresh; eauto. }
+      { econstructor; eauto. }
       exploit (IHEVAL (nv_bval x (wvl_recv (close_vl 0 ν v1')) σ1)).
       + econstructor; eauto.
       + intros (v2' & EVAL2 & LINK2).
@@ -138,10 +128,10 @@ Section Advance.
       match goal with
       | IH : forall _, ~ In _ ?L -> _, ν : loc, nIN : ~ In ν ?L |- _ =>
         exploit (IH ν nIN);
-        first [eapply link_floc; eauto | idtac]
+        first [eapply Link_floc; eauto | idtac]
       end.
       intros (v1' & EVAL1 & LINK1).
-      eapply link_lc in LINK as Σ1. inv Σ1. inv VAL.
+      eapply Link_lc in LINK as Σ1. inv Σ1. inv VAL.
       eapply Eval_lc in EVAL1 as V1; try solve [econstructor; eauto].
       assert (forall ℓ (FREE : ~ In ℓ (floc_nv σ1)),
         open_loc_vl 0 ℓ (close_vl 0 ν v1') = subst_loc_vl ℓ ν v1') as RR.
@@ -158,7 +148,7 @@ Section Advance.
         rewrite RR; eauto. }
       assert (forall ℓ (FREE : ~ In ℓ (floc_nv σ1)),
         σ0 ⋊ open_loc_vl 0 ℓ (close_vl 0 ν v1') ∋ open_loc_vl 0 ℓ v1).
-      { intros. apply link_subst_loc with (ν := ℓ) (ℓ' := ν) in LINK1; eauto.
+      { intros. apply Link_subst_loc with (ν := ℓ) (ℓ' := ν) in LINK1; eauto.
         assert (open_loc_subst_loc_vl _ _ _ v1) as RR' by eapply open_loc_subst_loc.
         simpl in LINK1. rewrite RR' in LINK1. clear RR'.
         rewrite eqb_refl in LINK1.
@@ -168,12 +158,7 @@ Section Advance.
         assert (subst_loc_fresh_vl _ _ _ v1) as RR' by eapply subst_loc_fresh.
         rewrite RR' in LINK1; eauto. }
       assert (σ0 ⋊ wvl_recv (close_vl 0 ν v1') ∋ wvl_recv v1).
-      { gensym_tac (floc_nv σ0 ++ floc_nv σ1 ++ floc_vl v1 ++ floc_vl (close_vl 0 ν v1')) ℓ.
-        replace v1 with (close_vl 0 ℓ (open_loc_vl 0 ℓ v1)).
-        econstructor; eauto.
-        assert (open_loc_close_vl _ _ _ v1) by eapply open_loc_close.
-        rw.
-        eapply close_fresh; eauto. }
+      { econstructor; eauto. }
       exploit (IHEVAL (nv_bval x (wvl_recv (close_vl 0 ν v1')) σ1)).
       + econstructor; eauto.
       + intros (v2' & EVAL2 & LINK2).
@@ -181,21 +166,23 @@ Section Advance.
         exists (nv_bval x (wvl_recv (close_vl 0 ν v1')) (nv_ev E)).
         split. eapply Ev_bindevent; eauto.
         econstructor; eauto.
-        eapply link_holeEvent.
+        eapply Link_holeEvent.
         assumption.
   Qed.
 
   Theorem advance `{Name loc} `{Eq var}
     (σ0 σ' : nv var loc _) (Σ0 : env σ0) v' t (EVAL : eval σ' t v') :
-    forall (σ : nv var loc _) (LINK : σ0 ⋊ σ ∋ σ'),
-      exists v, eval σ t v /\ (σ0 ⋊ v ∋ v').
+    forall (σ : nv var loc _) (LINK : link σ0 σ σ'),
+      exists v, eval σ t v /\ (link σ0 v v').
   Proof.
     intros.
     erewrite equiv_semantics in EVAL; eauto.
+    erewrite equiv_link in LINK; eauto.
     eapply advance_Eval in EVAL; eauto.
-    des.
+    destruct EVAL as (v & EVAL & LINK').
     erewrite <- equiv_semantics in EVAL; eauto.
-    eapply link_lc in LINK. inv LINK. inv VAL. auto.
+    erewrite <- equiv_link in LINK'; eauto.
+    eapply Link_lc in LINK. inv LINK. inv VAL. auto.
     eapply linked_lc_wvl in LINK; eauto. inv LINK. inv VAL. auto.
   Qed.
 End Advance.

@@ -75,5 +75,3 @@ Arguments link_bval {var loc _ _}.
 Arguments link_clos {var loc _ _}.
 Arguments link_rec {var loc _ _}.
 
-Notation " σ '⋊' w '∋' v " := (link σ w v)
-  (at level 100, w at next level, v at next level, right associativity).
