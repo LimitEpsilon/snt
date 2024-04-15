@@ -687,10 +687,8 @@ Proof.
   - ii. exploit (@sim_l var loc); eauto.
     instantiate (1 := id). ii; ss.
     instantiate (1 := L). instantiate (1 := σ').
-    assert (map_id_is_id_nv _ _ _ σ) by apply map_id_is_id.
-    rw. eauto.
+    replace (map_nv id σ) with σ by (symmetry; eapply map_id_is_id). auto.
     ii; des.
-    assert (map_id_is_id_vl _ _ _ v) as RR by apply map_id_is_id.
-    rewrite RR in *. eauto.
+    replace (map_vl id v) with v in * by (symmetry; eapply map_id_is_id). eauto.
   - ii. exploit (@sim_r var loc); eauto.
 Qed.

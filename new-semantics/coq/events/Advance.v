@@ -19,7 +19,7 @@ Section Advance.
   Lemma advance_Eval `{Name loc} `{Eq var}
     (σ0 σ' : nv var loc _) (Σ0 : env σ0) v' t (EVAL : σ' ⊢ t ⇓ v') :
     forall (σ : nv var loc _) (LINK : σ0 ⋊ σ ∋ σ'),
-      exists v, Eval σ t v /\ (σ0 ⋊ v ∋ v').
+      exists v, (σ ⊢ t ⇓ v) /\ (σ0 ⋊ v ∋ v').
   Proof.
     induction EVAL; ii; ss.
     - exploit Link_read; eauto; ss.
@@ -173,7 +173,7 @@ Section Advance.
   Theorem advance `{Name loc} `{Eq var}
     (σ0 σ' : nv var loc _) (Σ0 : env σ0) v' t (EVAL : eval σ' t v') :
     forall (σ : nv var loc _) (LINK : link σ0 σ σ'),
-      exists v, eval σ t v /\ (link σ0 v v').
+      exists v, eval σ t v /\ link σ0 v v'.
   Proof.
     intros.
     erewrite equiv_semantics in EVAL; eauto.
