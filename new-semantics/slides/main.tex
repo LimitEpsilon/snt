@@ -1,363 +1,12 @@
 %! TEX program = xelatex
-% \PassOptionsToPackage{draft}{graphicx}
 \documentclass{beamer}
-
-\usepackage{kotex}
-\usepackage{xcolor}
-\usepackage{tcolorbox}
-
-\usepackage{setspace} % setstretch
-
-\usepackage{tabularray}
-\usepackage{relsize}
-\UseTblrLibrary{booktabs}
-\UseTblrLibrary{counter}
-
-%%% Math settings
-\usepackage{amsmath,amsthm,amssymb,mathtools} % Before unicode-math
-\usepackage[math-style=TeX,bold-style=TeX]{unicode-math}
-\theoremstyle{definition}
-\newtheorem*{definition*}{Definition}
-\newtheorem*{lemma*}{Lemma}
-\newtheorem*{theorem*}{Theorem}
-\newtheorem*{corollary*}{Corollary}
-\newtheorem*{notation*}{Notation}
-
-%%% Font settings
-\setmainfont{Libertinus Serif}
-\setmathfont{Libertinus Math} % Before set*hangulfont
-\setmathfont{TeX Gyre Pagella Math}[range={\lbrace,\rbrace,\checkmark},Scale=1.1]
-\setmainhangulfont{Noto Serif CJK KR}
-\setsanshangulfont[BoldFont={* Bold}]{KoPubWorld Dotum.ttf}
-
-%%% PL constructs
-\usepackage{galois}
-\usepackage{ebproof}
-%% InfRule command
-\ExplSyntaxOn
-\NewTblrEnviron{@ruleenv}
-\SetTblrInner[@ruleenv]{belowsep=0pt,stretch=0}
-\SetTblrOuter[@ruleenv]{baseline=b}
-\NewDocumentEnvironment { InfRule } { m +b }
-  {
-    \begin{@ruleenv}{l}
-      \smaller{\textsc{#1}} \\
-      \begin{prooftree} #2 \end{prooftree}
-    \end{@ruleenv}
-  }
-  {}
-\ExplSyntaxOff
-
-%% Modification for \infer
-\ExplSyntaxOn
-\int_new:N \g__ebproof_sublevel_int
-\box_new:N \g__ebproof_substack_box
-\seq_new:N \g__ebproof_substack_seq
-
-\cs_new:Nn \__ebproof_clear_substack:
-  {
-    \int_gset:Nn \g__ebproof_sublevel_int { 0 }
-    \hbox_gset:Nn \g__ebproof_substack_box { }
-    \seq_gclear:N \g__ebproof_substack_seq
-  }
-
-\cs_new:Nn \__ebproof_subpush:N
-  {
-    \int_gincr:N \g__ebproof_sublevel_int
-    \hbox_gset:Nn \g__ebproof_substack_box
-      { \hbox_unpack:N \g__ebproof_substack_box \box_use:c { \__ebproof_box:N #1 } }
-    \seq_gput_left:Nv \g__ebproof_substack_seq
-      { \__ebproof_marks:N #1 }
-  }
-
-\cs_new:Nn \__ebproof_subpop:N
-  {
-    \int_compare:nNnTF { \g__ebproof_sublevel_int } > { 0 }
-      {
-        \int_gdecr:N \g__ebproof_sublevel_int
-        \hbox_gset:Nn \g__ebproof_substack_box {
-          \hbox_unpack:N \g__ebproof_substack_box
-          \box_gset_to_last:N \g_tmpa_box
-        }
-        \box_set_eq_drop:cN { \__ebproof_box:N #1 } \g_tmpa_box
-        \seq_gpop_left:NN \g__ebproof_substack_seq \l_tmpa_tl
-        \tl_set_eq:cN { \__ebproof_marks:N #1 } \l_tmpa_tl
-      }
-      { \PackageError{ebproof}{Missing~premiss~in~a~proof~tree}{} \__ebproof_clear:N #1 }
-  }
-
-\cs_new:Nn \__ebproof_append_subvertical:NN
-  {
-    \bool_if:NTF \l__ebproof_updown_bool
-      { \__ebproof_append_above:NN #1 #2 }
-      { \__ebproof_append_below:NN #1 #2 }
-  }
-
-\cs_new:Nn \__ebproof_join_subvertical:n
-  {
-    \group_begin:
-    \__ebproof_subpop:N \l__ebproof_a_box
-    \prg_replicate:nn { #1 - 1 }
-      {
-        \__ebproof_subpop:N \l__ebproof_b_box
-        \__ebproof_enlarge_conclusion:NN \l__ebproof_b_box \l__ebproof_a_box
-
-        \__ebproof_make_vertical:Nnnn \l__ebproof_c_box
-          { \__ebproof_mark:Nn \l__ebproof_b_box {axis} - \__ebproof_mark:Nn \l__ebproof_b_box {left} }
-          { \__ebproof_mark:Nn \l__ebproof_b_box {right} - \__ebproof_mark:Nn \l__ebproof_b_box {left} }
-          { \skip_vertical:N \l__ebproof_rule_margin_dim }
-        \__ebproof_vcenter:N \l__ebproof_b_box
-        \__ebproof_append_subvertical:NN \l__ebproof_a_box \l__ebproof_c_box
-
-        \__ebproof_append_subvertical:NN \l__ebproof_a_box \l__ebproof_b_box
-      }
-    \__ebproof_push:N \l__ebproof_a_box
-    \group_end:
-  }
-
-\cs_new:Nn \__ebproof_renew_statement:nnn
-  {
-    \exp_args:Nc \RenewDocumentCommand { ebproof#1 }{ #2 } { #3 }
-    \seq_gput_right:Nn \g__ebproof_statements_seq { #1 }
-  }
-\__ebproof_renew_statement:nnn { infer } { O{} m O{} m }
-  {
-    \group_begin:
-    \__ebproof_restore_statements:
-    \keys_set_known:nnN { ebproof / rule~style } { #1 } \l_tmpa_tl
-    \keys_set:nV { ebproof } \l_tmpa_tl
-    \tl_set:Nn \l__ebproof_right_label_tl { #3 }
-
-    \__ebproof_clear_substack:
-    \clist_map_inline:nn { #2 }
-      {
-        \__ebproof_join_horizontal:n { ##1 }
-        \__ebproof_pop:N \l__ebproof_a_box
-        \__ebproof_subpush:N \l__ebproof_a_box
-      }
-    \__ebproof_join_subvertical:n { \clist_count:n { #2 } }
-
-    \__ebproof_push_statement:n { #4 }
-    \__ebproof_join_vertical:
-    \group_end:
-  }
-\ExplSyntaxOff
-\ebproofset{left label template=\textsc{[\inserttext]}}
-\ebproofset{center=false}
-
-% For simplebnf
-\newfontfamily{\fallbackfont}{EB Garamond}
-\DeclareTextFontCommand{\textfallback}{\fallbackfont}
-\usepackage{newunicodechar}
-\newunicodechar{⩴}{\textfallback{⩴}}
-
-%%% Custom commands
-\newcommand*{\vbar}{|}
-\newcommand*{\finto}{\xrightarrow{\text{\textrm{fin}}}}
-\newcommand*{\istype}{\mathrel{⩴}}
-\newcommand*{\ortype}{\mathrel{|}}
-\newcommand*{\cons}{:\hskip-2pt:}
-\newcommand*{\pset}{\mathscr{P}}
-
-\def\ovbarw{1.2mu}
-\def\ovbarh{1}
-\newcommand*{\ovbar}[1]{\mkern \ovbarw\overline{\mkern-\ovbarw{\smash{#1}\scalebox{1}[\ovbarh]{\vphantom{i}}}\mkern-\ovbarw}\mkern \ovbarw}
-\newcommand*{\A}[1]{\overset{\,_{\mbox{\Large .}}}{#1}}
-\newcommand*{\Abs}[1]{{#1}^{\#}}
-\newcommand*{\Expr}{\text{Expr}}
-\newcommand*{\ExprVar}{\text{Var}}
-\newcommand*{\Module}{\text{Module}}
-\newcommand*{\ModVar}{\text{ModVar}}
-\newcommand*{\modid}{d}
-\newcommand*{\Time}{\mathbb{T}}
-\newcommand*{\ATime}{\A{\Time}}
-\newcommand*{\Ctx}{\text{Env}}
-\newcommand*{\ctx}{\sigma}
-\newcommand*{\Value}{\text{Val}}
-\newcommand*{\Mem}{\text{Mem}}
-\newcommand*{\Left}{\text{Left}}
-\newcommand*{\Right}{\text{Right}}
-\newcommand*{\Sig}{\text{Sig}}
-\newcommand*{\mem}{m}
-\newcommand*{\AMem}{\A{\text{Mem}}}
-\newcommand*{\State}{\text{State}}
-\newcommand*{\AState}{\A{\text{State}}}
-\newcommand*{\Result}{\text{Result}}
-\newcommand*{\AResult}{\A{\text{Result}}}
-\newcommand*{\Tick}{\text{Tick}}
-\newcommand*{\lfp}{\mathsf{lfp}}
-\newcommand*{\Step}{\mathsf{Step}}
-\newcommand*{\semarrow}{\Downarrow}
-\newcommand*{\asemarrow}{\A{\rightsquigarrow}}
-\newcommand*{\synlink}{\rtimes}
-\newcommand*{\semlink}{\mathbin{\rotatebox[origin=c]{180}{$\propto$}}}
-\newcommand*{\link}[2]{{#1}\rtimes{#2}}
-\newcommand*{\mt}{\mathsf{empty}}
-\newcommand*{\valid}{\mathsf{valid}}
-\newcommand*{\Path}{\text{Path}}
-\newcommand*{\equivalent}{\sim}
-
-\newcommand*{\dblplus}{{+\hskip-2pt+}}
-\newcommand*{\project}{\text{\texttt{:>} }}
-\newcommand*{\Exp}{\mathsf{Exp}}
-\newcommand*{\Imp}{\mathsf{Imp}}
-\newcommand*{\Fin}{\mathsf{Fin}}
-\newcommand*{\Link}{\mathsf{Link}}
-\newcommand*{\sembracket}[1]{\lBrack{#1}\rBrack}
-\newcommand*{\fin}[2]{{#1}\xrightarrow{\text{fin}}{#2}}
-\newcommand*{\addr}{\mathsf{addr}}
-\newcommand*{\tick}{\mathsf{tick}}
-\newcommand*{\modctx}{\mathsf{ctx}}
-\newcommand*{\mapinject}[2]{{#2}[{#1}]}
-\newcommand*{\inject}[2]{{#2}\langle{#1}\rangle}
-\newcommand*{\deletepre}[2]{{#2}\overline{\doubleplus}{#1}}
-\newcommand*{\deletemap}[2]{{#1}\overline{[{#2}]}}
-\newcommand*{\delete}[2]{{#2}{\langle{#1}\rangle}^{-1}}
-\newcommand*{\filter}{\mathsf{filter}}
-\newcommand*{\Lete}{\mathtt{val}}
-\newcommand*{\Letm}{\mathtt{mod}}
-
-\newcommand*{\ValRel}[1]{V\sembracket{#1}}
-\newcommand*{\ExprRel}[1]{E\sembracket{#1}}
-\newcommand*{\CtxRel}[1]{\mathcal{C}\sembracket{#1}}
-\newcommand*{\ModRel}[1]{\mathcal{M}\sembracket{#1}}
-\newcommand*{\TyEnv}{\text{TyEnv}}
-\newcommand*{\TyVar}{\text{TyVar}}
-\newcommand*{\Type}{\text{Type}}
-\newcommand*{\Subst}{\text{Subst}}
-\newcommand*{\external}{\Gamma_{\text{ext}}}
-
-%%%%%%%%%%%%%%%%%%%%%
-%  Beamer Settings  %
-%%%%%%%%%%%%%%%%%%%%%
-\usetheme[numbering=fraction,progressbar=none]{metropolis}
-\useoutertheme[subsection=false]{miniframes}
-\usecolortheme{rose}
-
-\setbeamertemplate{itemize item}[square]
-\setbeamertemplate{itemize subitem}[triangle]
-\setbeamertemplate{itemize subsubitem}[circle]
-\setbeamertemplate{headline}{}
-
-\usepackage{listings}
-\definecolor{dkgreen}{rgb}{0,0.6,0}
-\definecolor{ltblue}{rgb}{0,0.4,0.4}
-\definecolor{dkviolet}{rgb}{0.3,0,0.5}
-
-%%% lstlisting coq style (inspired from a file of Assia Mahboubi)
-\lstdefinelanguage{Coq}{
-    % To insert blank lines, write %
-    escapechar=\%,
-    % Anything betweeen $ becomes LaTeX math mode
-    mathescape=true,
-    % Comments may or not include Latex commands
-    texcl=false, 
-    % Vernacular commands
-    morekeywords=[1]{Section, Module, End, Require, Import, Export, Include,
-        Variable, Variables, Parameter, Parameters, Axiom, Hypothesis,
-        Hypotheses, Notation, Local, Tactic, Reserved, Scope, Open, Close,
-        Bind, Delimit, Definition, Let, Ltac, Fixpoint, CoFixpoint, Add,
-        Morphism, Relation, Implicit, Arguments, Unset, Contextual,
-        Strict, Prenex, Implicits, Inductive, CoInductive, Record,
-        Structure, Canonical, Coercion, Context, Class, Global, Instance,
-        Program, Infix, Theorem, Lemma, Corollary, Proposition, Fact,
-        Remark, Example, Proof, Goal, Save, Qed, Defined, Hint, Resolve,
-        Rewrite, View, Search, Show, Print, Printing, All, Eval, Check,
-        Projections, inside, outside, Def},
-    % Gallina
-    morekeywords=[2]{forall, exists, exists2, fun, fix, cofix, struct,
-        match, with, end, as, in, return, let, if, is, then, else, for, of,
-        nosimpl, when},
-    % Sorts
-    morekeywords=[3]{Type, Prop, Set, true, false, option},
-    % Various tactics, some are std Coq subsumed by ssr, for the manual purpose
-    morekeywords=[4]{pose, set, move, case, elim, apply, clear, hnf,
-        intro, intros, generalize, rename, pattern, after, destruct,
-        induction, using, refine, inversion, injection, rewrite, congr,
-        unlock, compute, ring, field, fourier, replace, fold, unfold,
-        change, cutrewrite, simpl, have, suff, wlog, suffices, without,
-        loss, nat_norm, assert, cut, trivial, revert, bool_congr, nat_congr,
-        symmetry, transitivity, auto, split, left, right, autorewrite},
-    % Terminators
-    morekeywords=[5]{by, done, exact, reflexivity, tauto, romega, omega,
-        assumption, solve, contradiction, discriminate},
-    % Control
-    morekeywords=[6]{do, last, first, try, idtac, repeat},
-    % Comments delimiters, we do turn this off for the manual
-    morecomment=[s]{(*}{*)},
-    % Spaces are not displayed as a special character
-    showstringspaces=false,
-    % String delimiters
-    morestring=[b]",
-    morestring=[d],
-    % Size of tabulations
-    tabsize=3,
-    % Enables ASCII chars 128 to 255
-    extendedchars=false,
-    % Case sensitivity
-    sensitive=true,
-    % Automatic breaking of long lines
-    breaklines=false,
-    % Default style fors listings
-    basicstyle=\footnotesize,
-    % Position of captions is bottom
-    captionpos=b,
-    % flexible columns
-    columns=[l]flexible,
-    % Style for (listings') identifiers
-    identifierstyle={\ttfamily\color{black}},
-    % Style for declaration keywords
-    keywordstyle=[1]{\ttfamily\color{dkviolet}},
-    % Style for gallina keywords
-    keywordstyle=[2]{\ttfamily\color{dkgreen}},
-    % Style for sorts keywords
-    keywordstyle=[3]{\ttfamily\color{ltblue}},
-    % Style for tactics keywords
-    keywordstyle=[4]{\ttfamily\color{dkblue}},
-    % Style for terminators keywords
-    keywordstyle=[5]{\ttfamily\color{dkred}},
-    %Style for iterators
-    %keywordstyle=[6]{\ttfamily\color{dkpink}},
-    % Style for strings
-    stringstyle=\ttfamily,
-    % Style for comments
-    commentstyle={\ttfamily\color{dkgreen}},
-    %moredelim=**[is][\ttfamily\color{red}]{/&}{&/},
-    literate=
-    {\\forall}{{\color{dkgreen}{$\forall\;$}}}1
-    {\\exists}{{$\exists\;$}}1
-    {<-}{{$\leftarrow\;$}}1
-    {=>}{{$\Rightarrow\;$}}1
-    {==}{{\code{==}\;}}1
-    {==>}{{\code{==>}\;}}1
-    %    {:>}{{\code{:>}\;}}1
-    {->}{{$\rightarrow\;$}}1
-    {<->}{{$\leftrightarrow\;$}}1
-    {<==}{{$\leq\;$}}1
-    {\#}{{$^\star$}}1 
-    {\\o}{{$\circ\;$}}1 
-    {\@}{{$\cdot$}}1 
-    {\/\\}{{$\wedge\;$}}1
-    {\\\/}{{$\vee\;$}}1
-    {++}{{\code{++}}}1
-    {~}{{\ }}1
-    {\@\@}{{$@$}}1
-    {\\mapsto}{{$\mapsto\;$}}1
-    {\\hline}{{\rule{\linewidth}{0.5pt}}}1
-    %
-}[keywords,comments,strings]
-
-\usepackage{pgfplots}
-\usetikzlibrary{shapes,arrows}
-
-\usepackage{adjustbox}
-\newcommand{\cfbox}[1]{\adjustbox{cfbox=#1}}
+\input{preamble.tex}
 
 \title{프로그램 따로분석의 이론적 기틀}
-\subtitle{재귀적 모듈 지원하기}
-\author{이준협, 이광근}
-\date{2024년 1월 31일}
-\institute{2024년 SIGPL 겨울학교}
+%\subtitle{}
+\author{이준협}
+\date{2024년 4월 19일}
+\institute{ROPAS S\&T}
 
 \titlegraphic{%
   \begin{tikzpicture}[overlay,remember picture]
@@ -373,72 +22,328 @@
 \begin{document}
 \maketitle
 \begin{frame}[c,fragile]
-  \frametitle{무엇을 하고 싶은가?}
-  \begin{itemize}
-    \item 따로분석이란,
-    \item 프로그램에서 쓰이는 이름이 어디에서 정의되는지 몰라도,
-    \item 그 프로그램이 할 수 있는 일을 포섭하는 분석이다.
-  \end{itemize}
+	\frametitle{따로분석?}
+	\begin{itemize}
+		\item 따로분석이란,
+		\item 모든 것이 알려지기 전에,
+		\item 프로그램의 의미를 포섭하는 분석이다.
+	\end{itemize}
 \end{frame}
 \begin{frame}[c,fragile]
-  \frametitle{왜 필요한가?}
-  \begin{itemize}
-    \item 우리가 분석하는 프로그램은 코드 전체가 알려져있는 일이 드물다.\\
-          \textbf{ex. }외부 라이브러리 함수를 부르는 경우
-    \item 외부 환경과 ``따로'' 분석해야한다
-  \end{itemize}
+	\frametitle{왜 필요한가?}
+	\begin{tabular}{c}
+		\begin{lstlisting}[language=Simple]
+int *x;
+void f(void) {
+  if (*x == *x) g(); /* call to unknown function */
+  *x = 42; /* what happens here? */
+}
+  \end{lstlisting}
+	\end{tabular}
+	\begin{itemize}
+		\item 코드 전체가 주어지지 않는 일이 빈번하다.\\
+		      \textbf{ex. }외부 라이브러리 함수를 부르는 경우
+		\item \textbf{미리} 최대한 분석하고 싶다.
+	\end{itemize}
 \end{frame}
 \begin{frame}[c,fragile]
-  \frametitle{어떻게 할 것인가?}
-  \begin{itemize}
-    \item ``Algebraic Effects'': 환경을 받는 \textbf{함수}를 \textbf{자료구조}로 나타냄.
-    \item ``환경'': 이름을 물어보면, 답을 돌려줌
-    \item 환경과의 상호작용을 요약하고, 나중에 환경이 알려지면 풀자!
-  \end{itemize}
+	\frametitle{미리보기}
+	\begin{center}
+		$\sembracket{e}(\Sigma_0\semlink\Sigma)\subseteq\Sigma_0\semlink\sembracket{e}\Sigma$
+	\end{center}
+	\begin{itemize}
+		\item $\Sigma_0:\text{내가 모르던 외부 환경}$
+		\item $\sembracket{e}\Sigma:\text{몰라도 최선을 다해 실행한 결과}$
+		\item $\semlink:\text{합치기(linking) 연산}$
+	\end{itemize}
+	\[\text{따로분석}=\text{안전한 }\Abs{\sembracket{\cdot}}+\text{안전한 }\Abs\semlink\]
+	\[\text{분석의 안전성}:\sembracket{e}(\Sigma_0\semlink\Sigma)\subseteq\gamma(\overbracket{\Abs\ctx_0\Abs\semlink\underbracket{\Abs{\sembracket{e}}\Abs\ctx}_{\text{따로분석}}}^{\text{나중에 합치기}})\]
 \end{frame}
 \begin{frame}[c,fragile]
-  \frametitle{왜 어려운가?}
-  \begin{itemize}
-    \item 언어마다 이름을 알아내는 방법이 다 다르다.
-    \item 이름을 알아내는 방법이 복잡할 수도 있다.\\
-          \textbf{ex. }First class modules, Functors, Recursive modules
-    \item 심지어, OCaml에서 링킹은 끝나지 않을 수도 있다!\\
-          \textcolor{gray}{False를 증명할 수 있다 (Girard's paradox)}
-    \item 나중에 풀 때, 어떻게 ``안전하게'' 풀 것인가?
-  \end{itemize}
+	\frametitle{언어 소개}
+	{
+		\small
+		\begin{tabular}{rrcll}
+			Identifiers & $x$ & $\in$         & $\ExprVar$                                                      \\
+			Expression  & $e$ & $\rightarrow$ & $x$ $\vbar$ $\lambda x.e$ $\vbar$ $e$ $e$ & $\lambda$-calculus  \\
+			            &     & $\vbar$       & $e\synlink e$                             & linked expression   \\
+			            &     & $\vbar$       & $\varepsilon$                             & empty module        \\
+			            &     & $\vbar$       & $x\:\texttt{=}\:e$ \texttt{;} $e$         & (recursive) binding
+		\end{tabular}
+	}
 \end{frame}
 \begin{frame}[c,fragile]
-  \frametitle{잘 요약하기 위해서는}
-  \begin{itemize}
-    \item 요약해석이 알려주는 사실은,
-    \item 기초가 되는 의미구조만 잘 정의해주면,
-    \item 안전한 요약은 ``자연스럽게'' 가능하다는 것이다.
-  \end{itemize}
+	\frametitle{의미공간 소개}
+	{
+		\small
+		\begin{tabular}{rrcll}
+			Environment & $\ctx$ & $\in$         & $\Ctx$                                                                        \\
+			Location    & $\ell$ & $\in$         & $\Loc$                                                                        \\
+			Value       & $v$    & $\in$         & $\Value \triangleq\Ctx+\ExprVar\times\Expr\times\Ctx$                         \\
+			Weak Value  & $w$    & $\in$         & $\Walue\triangleq\Value+\underline\Value$                                     \\
+			Environment & $\ctx$ & $\rightarrow$ & $\bullet$                                             & empty stack           \\
+			            &        & $\vbar$       & $(x,w)\cons \ctx$                                     & weak value binding    \\
+			            &        & $\vbar$       & $(x,\ell)\cons\ctx$                                   & free location binding \\
+			Value       & $v$    & $\rightarrow$ & $\ctx$                                                & exported environment  \\
+			            &        & $\vbar$       & $\langle \lambda x.e, \ctx \rangle$                   & closure               \\
+			Weak Value  & $w$    & $\rightarrow$ & $v$                                                   & value                 \\
+			            &        & $\vbar$       & $\mu\ell.v$                                           & recursive value
+		\end{tabular}
+	}
 \end{frame}
 \begin{frame}[c,fragile]
-  \frametitle{외부 환경과 상호작용하는 의미구조}
-  \begin{itemize}
-    \item 이름 알아내기 어려운 언어에서
-    \item 외부와의 상호작용을 \textbf{발생}시키고
-    \item 이후 \textbf{푸는} 연산을 최대한 간단하게 표현하는 의미구조?
-  \end{itemize}
+	\frametitle{의미공간 확장}
+	{
+		\small
+		\begin{tabular}{rrcll}
+			Event       & $\event$ & $\rightarrow$ & $\InitE$           & initial environment \\
+			            &          & $\vbar$       & $\ReadE(\event,x)$ & read event          \\
+			            &          & $\vbar$       & $\CallE(\event,v)$ & call event          \\
+			Environment & $\ctx$   & $\rightarrow$ & $\cdots$                                 \\
+			            &          & $\vbar$       & $[\event]$         & answer to an event  \\
+			Value       & $v$      & $\rightarrow$ & $\cdots$                                 \\
+			            &          & $\vbar$       & $\event$           & answer to an event
+		\end{tabular}
+	}
+\end{frame}
+\begin{frame}[c,fragile]
+	\frametitle{실행의미 소개}
+	{
+		\footnotesize
+		\begin{flushright}
+			\fbox{$\evjudg{\ctx}{e}{v}$}
+		\end{flushright}
+		\centering
+		\[
+			\begin{InfRule}{Id}
+				\hypo{\ctx(x)=v}
+				\infer1{\evjudg{\ctx}{x}{v}}
+			\end{InfRule}\:
+			\begin{InfRule}{RecId}
+				\hypo{\ctx(x)=\mu\ell.v}
+				\infer1{\evjudg{\ctx}{x}{v[\mu\ell.v/\ell]}}
+			\end{InfRule}\:
+			\begin{InfRule}{Fn}
+				\infer0{\evjudg{\ctx}{\lambda x.e}{\langle\lambda x.e, \ctx\rangle}}
+			\end{InfRule}\:
+			\begin{InfRule}{App}
+				\hypo{\evjudg{\ctx}{e_1}{\langle\lambda x.e, \ctx_1\rangle}}
+				\hypo{\evjudg{\ctx}{e_2}{v_2}}
+				\hypo{\evjudg{(x, v_2)\cons \ctx_1}{e}{v}}
+				\infer{2,1}{\evjudg{\ctx}{e_1\:e_2}{v}}
+			\end{InfRule}
+		\]
 
-  \begin{center}
-    \fbox{특히, \textbf{재귀적 모듈}을 위한 의미구조?}
-  \end{center}
+		\[
+			\begin{InfRule}{Link}
+				\hypo{\evjudg{\ctx}{e_1}{\ctx_1}}
+				\hypo{\evjudg{\ctx_1}{e_2}{v}}
+				\infer2{\evjudg{\ctx}{{e_1}\synlink{e_2}}{v}}
+			\end{InfRule}\:
+			\begin{InfRule}{Empty}
+				\infer0{\evjudg{\ctx}{\varepsilon}{\bullet}}
+			\end{InfRule}\:
+			\begin{InfRule}{Bind}
+				\hypo{\ell\not\in\FLoc(\ctx)}
+				\hypo{\evjudg{(x,\ell)\cons\ctx}{e_1}{v_1}}
+				\hypo{\evjudg{(x, \mu\ell.v_1)\cons \ctx}{e_1}{\ctx_2}}
+				\infer{2,1}{\evjudg{\ctx}{x\:\texttt{=}\:e_1; e_2}{(x,\mu\ell.v_1)\cons\ctx_2}}
+			\end{InfRule}
+		\]
+	}
 \end{frame}
 \begin{frame}
-  \begin{center}\LARGE
-    의미구조 정의와 이후 로드맵\\
-    \textbf{포스터에} 있습니다.
+	\frametitle{실행의미 확장}
+	{\footnotesize
+		\[
+			\begin{InfRule}{LinkEvent}
+				\hypo{\evjudg{\ctx}{e_1}{\event}}
+				\hypo{\evjudg{[\event]}{e_2}{v}}
+				\infer2{\evjudg{\ctx}{e_1\synlink e_2}{v}}
+			\end{InfRule}\:
+			\begin{InfRule}{AppEvent}
+				\hypo{\evjudg{\ctx}{e_1}{\event}}
+				\hypo{\evjudg{\ctx}{e_2}{v}}
+				\infer2{\evjudg{\ctx}{e_1\:e_2}{\CallE(\event,v)}}
+			\end{InfRule}
+		\]
 
-    \large
-    들어주셔서 감사합니다.
-  \end{center}
+		\[
+			\begin{InfRule}{BindEvent}
+				\hypo{\ell\not\in\FLoc(\ctx)}
+				\hypo{\evjudg{(x,\ell)\cons\ctx}{e_1}{v_1}}
+				\hypo{\evjudg{(x, \mu\ell.v_1)\cons \ctx}{e_1}{\event_2}}
+				\infer{2,1}{\evjudg{\ctx}{x\:\texttt{=}\:e_1; e_2}{(x,\mu\ell.v_1)\cons[\event_2]}}
+			\end{InfRule}
+		\]
+	}
+\end{frame}
+\begin{frame}
+	\frametitle{합치기}
+	\footnotesize
+	\begin{align*}
+		\fbox{$\ctx_0\semlink\cdot\in\Event\rightarrow\pset{\Value}$}                                                                                                                        \\
+		\ctx_0\semlink\InitE\triangleq           & \: \{\ctx_0\}                                                                                                                             \\
+		\ctx_0\semlink\ReadE(\event,x)\triangleq & \: \{v_+|\ctx_+\in\ctx_0\semlink\event\land\ctx_+(x)=v_+\}                                                                                \\
+		\cup                                     & \: \{v_+[\mu\ell.v_+/\ell]|\ctx_+\in\ctx_0\semlink E\land\ctx_+(x)=\mu\ell.v_+\}                                                          \\
+		\ctx_0\semlink\CallE(\event,v)\triangleq & \: \{v_+'|\langle\lambda x.e,\ctx_+\rangle\in\ctx_0\semlink E\land v_+\in\ctx_0\semlink v\land(x,v_+)\cons\ctx_+\vdash e\Downarrow v_+'\} \\
+		\cup                                     & \: \{\CallE(\event_+,v_+)|\event_+\in\ctx_0\semlink E\land v_+\in\ctx_0\semlink v\}                                                       \\
+		\fbox{$\ctx_0\semlink\cdot\in\Ctx\rightarrow\pset{\Ctx}$}                                                                                                                            \\
+		\cdots                                                                                                                                                                               \\
+		\fbox{$\ctx_0\semlink\cdot\in\Value\rightarrow\pset{\Value}$}                                                                                                                        \\
+		\cdots                                                                                                                                                                               \\
+		\fbox{$\ctx_0\semlink\cdot\in\Walue\rightarrow\pset{\Walue}$}                                                                                                                        \\
+		\ctx_0\semlink\mu\ell.v\triangleq        & \: \{\mu\ell'.v_+|\ell'\not\in\FLoc(v)\cup\FLoc(\ctx_0)\land v_+\in\ctx_0\semlink v[\ell'/\ell]\}
+	\end{align*}
+\end{frame}
+\begin{frame}
+	\frametitle{Advance}
+	{\small
+		\[\eval(e,\ctx)\triangleq\{v|\ctx\vdash e\Downarrow v\}\quad\eval(e,\Sigma)\triangleq\bigcup_{\ctx\in\Sigma}\eval(e,\ctx)\quad\Sigma_0\semlink W\triangleq\bigcup_{\substack{\ctx_0\in\Sigma_0\\w\in W}}(\ctx_0\semlink w)\]
+	}
+	\begin{thm}[Advance]
+		\[\eval(e,\Sigma_0\semlink\Sigma)\subseteq\Sigma_0\semlink\eval(e,\Sigma)\]
+	\end{thm}
+	\begin{itemize}
+		\item 증명은 $\evjudg{\ctx}{e}{v}$에 대한 귀납법으로
+		\item Coq으로 엄검증 완료! $\checkmark$
+	\end{itemize}
+\end{frame}
+\begin{frame}[c,fragile]
+	\frametitle{따로분석}
+	\begin{enumerate}
+		\item 증가하는 $\gamma\in\pset{\Walue}\rightarrow\Abs\Walue$
+		\item 안전한 $\Abs\eval$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\Rightarrow\eval(e,\Sigma_0)\subseteq\gamma(\Abs\eval(e,\Abs\ctx_0))$
+		\item 안전한 $\Abs\semlink$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ 이고 }W\subseteq\gamma(\Abs{w})\Rightarrow\Sigma_0\semlink W\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs{w})$
+	\end{enumerate}
+	\[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ 이고 }\Sigma\subseteq\gamma(\Abs\ctx)\Rightarrow\eval(e,\Sigma_0\semlink\Sigma)\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs\eval(e,\Abs\ctx))\]
+\end{frame}
+\begin{frame}[c,fragile]
+	\frametitle{특히}
+	\[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\]
+	이고
+	\[[\InitE]\in\gamma(\Abs\InitE)\]
+	이면
+	\[\eval(e_1\synlink e_2,\Sigma_0)\subseteq\gamma(\underbracket{\Abs\eval(e_1,\Abs\ctx_0)}_{\text{따로}}\Abs\semlink\underbracket{\Abs\eval(e_2,\Abs\InitE)}_{\text{따로}})\]
+\end{frame}
+\begin{frame}[c,fragile]
+	\frametitle{예시: CFA}
+	\small
+	\begin{tabular}{rrcl}
+		Program point        & $p$                            & $\in$         & $\mathbb{P}$                                                                    \\
+		Abstract event       & $\Abs{\event}$                 & $\in$         & $\Abs{\Event}$                                                                  \\
+		Abstract environment & $\Abs{\ctx}$                   & $\in$         & $\Abs{\Ctx}\triangleq(\fin{\ExprVar}{\pset{\mathbb{P}}})\times2^{\Abs{\Event}}$ \\
+		Abstract closure     & $\langle\lambda x.p,p'\rangle$ & $\in$         & $\Abs{\text{Clos}}\triangleq\ExprVar\times\mathbb{P}\times\mathbb{P}$           \\
+		Abstract value       & $\Abs{v}$                      & $\in$         & $\Abs{\Value}\triangleq\Abs{\Ctx}\times\pset{\Abs{\text{Clos}}}$                \\
+		Abstract semantics   & $\Abs\ptree$                   & $\in$         & $\Abs{\mathbb{T}}\triangleq\mathbb{P}\rightarrow\Abs{\Ctx}\times\Abs{\Value}$   \\
+		Abstract event       & $\Abs{\event}$                 & $\rightarrow$ & $\Abs{\InitE}$ | $\Abs{\ReadE}(p,x)$ | $\Abs{\CallE}(p,p)$
+	\end{tabular}
+\end{frame}
+\begin{frame}[c,fragile]
+	\frametitle{직관}
+	\[\Abs\ptree=p\mapsto(\Abs\ctx,\Abs{v})\]
+	모든 $p$마다, 입력 $\Abs\ctx$와 출력 $\Abs{v}$가 달려있음.
+	\[\Abs{v}=(\underbracket{(x\mapsto\{p\},\overbracket{\{\Abs\InitE,\Abs\ReadE(p,x),\Abs\CallE(p_1,p_2)\}}^{\Abs\event\text{ 부분}})}_{\Abs\ctx\text{ 부분}},\underbracket{\{\langle\lambda x.p,p'\rangle\}}_{\Abs{\text{Clos}}\text{ 부분}})\]
+	$x\mapsto\{p\}$: $\ctx(x)$가 $\llabel{p}{\ell}$이거나 $p$의 출력.
+
+	$\Abs\ReadE(p,x)$: $p$에 들어오는 $[E]$에서 $x$를 읽음.
+
+	$\Abs\CallE(p_1,p_2)$: $p_1$에서 나온 $E$를 $p_2$에서 나온 $v$에 적용.
+
+	$\langle\lambda x.p,p'\rangle$: $p'$에 들어온 $\ctx$에서 실행되는 함수.
+\end{frame}
+\begin{frame}[c,fragile]
+	\frametitle{$\gamma$ 정의하기}
+	\scriptsize
+	\begin{flushright}
+		\fbox{$\ctx\preceq(\Abs\ctx,\Abs\ptree)$}
+	\end{flushright}
+	\[
+		\begin{InfRule}{Conc-Nil}
+			\infer0{\bullet\preceq\Abs\ctx}
+		\end{InfRule}\:
+		\begin{InfRule}{Conc-ENil}
+			\hypo{\event\preceq(\Abs\ctx,\varnothing)}
+			\infer1{[\event]\preceq\Abs\ctx}
+		\end{InfRule}\:
+		\begin{InfRule}{Conc-ConsLoc}
+			\hypo{p\in\Abs\ctx.1(x)}
+			\hypo{\ctx\preceq\Abs\ctx}
+			\infer2{(x,\llabel{p}{\ell})\cons\ctx\preceq\Abs\ctx}
+		\end{InfRule}\:
+		\begin{InfRule}{Conc-ConsWVal}
+			\hypo{p\in\Abs\ctx.1(x)}
+			\hypo{w\preceq\Abs\ptree(p).2}
+			\hypo{\ctx\preceq\Abs\ctx}
+			\infer3{(x,w)\cons\ctx\preceq\Abs\ctx}
+		\end{InfRule}
+	\]
+	\begin{flushright}
+		\fbox{$w\preceq(\Abs{v},\Abs\ptree)$}
+	\end{flushright}
+	\[
+		\begin{InfRule}{Conc-Clos}
+			\hypo{\langle\lambda x.p,p'\rangle\in\Abs{v}.2}
+			\hypo{\ctx\preceq\Abs\ptree(p').1}
+			\infer2{\langle\lambda x.p,\ctx\rangle\preceq\Abs{v}}
+		\end{InfRule}\:
+		\begin{InfRule}{Conc-Rec}
+			\hypo{v\preceq\Abs\ptree(p).2}
+			\hypo{v\preceq\Abs{v}}
+			\infer2{\mu\llabel{p}{\ell}.v\preceq\Abs{v}}
+		\end{InfRule}\:
+		\begin{InfRule}{Conc-Init}
+			\hypo{\Abs\InitE\in\Abs{v}.1.2}
+			\infer1{\InitE\preceq\Abs{v}}
+		\end{InfRule}
+	\]
+
+	\[
+		\begin{InfRule}{Conc-Read}
+			\hypo{\Abs\ReadE(p,x)\in\Abs{v}.1.2}
+			\hypo{[\event]\preceq\Abs\ptree(p).1}
+			\infer2{\ReadE(\event,x)\preceq\Abs{v}}
+		\end{InfRule}\:
+		\begin{InfRule}{Conc-Call}
+			\hypo{\Abs\CallE(p_1,p_2)\in\Abs{v}.1.2}
+			\hypo{\event\preceq\Abs\ptree(p_1).2}
+			\hypo{v\preceq\Abs\ptree(p_2).2}
+			\infer3{\CallE(\event,v)\preceq\Abs{v}}
+		\end{InfRule}
+	\]
+\end{frame}
+\begin{frame}
+	\frametitle{$\gamma$ 정의하기}
+	\[\gamma(\Abs{v},\Abs\ptree)\triangleq\{v|v\preceq(\Abs{v},\Abs\ptree)\}\]
+\end{frame}
+\begin{frame}[c,fragile]
+	\frametitle{안전한 $\Abs\Step$}
+	\begin{itemize}
+		\item $\Abs\ptree\sqsupseteq\Abs\Step(\Abs\ptree)$이면
+		      \[\evjudg{\ctx}{p}{v}\Rightarrow\ctx\in\gamma(\Abs\ptree(p).1,\Abs\ptree)\Rightarrow v\in\gamma(\Abs\ptree(p).2,\Abs\ptree)\]
+		      가 성립하는
+	\end{itemize}
+\end{frame}
+\begin{frame}[c,fragile]
+	\frametitle{안전한 $\Abs\Link$}
+	\begin{itemize}
+		\item $\ctx_0\in\gamma(\Abs\ctx_0,\Abs\ptree_0)$인 $\Abs\ctx_0,\Abs\ptree_0$와
+		\item $\Abs\ptree$가 주어졌을 때,
+    \item $\Abs\ptree_+\sqsupseteq\Abs\ptree_0\sqcup\Abs\ptree$이고 $\Abs\ptree_+\sqsupseteq\Abs\Link(\Abs\ctx_0,\Abs\ptree_+)$이면
+	\end{itemize}
+	\[w_+\in\ctx_0\semlink w\Rightarrow w\in\gamma(\Abs\ptree(p).1,\Abs\ptree)\Rightarrow w_+\in\gamma(\Abs\ptree_+(p).1,\Abs\ptree_+)\]
+	와
+	\[w_+\in\ctx_0\semlink w\Rightarrow w\in\gamma(\Abs\ptree(p).2,\Abs\ptree)\Rightarrow w_+\in\gamma(\Abs\ptree_+(p).2,\Abs\ptree_+)\]
+	가 성립하는
+\end{frame}
+\begin{frame}
+  \frametitle{안전한 $\Abs{\sembracket{p_0}}$와 $\Abs\semlink$}
+  \[\Abs{\sembracket{p_0}}(\Abs\ctx_0,\Abs\ptree_0)\triangleq\lfp(\lambda\Abs\ptree.\Abs\Step(\Abs\ptree)\sqcup[p_0\mapsto(\Abs\ctx_0,\bot)]\sqcup\Abs\ptree_0)\]
+  \[(\Abs\ctx_0,\Abs\ptree_0)\Abs\semlink\Abs\ptree\triangleq\lfp(\lambda\Abs\ptree_+.\Abs\Link(\Abs\ctx_0,\Abs\ptree_+)\sqcup\Abs\ptree_0\sqcup\Abs\ptree)\]
+\end{frame}
+\begin{frame}
+	\begin{center}\LARGE
+		감사합니다
+	\end{center}
 \end{frame}
 \end{document}
-%%% Local Variables:
-%%% coding: utf-8
-%%% mode: latex
-%%% TeX-engine: xetex
-%%% End:

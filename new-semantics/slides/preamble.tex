@@ -1,0 +1,214 @@
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{kotex}
+\usepackage{csquotes}
+\usepackage{tabularray}
+\usepackage{relsize}
+
+%%% Math settings
+\usepackage{amssymb,amsmath,amsthm,mathtools}
+\usepackage[math-style=TeX,bold-style=TeX]{unicode-math}
+\theoremstyle{definition}
+\newtheorem{lem}{Lemma}[section]
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{cor}{Corollary}[section]
+\newtheorem{clm}{Claim}[section]
+
+%%% Font settings
+\setmainfont{Libertinus Serif}
+\setmathfont{Libertinus Math} % Before set*hangulfont
+\setmathfont{TeX Gyre Pagella Math}[range={\lbrace,\rbrace,\checkmark},Scale=1.1]
+\setmonofont{JuliaMono}[Scale=MatchLowercase]
+\setmainhangulfont{Noto Serif CJK KR}
+\setsanshangulfont[BoldFont={* Bold}]{KoPubWorld Dotum.ttf}
+
+%%% PL constructs
+\usepackage{galois}
+\usepackage{ebproofx}
+\ebproofxset{center=false}
+
+%%% Listings
+\usepackage{listings}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{ltblue}{rgb}{0,0.4,0.4}
+\definecolor{dkviolet}{rgb}{0.3,0,0.5}
+
+%%% lstlisting style
+\lstdefinelanguage{Simple}{ 
+    % Anything betweeen $ becomes LaTeX math mode
+    mathescape=true,
+    % Comments may or not include Latex commands
+    texcl=false, 
+    % Comments delimiters, we do turn this off for the manual
+    morecomment=[s]{/*}{*/},
+    % Spaces are not displayed as a special character
+    showstringspaces=false,
+    % String delimiters
+    morestring=[b]",
+    morestring=[d],
+    % Size of tabulations
+    tabsize=4,
+    % Enables ASCII chars 128 to 255
+    extendedchars=false,
+    % Case sensitivity
+    sensitive=true,
+    % Automatic breaking of long lines
+    breaklines=false,
+    % Default style fors listings
+    basicstyle=\small\ttfamily,
+    % Position of captions is bottom
+    captionpos=b,
+    % flexible columns
+    columns=[l]flexible,
+    % Style for (listings') identifiers
+    identifierstyle={\ttfamily\color{black}},
+    % Style for strings
+    stringstyle=\ttfamily,
+    % Style for comments
+    commentstyle={\ttfamily\color{black}},
+}[comments,strings]
+
+%%% Custom commands
+\newcommand*{\vbar}{|}
+\newcommand*{\finto}{\xrightarrow{\text{\textrm{fin}}}}
+\newcommand*{\istype}{\mathrel{⩴}}
+\newcommand*{\ortype}{\mathrel{|}}
+\newcommand*{\cons}{:\mkern-3mu:}
+\newcommand*{\pset}[1]{2^{#1}}
+\newcommand*{\closeloc}[2]{\prescript{\backslash{#1}}{}{#2}}
+\newcommand*{\openloc}[2]{{#2}^{#1}}
+
+\def\ovbarw{1.2mu}
+\def\ovbarh{1}
+\newcommand*{\ovbar}[1]{\mkern \ovbarw\overline{\mkern-\ovbarw{\smash{#1}\scalebox{1}[\ovbarh]{\vphantom{i}}}\mkern-\ovbarw}\mkern \ovbarw}
+\newcommand*{\A}[1]{\overset{\,_{\mbox{\Large .}}}{#1}}
+\newcommand*{\Abs}[1]{{#1}^{\#}}
+\newcommand*{\Expr}{\text{Expr}}
+\newcommand*{\ExprVar}{\text{Var}}
+\newcommand*{\Module}{\text{Module}}
+\newcommand*{\ModVar}{\text{ModVar}}
+\newcommand*{\modid}{d}
+\newcommand*{\Time}{\mathbb{T}}
+\newcommand*{\ATime}{\A{\Time}}
+\newcommand*{\Ctx}{\text{Env}}
+\newcommand*{\Mtx}{\text{MEnv}}
+\newcommand*{\ctx}{\sigma}
+\newcommand*{\Value}{\text{Val}}
+\newcommand*{\Malue}{\text{MVal}}
+\newcommand*{\Walue}{\text{WVal}}
+\newcommand*{\Mem}{\text{Mem}}
+\newcommand*{\Heap}{\text{Heap}}
+\newcommand*{\Loc}{\text{Loc}}
+\newcommand*{\FLoc}{\text{FLoc}}
+\newcommand*{\Left}{\text{Left}}
+\newcommand*{\Right}{\text{Right}}
+\newcommand*{\Sig}{\text{Sig}}
+\newcommand*{\mem}{m}
+\newcommand*{\heap}{H}
+\newcommand*{\dom}{\text{dom}}
+\newcommand*{\AMem}{\A{\text{Heap}}}
+\newcommand*{\State}{\text{State}}
+\newcommand*{\AState}{\A{\text{State}}}
+\newcommand*{\Result}{\text{Result}}
+\newcommand*{\AResult}{\A{\text{Result}}}
+\newcommand*{\Tick}{\text{Tick}}
+\newcommand*{\lfp}{\text{lfp}}
+\newcommand*{\Step}{\text{Step}}
+\newcommand*{\step}{\text{step}}
+\newcommand*{\semarrow}{\Downarrow}
+\newcommand*{\asemarrow}{\A{\rightsquigarrow}}
+\newcommand*{\synlink}{\rtimes}
+\newcommand*{\semlink}{\mathbin{\text{\rotatebox[origin=c]{180}{$\propto$}}}}
+\newcommand*{\mt}{\mathsf{empty}}
+\newcommand*{\valid}{\mathsf{valid}}
+\newcommand*{\Path}{\text{Path}}
+\newcommand*{\equivalent}{\sim}
+\newcommand*{\tystate}{t}
+
+\newcommand*{\doubleplus}{\ensuremath{\mathbin{+\mkern-3mu+}}}
+\newcommand*{\project}{\text{\texttt{:>} }}
+\newcommand*{\Exp}{\mathsf{Exp}}
+\newcommand*{\Imp}{\mathsf{Imp}}
+\newcommand*{\Fin}{\mathsf{Fin}}
+\newcommand*{\Link}{\text{Link}}
+\newcommand*{\link}{\text{link}}
+\newcommand*{\sembracket}[1]{\lBrack{#1}\rBrack}
+\newcommand*{\fin}[2]{{#1}\xrightarrow{\mbox{\tiny{fin}}}{#2}}
+\newcommand*{\addr}{\mathsf{addr}}
+\newcommand*{\tick}{\mathsf{tick}}
+\newcommand*{\modctx}{\mathsf{ctx}}
+\newcommand*{\mapinject}[2]{{#2}[{#1}]}
+\newcommand*{\inject}[2]{{#2}\langle{#1}\rangle}
+\newcommand*{\deletepre}[2]{{#2}\overline{\doubleplus}{#1}}
+\newcommand*{\deletemap}[2]{{#1}\overline{[{#2}]}}
+\newcommand*{\delete}[2]{{#2}{\langle{#1}\rangle}^{-1}}
+\newcommand*{\filter}{\mathsf{filter}}
+\newcommand*{\Lete}{\mathtt{val}}
+\newcommand*{\Letm}{\mathtt{mod}}
+\newcommand*{\textand}{\text{ and }}
+\newcommand*{\eval}{\text{eval}}
+
+% symbol standing for partial proof tree
+\newcommand*{\ptree}{t}
+
+% labelled expressions {p:e}
+\newcommand*{\plabel}[2]{\{{#1}:{#2}\}}
+
+% labelled locations \ell^p
+\newcommand*{\llabel}[2]{{#2}^{#1}}
+
+% big-step evaluation judgment σ ⊢ e ⇓ v
+\newcommand*{\evjudg}[3]{{#1}\vdash{#2}\Downarrow{#3}}
+
+% typing judgment Γ ⊢ e : τ, S
+\newcommand*{\typejudg}[4]{{#1}\vdash{#2}:{#3},{#4}}
+
+% semantic typing judgment Γ ⊨ e : τ, S
+\newcommand*{\semtypejudg}[4]{{#1}\vDash{#2}:{#3},{#4}}
+
+\newcommand*{\arrowty}[3]{{#1}\xrightarrow{\mbox{\tiny$#2$}}{#3}}
+\newcommand*{\ValRel}[1]{\mathcal{V}\sembracket{#1}}
+\newcommand*{\WalRel}[1]{\mathcal{W}\sembracket{#1}}
+\newcommand*{\ExprRel}[1]{\mathcal{X}\sembracket{#1}}
+\newcommand*{\CtxRel}[1]{\mathcal{C}\sembracket{#1}}
+\newcommand*{\EvtRel}[1]{\mathcal{\event}\sembracket{#1}}
+\newcommand*{\ModRel}[1]{\mathcal{M}\sembracket{#1}}
+\newcommand*{\TyEnv}{\text{TyEnv}}
+\newcommand*{\TyVar}{\text{TyVar}}
+\newcommand*{\Type}{\text{Type}}
+\newcommand*{\Subst}{\text{Subst}}
+\newcommand*{\external}{\Gamma_0}
+\newcommand*{\Safe}{S}
+\newcommand*{\unsafe}{\text{unsafe}}
+
+\newcommand*{\event}{E}
+\newcommand*{\Event}{\text{Event}}
+\newcommand*{\InitE}{\textsf{Init}}
+\newcommand*{\ReadE}{\textsf{Read}}
+\newcommand*{\CallE}{\textsf{Call}}
+\newcommand*{\resolve}{\downarrow_{\ctx_0}}
+\newcommand*{\cstr}{c}
+\newcommand*{\Cstr}{C}
+\newcommand*{\constraints}{\mathbb{C}}
+
+%%%%%%%%%%%%%%%%%%%%%
+%  Beamer Settings  %
+%%%%%%%%%%%%%%%%%%%%%
+\usetheme[numbering=fraction,progressbar=none]{metropolis}
+\useoutertheme[subsection=false]{miniframes}
+\usecolortheme{rose}
+
+\setbeamertemplate{itemize item}[square]
+\setbeamertemplate{itemize subitem}[triangle]
+\setbeamertemplate{itemize subsubitem}[circle]
+\setbeamertemplate{headline}{}
+
+%%% tikz
+\usepackage{pgfplots}
+\usetikzlibrary{shapes,arrows}
+
+\usepackage{adjustbox}
+\newcommand{\cfbox}[1]{\adjustbox{cfbox=#1}}
+
