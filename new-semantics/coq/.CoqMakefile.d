@@ -52,3 +52,9 @@ events/SubstFacts.vos events/SubstFacts.vok events/SubstFacts.required_vos: even
 events/Syntax.vo events/Syntax.glob events/Syntax.v.beautified events/Syntax.required_vo: events/Syntax.v 
 events/Syntax.vio: events/Syntax.v 
 events/Syntax.vos events/Syntax.vok events/Syntax.required_vos: events/Syntax.v 
+cfa/Defs.vo cfa/Defs.glob cfa/Defs.v.beautified cfa/Defs.required_vo: cfa/Defs.v basics/Basics.vo events/Syntax.vo events/EnvSemantics.vo cfa/Syntax.vo
+cfa/Defs.vio: cfa/Defs.v basics/Basics.vio events/Syntax.vio events/EnvSemantics.vio cfa/Syntax.vio
+cfa/Defs.vos cfa/Defs.vok cfa/Defs.required_vos: cfa/Defs.v basics/Basics.vos events/Syntax.vos events/EnvSemantics.vos cfa/Syntax.vos
+cfa/Syntax.vo cfa/Syntax.glob cfa/Syntax.v.beautified cfa/Syntax.required_vo: cfa/Syntax.v 
+cfa/Syntax.vio: cfa/Syntax.v 
+cfa/Syntax.vos cfa/Syntax.vok cfa/Syntax.required_vos: cfa/Syntax.v 

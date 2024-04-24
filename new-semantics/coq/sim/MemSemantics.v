@@ -692,3 +692,16 @@ Proof.
     replace (map_vl id v) with v in * by (symmetry; eapply map_id_is_id). eauto.
   - ii. exploit (@sim_r var loc); eauto.
 Qed.
+
+Corollary sim_empty {var loc} `{Eq var} `{Name loc} t :
+  (forall v (EVAL : eval nv_mt t v),
+    exists v' m' L', meval [] bot [] t v' m' L' /\ Sim v v' m' L') /\
+  (forall v' m' L' (EVAL : meval [] bot [] t v' m' L'),
+    exists v, eval nv_mt t v /\ Sim (wvl_v v) v' m' L').
+Proof.
+  eapply sim_semantics.
+  - repeat eexists; eauto.
+  - split; ss; econstructor; eauto.
+  Unshelve. exact [].
+Qed.
+
