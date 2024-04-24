@@ -1,12 +1,12 @@
-Inductive tm {var} :=
-| tm_var (x : var)
-| tm_lam (x : var) (t : tm)
-| tm_app (t1 t2 : tm)
-| tm_link (t1 t2 : tm)
-| tm_mt
-| tm_bind (x : var) (t1 t2 : tm)
+Inductive tm {var lbl} :=
+| tm_var (p : lbl) (x : var)
+| tm_lam (p : lbl)(x : var) (t : tm)
+| tm_app (p : lbl) (t1 t2 : tm)
+| tm_link (p : lbl) (t1 t2 : tm)
+| tm_mt (p : lbl)
+| tm_bind (p : lbl) (x : var) (t1 t2 : tm)
 .
 
-Variant val {var} :=
-| v_fn (x : var) (t : @tm var)
+Variant val {var lbl} :=
+| v_fn (x : var) (t : @tm var lbl)
 .

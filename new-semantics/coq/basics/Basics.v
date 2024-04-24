@@ -47,6 +47,15 @@ Qed.
 Lemma eqb_refl {T} `{Eq T} : forall t, eqb t t = true.
 Proof. intros; apply eqb_eq; eauto. Qed.
 
+#[refine] Instance EqPair A B `{EA : Eq A} `{EB : Eq B} : Eq (A * B) :=
+{ eqb := fun x y =>
+    let (a, b) := x in let (a', b') := y in
+    eqb a a' && eqb b b' }.
+Proof.
+  ii; repeat des_goal; split; intro EQ; repeat des_hyp;
+  repeat first [rewrite eqb_eq in * | rewrite eqb_refl in * | clarify].
+Defined.
+
 Ltac eqb2eq T :=
   match T with
   | nat => first 

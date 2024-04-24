@@ -8,6 +8,6 @@
 
 ## Proving Advance
 
-- Definition for semantics with events: [eval](./events/EnvSemantics.v#L22)
-- Definition for linking: [link](./events/LinkDefs.v#L22)
-- Advance: [advance](./events/Advance.v#L173)
+- Definition for semantics with events: [eval](./events/EnvSemantics.v#L27)
+- Definition for linking: [link](./events/LinkDefs.v#L21)
+- Advance: [advance](./events/Advance.v#L172)

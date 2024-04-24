@@ -2,104 +2,104 @@
 Now we formulate the semantics for generating events.
 
 \begin{figure}[h!]
-	\centering
-	\small
-	\begin{tabular}{rrcll}
-		Event       & $\event$ & $\rightarrow$ & $\InitE$           & initial environment \\
-		            &          & $\vbar$       & $\ReadE(\event,x)$ & read event          \\
-		            &          & $\vbar$       & $\CallE(\event,v)$ & call event          \\
-		Environment & $\ctx$   & $\rightarrow$ & $\cdots$                                 \\
-		            &          & $\vbar$       & $[\event]$         & answer to an event  \\
-		Value       & $v$      & $\rightarrow$ & $\cdots$                                 \\
-		            &          & $\vbar$       & $\event$           & answer to an event
-	\end{tabular}
-	\caption{Definition of the semantic domains with events. All other semantic domains are equal to Figure \ref{fig:domain}.}
-	\label{fig:eventdomain}
+  \centering
+  \small
+  \begin{tabular}{rrcll}
+    Event       & $\event$ & $\rightarrow$ & $\InitE$           & initial environment \\
+                &          & $\vbar$       & $\ReadE(\event,x)$ & read event          \\
+                &          & $\vbar$       & $\CallE(\event,v)$ & call event          \\
+    Environment & $\ctx$   & $\rightarrow$ & $\cdots$                                 \\
+                &          & $\vbar$       & $[\event]$         & answer to an event  \\
+    Value       & $v$      & $\rightarrow$ & $\cdots$                                 \\
+                &          & $\vbar$       & $\event$           & answer to an event
+  \end{tabular}
+  \caption{Definition of the semantic domains with events. All other semantic domains are equal to Figure \ref{fig:domain}.}
+  \label{fig:eventdomain}
 \end{figure}
 
 We extend how to read weak values given an environment.
 \begin{align*}
-	\bullet(x)  & \triangleq\bot             &  &  & ((x',\ell)\cons\ctx)(x) & \triangleq (x=x'?\ell:\ctx(x)) \\
-	[\event](x) & \triangleq\ReadE(\event,x) &  &  & ((x',w)\cons\ctx)(x)    & \triangleq (x=x'?w:\ctx(x))    \\
+  \bullet(x)  & \triangleq\bot             &  &  & ((x',\ell)\cons\ctx)(x) & \triangleq (x=x'?\ell:\ctx(x)) \\
+  [\event](x) & \triangleq\ReadE(\event,x) &  &  & ((x',w)\cons\ctx)(x)    & \triangleq (x=x'?w:\ctx(x))    \\
 \end{align*}
 
 Then we need to add only three rules to the semantics in Figure \ref{fig:bigstep} for the semantics to incorporate events.
-	{\small
-		\[
+  {\small
+    \[
       \begin{InfRule}{LinkEvent}
         \hypo{\evjudg{\ctx}{e_1}{\event}}
         \hypo{\evjudg{[\event]}{e_2}{v}}
         \infer2{\evjudg{\ctx}{e_1\synlink e_2}{v}}
-			\end{InfRule}\:
+      \end{InfRule}\:
       \begin{InfRule}{AppEvent}
         \hypo{\evjudg{\ctx}{e_1}{\event}}
         \hypo{\evjudg{\ctx}{e_2}{v}}
         \infer2{\evjudg{\ctx}{e_1\:e_2}{\CallE(\event,v)}}
-			\end{InfRule}\:
+      \end{InfRule}\:
       \begin{InfRule}{BindEvent}
         \hypo{\ell\not\in\FLoc(\ctx)}
-			  \hypo{\evjudg{(x,\ell)\cons\ctx}{e_1}{v_1}}
-			  \hypo{\evjudg{(x, \mu\ell.v_1)\cons \ctx}{e_1}{\event_2}}
+        \hypo{\evjudg{(x,\ell)\cons\ctx}{e_1}{v_1}}
+        \hypo{\evjudg{(x, \mu\ell.v_1)\cons \ctx}{e_1}{\event_2}}
         \infer{2,1}{\evjudg{\ctx}{x\:\texttt{=}\:e_1; e_2}{(x,\mu\ell.v_1)\cons[\event_2]}}
-			\end{InfRule}
-		\]
-	}
+      \end{InfRule}
+    \]
+  }
 
 Now we need to formulate the \emph{concrete linking} rules.
 The concrete linking rule $\ctx_0\semlink w$, given an answer $\ctx_0$ to the $\InitE$ event, resolves all events within $w$ to obtain a set of final results.
 \begin{align*}
-	\fbox{$\semlink\in\Ctx\rightarrow\Event\rightarrow\pset(\Value)$}                                                                                                                                  \\
-	\ctx_0\semlink\InitE\triangleq                         & \: \{\ctx_0\}                                                                                                                             \\
-	\ctx_0\semlink\ReadE(\event,x)\triangleq               & \: \{v_+|\ctx_+\in\ctx_0\semlink\event\land\ctx_+(x)=v_+\}                                                                                \\
-	\cup                                                   & \: \{v_+[\mu\ell.v_+/\ell]|\ctx_+\in\ctx_0\semlink E\land\ctx_+(x)=\mu\ell.v_+\}                                                          \\
-	\ctx_0\semlink\CallE(\event,v)\triangleq               & \: \{v_+'|\langle\lambda x.e,\ctx_+\rangle\in\ctx_0\semlink E\land v_+\in\ctx_0\semlink v\land(x,v_+)\cons\ctx_+\vdash e\Downarrow v_+'\} \\
-	\cup                                                   & \: \{\CallE(\event_+,v_+)|\event_+\in\ctx_0\semlink E\land v_+\in\ctx_0\semlink v\}                                                       \\
-	\fbox{$\semlink\in\Ctx\rightarrow\Ctx\rightarrow\pset(\Ctx)$}                                                                                                                                      \\
-	\ctx_0\semlink\bullet\triangleq                        & \: \{\bullet\}                                                                                                                            \\
-	\ctx_0\semlink(x,\ell)\cons\ctx\triangleq              & \: \{(x,\ell)\cons\ctx_+|\ctx_+\in\ctx_0\semlink\ctx\}                                                                                    \\
-	\ctx_0\semlink(x,w)\cons\ctx\triangleq                 & \: \{(x,w_+)\cons\ctx_+|w_+\in\ctx_0\semlink w\land\ctx_+\in\ctx_0\semlink\ctx\}                                                          \\
-	\ctx_0\semlink[E]\triangleq                            & \: \{\ctx_+|\ctx_+\in\ctx_0\semlink\event\}\cup\{[\event_+]|\event_+\in\ctx_0\semlink\event\}                                             \\
-	\fbox{$\semlink\in\Ctx\rightarrow\Value\rightarrow\pset(\Value)$}                                                                                                                                  \\
-	\ctx_0\semlink\langle\lambda x.e,\ctx\rangle\triangleq & \: \{\langle\lambda x.e,\ctx_+\rangle|\ctx_+\in\ctx_0\semlink\ctx\}                                                                       \\
-	\fbox{$\semlink\in\Ctx\rightarrow\Walue\rightarrow\pset(\Walue)$}                                                                                                                                  \\
-	\ctx_0\semlink\mu\ell.v\triangleq                      & \: \{\mu\ell'.v_+|\ell'\not\in\FLoc(v)\cup\FLoc(\ctx_0)\land v_+\in\ctx_0\semlink v[\ell'/\ell]\}
+  \fbox{$\semlink\in\Ctx\rightarrow\Event\rightarrow\pset(\Value)$}                                                                                                                           \\
+  \ctx_0\semlink\InitE\triangleq                         & \: \{\ctx_0\}                                                                                                                      \\
+  \ctx_0\semlink\ReadE(\event,x)\triangleq               & \: \{v_+|\ctx_+\in\ctx_0\semlink\event,\ctx_+(x)=v_+\}                                                                             \\
+  \cup                                                   & \: \{v_+[\mu\ell.v_+/\ell]|\ctx_+\in\ctx_0\semlink E,\ctx_+(x)=\mu\ell.v_+\}                                                       \\
+  \ctx_0\semlink\CallE(\event,v)\triangleq               & \: \{v_+'|\langle\lambda x.e,\ctx_+\rangle\in\ctx_0\semlink E, v_+\in\ctx_0\semlink v, (x,v_+)\cons\ctx_+\vdash e\Downarrow v_+'\} \\
+  \cup                                                   & \: \{\CallE(\event_+,v_+)|\event_+\in\ctx_0\semlink E, v_+\in\ctx_0\semlink v\}                                                    \\
+  \fbox{$\semlink\in\Ctx\rightarrow\Ctx\rightarrow\pset(\Ctx)$}                                                                                                                               \\
+  \ctx_0\semlink\bullet\triangleq                        & \: \{\bullet\}                                                                                                                     \\
+  \ctx_0\semlink(x,\ell)\cons\ctx\triangleq              & \: \{(x,\ell)\cons\ctx_+|\ctx_+\in\ctx_0\semlink\ctx\}                                                                             \\
+  \ctx_0\semlink(x,w)\cons\ctx\triangleq                 & \: \{(x,w_+)\cons\ctx_+|w_+\in\ctx_0\semlink w,\ctx_+\in\ctx_0\semlink\ctx\}                                                       \\
+  \ctx_0\semlink[E]\triangleq                            & \: \{\ctx_+|\ctx_+\in\ctx_0\semlink\event\}\cup\{[\event_+]|\event_+\in\ctx_0\semlink\event\}                                      \\
+  \fbox{$\semlink\in\Ctx\rightarrow\Value\rightarrow\pset(\Value)$}                                                                                                                           \\
+  \ctx_0\semlink\langle\lambda x.e,\ctx\rangle\triangleq & \: \{\langle\lambda x.e,\ctx_+\rangle|\ctx_+\in\ctx_0\semlink\ctx\}                                                                \\
+  \fbox{$\semlink\in\Ctx\rightarrow\Walue\rightarrow\pset(\Walue)$}                                                                                                                           \\
+  \ctx_0\semlink\mu\ell.v\triangleq                      & \: \{\mu\ell'.v_+|\ell'\not\in\FLoc(v)\cup\FLoc(\ctx_0), v_+\in\ctx_0\semlink v[\ell'/\ell]\}
 \end{align*}
 Concrete linking makes sense because of the following theorem.
 First define:
 \[\eval(e,\ctx)\triangleq\{v|\ctx\vdash e\Downarrow v\}\qquad\eval(e,\Sigma)\triangleq\bigcup_{\ctx\in\Sigma}\eval(e,\ctx)\qquad\Sigma_0\semlink W\triangleq\bigcup_{\substack{\ctx_0\in\Sigma_0\\w\in W}}(\ctx_0\semlink w)\]
 Then the following holds:
 \begin{thm}[Advance]\label{thm:linksound}
-	Given $e\in\Expr,\Sigma_0,\Sigma\subseteq\Ctx$,
-	\[\eval(e,\Sigma_0\semlink\Sigma)\subseteq\Sigma_0\semlink\eval(e,\Sigma)\]
+  Given $e\in\Expr,\Sigma_0,\Sigma\subseteq\Ctx$,
+  \[\eval(e,\Sigma_0\semlink\Sigma)\subseteq\Sigma_0\semlink\eval(e,\Sigma)\]
 \end{thm}
 
 The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
 \begin{lem}[Linking distributes under substitution]
-	Let $\ctx_0$ be the external environment that is linked with weak values $w$ and $u$.
-	For all $\ell\not\in\FLoc(\ctx_0)$, we have:
-	\[\forall w_+,u_+:w_+\in\ctx_0\semlink w\wedge u_+\in\ctx_0\semlink u\Rightarrow w_+[u_+/\ell]\in\ctx_0\semlink w[u/\ell]\]
+  Let $\ctx_0$ be the external environment that is linked with weak values $w$ and $u$.
+  For all $\ell\not\in\FLoc(\ctx_0)$, we have:
+  \[\forall w_+,u_+:w_+\in\ctx_0\semlink w\wedge u_+\in\ctx_0\semlink u\Rightarrow w_+[u_+/\ell]\in\ctx_0\semlink w[u/\ell]\]
 \end{lem}
 \begin{lem}[Linking is compatible with reads]
-	Let $\ctx_0$ be the external environment that is linked with some environment $\ctx$.
-	Let $w$ be the value obtained from reading $x$ from $\ctx$.
-	Let $\text{unfold}:\Walue\rightarrow\Value$ be defined as:
-	\[\text{unfold}(\mu\ell.v)\triangleq v[\mu\ell.v/\ell]\qquad\text{unfold}(v)\triangleq v\]
-	Then for all $\ctx_+\in\ctx_0\semlink\ctx$, we have:
-	\[\exists w_+\in\Walue:\ctx_+(x)=w_+\land\text{unfold}(w_+)\in\ctx_0\semlink\text{unfold}(w)\]
+  Let $\ctx_0$ be the external environment that is linked with some environment $\ctx$.
+  Let $w$ be the value obtained from reading $x$ from $\ctx$.
+  Let $\text{unfold}:\Walue\rightarrow\Value$ be defined as:
+  \[\text{unfold}(\mu\ell.v)\triangleq v[\mu\ell.v/\ell]\qquad\text{unfold}(v)\triangleq v\]
+  Then for all $\ctx_+\in\ctx_0\semlink\ctx$, we have:
+  \[\exists w_+\in\Walue:\ctx_+(x)=w_+\land\text{unfold}(w_+)\in\ctx_0\semlink\text{unfold}(w)\]
 \end{lem}
 
 Now we can formulate modular analysis.
 A modular analysis consists of two requirements: an abstraction for the semantics with events and an abstraction for the semantic linking operator.
 \begin{thm}[Modular analysis]
-	Assume:
-	\begin{enumerate}
-		\item An abstract domain $\Abs\Walue$ that is concretized by a monotonic $\gamma\in\pset(\Walue)\rightarrow\Abs\Walue$
-		\item A sound $\Abs\eval$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\Rightarrow\eval(e,\Sigma_0)\subseteq\gamma(\Abs\eval(e,\Abs\ctx_0))$
-		\item A sound $\Abs\semlink$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }W\subseteq\gamma(\Abs{w})\Rightarrow\Sigma_0\semlink W\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs{w})$
-	\end{enumerate}
-	then we have:
-	\[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }\Sigma\subseteq\gamma(\Abs\ctx)\Rightarrow\eval(e,\Sigma_0\semlink\Sigma)\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs\eval(e,\Abs\ctx))\]
+  Assume:
+  \begin{enumerate}
+    \item An abstract domain $\Abs\Walue$ that is concretized by a monotonic $\gamma\in\pset(\Walue)\rightarrow\Abs\Walue$
+    \item A sound $\Abs\eval$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\Rightarrow\eval(e,\Sigma_0)\subseteq\gamma(\Abs\eval(e,\Abs\ctx_0))$
+    \item A sound $\Abs\semlink$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }W\subseteq\gamma(\Abs{w})\Rightarrow\Sigma_0\semlink W\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs{w})$
+  \end{enumerate}
+  then we have:
+  \[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }\Sigma\subseteq\gamma(\Abs\ctx)\Rightarrow\eval(e,\Sigma_0\semlink\Sigma)\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs\eval(e,\Abs\ctx))\]
 \end{thm}
 \begin{cor}[Modular analysis of linked program]
-	\[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }[\InitE]\in\gamma(\Abs\InitE)\Rightarrow\eval(e_1\synlink e_2,\Sigma_0)\subseteq\gamma(\Abs\eval(e_1,\Abs\ctx_0)\Abs\semlink\Abs\eval(e_2,\Abs\InitE))\]
+  \[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }[\InitE]\in\gamma(\Abs\InitE)\Rightarrow\eval(e_1\synlink e_2,\Sigma_0)\subseteq\gamma(\Abs\eval(e_1,\Abs\ctx_0)\Abs\semlink\Abs\eval(e_2,\Abs\InitE))\]
 \end{cor}
