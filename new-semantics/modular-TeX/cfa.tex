@@ -50,59 +50,59 @@ That is, $(\ctx,v)$ is contained in $\sembracket{p_0}\Sigma_0(p)$ if and only if
   \centering
   \small
   \begin{flushright}
-    \fbox{$\ctx\le(\Abs\ctx,\Abs\ptree)$}
+    \fbox{$\ctx\preceq(\Abs\ctx,\Abs\ptree)$}
   \end{flushright}
   \[
     \begin{InfRule}{Conc-Nil}
-      \infer0{\bullet\le\Abs\ctx}
+      \infer0{\bullet\preceq\Abs\ctx}
     \end{InfRule}\:
     \begin{InfRule}{Conc-ENil}
-      \hypo{\event\le(\Abs\ctx,\varnothing)}
-      \infer1{[\event]\le\Abs\ctx}
+      \hypo{\event\preceq(\Abs\ctx,\varnothing)}
+      \infer1{[\event]\preceq\Abs\ctx}
     \end{InfRule}\:
     \begin{InfRule}{Conc-ConsLoc}
       \hypo{p\in\Abs\ctx.1(x)}
-      \hypo{\ctx\le\Abs\ctx}
-      \infer2{(x,\llabel{p}{\ell})\cons\ctx\le\Abs\ctx}
+      \hypo{\ctx\preceq\Abs\ctx}
+      \infer2{(x,\llabel{p}{\ell})\cons\ctx\preceq\Abs\ctx}
     \end{InfRule}\:
     \begin{InfRule}{Conc-ConsWVal}
       \hypo{p\in\Abs\ctx.1(x)}
-      \hypo{w\le\Abs\ptree(p).2}
-      \hypo{\ctx\le\Abs\ctx}
-      \infer3{(x,w)\cons\ctx\le\Abs\ctx}
+      \hypo{w\preceq\Abs\ptree(p).2}
+      \hypo{\ctx\preceq\Abs\ctx}
+      \infer3{(x,w)\cons\ctx\preceq\Abs\ctx}
     \end{InfRule}
   \]
   \begin{flushright}
-    \fbox{$w\le(\Abs{v},\Abs\ptree)$}
+    \fbox{$w\preceq(\Abs{v},\Abs\ptree)$}
   \end{flushright}
   \[
     \begin{InfRule}{Conc-Clos}
       \hypo{\langle\lambda x.p,p'\rangle\in\Abs{v}.2}
-      \hypo{\ctx\le\Abs\ptree(p').1}
-      \infer2{\langle\lambda x.p,\ctx\rangle\le\Abs{v}}
+      \hypo{\ctx\preceq\Abs\ptree(p').1}
+      \infer2{\langle\lambda x.p,\ctx\rangle\preceq\Abs{v}}
     \end{InfRule}\:
     \begin{InfRule}{Conc-Rec}
-      \hypo{v\le\Abs\ptree(p).2}
-      \hypo{v\le\Abs{v}}
-      \infer2{\mu\llabel{p}{\ell}.v\le\Abs{v}}
+      \hypo{v\preceq\Abs\ptree(p).2}
+      \hypo{v\preceq\Abs{v}}
+      \infer2{\mu\llabel{p}{\ell}.v\preceq\Abs{v}}
     \end{InfRule}
   \]
 
   \[
     \begin{InfRule}{Conc-Init}
       \hypo{\Abs\InitE\in\Abs{v}.1.2}
-      \infer1{\InitE\le\Abs{v}}
+      \infer1{\InitE\preceq\Abs{v}}
     \end{InfRule}\:
     \begin{InfRule}{Conc-Read}
       \hypo{\Abs\ReadE(p,x)\in\Abs{v}.1.2}
-      \hypo{[\event]\le\Abs\ptree(p).1}
-      \infer2{\ReadE(\event,x)\le\Abs{v}}
+      \hypo{[\event]\preceq\Abs\ptree(p).1}
+      \infer2{\ReadE(\event,x)\preceq\Abs{v}}
     \end{InfRule}\:
     \begin{InfRule}{Conc-Call}
       \hypo{\Abs\CallE(p_1,p_2)\in\Abs{v}.1.2}
-      \hypo{\event\le\Abs\ptree(p_1).2}
-      \hypo{v\le\Abs\ptree(p_2).2}
-      \infer3{\CallE(\event,v)\le\Abs{v}}
+      \hypo{\event\preceq\Abs\ptree(p_1).2}
+      \hypo{v\preceq\Abs\ptree(p_2).2}
+      \infer3{\CallE(\event,v)\preceq\Abs{v}}
     \end{InfRule}
   \]
   \caption{The concretization relation between weak values and abstract values. $\Abs\ptree$ is omitted.}
@@ -110,8 +110,8 @@ That is, $(\ctx,v)$ is contained in $\sembracket{p_0}\Sigma_0(p)$ if and only if
 \end{figure}
 
 The concretization function $\gamma$ that sends an element of $\Abs{\mathbb{T}}$ to $\mathbb{T}$ is defined as:
-\[\gamma(\Abs\ptree)\triangleq\lambda p.\{\ctx|\ctx\le(\Abs\ptree(p).1,\Abs\ptree)\}\cup\{(\ctx,v)|v\le(\Abs\ptree(p).2,\Abs\ptree)\}\]
-where $\le$ is the concretization relation that is inductively defined in Figure \ref{fig:concretrel}.
+\[\gamma(\Abs\ptree)\triangleq\lambda p.\{\ctx|\ctx\preceq(\Abs\ptree(p).1,\Abs\ptree)\}\cup\{(\ctx,v)|v\preceq(\Abs\ptree(p).2,\Abs\ptree)\}\]
+where $\preceq$ is the concretization relation that is inductively defined in Figure \ref{fig:concretrel}.
 
 Now the abstract semantic function can be given.
 \begin{align*}
@@ -141,53 +141,53 @@ is a sound abstraction of $\sembracket{p_0}\Sigma_0$ when $\Sigma_0\subseteq\gam
 \subsection{Abstract linking}
 Now we define a sound linking operator that abstracts $\semlink$.
 Assume we have
-\[\ctx_0\le(\Abs{\ctx}_0,\Abs{\ptree}_0)\quad\ptree\subseteq\gamma(\Abs\ptree)\]
+\[\ctx_0\preceq(\Abs{\ctx}_0,\Abs{\ptree}_0)\quad\ptree\subseteq\gamma(\Abs\ptree)\]
 we define:
 \[\ctx_0\semlink\ptree\triangleq\lambda p.\bigcup_{\ctx\in t(p)}(\ctx_0\semlink\ctx)\cup\bigcup_{(\ctx,v)\in t(p)}\{(\ctx_+,v_+)|\ctx_+\in\ctx_0\semlink\ctx\text{ and }v_+\in\ctx_0\semlink v\}\]
 
 We want to define $\Abs\semlink$ so that the following holds:
 \[\ctx_0\semlink\ptree\subseteq\gamma((\Abs{\ctx}_0,\Abs{\ptree}_0)\Abs\semlink\Abs\ptree)\]
 This is equivalent to saying that the linked result $\Abs\ptree_+=(\Abs\ctx_0,\Abs\ptree_0)\Abs\semlink\Abs\ptree$ satisfies:
-\[\ctx_0\le(\Abs\ctx_0,\Abs\ptree_0)\text{ and }w\le(\Abs{v},\Abs\ptree)\Rightarrow w_+\le(\Abs{v}_+,\Abs\ptree_+)\]
+\[\ctx_0\preceq(\Abs\ctx_0,\Abs\ptree_0)\text{ and }w\preceq(\Abs{v},\Abs\ptree)\Rightarrow w_+\preceq(\Abs{v}_+,\Abs\ptree_+)\]
 for each $w_+\in\ctx_0\semlink w$ and $p\in\mathbb{P}$,
-where $[\Abs{v},\Abs{v}_+] \in \{[(\Abs\ptree(p).1,\varnothing),(\Abs\ptree_+(p).1,\varnothing)],[\Abs\ptree(p).2,\Abs\ptree_+(p).2]\}$.
+where $[\Abs{v},\Abs{v}_+] = [(\Abs\ptree(p).1,\varnothing),(\Abs\ptree_+(p).1,\varnothing)]$ or $[\Abs\ptree(p).2,\Abs\ptree_+(p).2]$.
 
 The condition for $\Abs\ptree_+$ can be deduced by attempting the proof of the above in advance.
 
 We proceed by induction on the derivation for
 \[w_+\in\ctx_0\semlink w\]
-and inversion on $w\le(\Abs{v},\Abs\ptree)$.
+and inversion on $w\preceq(\Abs{v},\Abs\ptree)$.
 \begin{center}
   \begin{tabular}{|l@{\hskip2pt}r@{\hskip2pt}l@{\hskip2pt}l|}
     \hline
-    When: & $w=$                                & $\InitE$,                                                                  &                                                              \\
-    Have: & $\Abs\InitE\in$                     & $\Abs{v}.1.2$                                                              &                                                              \\
-    Need: & $\Abs{v}_+\sqsupseteq$              & $\:\Abs\ctx_0$                                                             &                                                              \\
-          & $\Abs\ptree_+\sqsupseteq$           & $\:\Abs\ptree_0$                                                           &                                                              \\
+    When: & $w=$                                & $\InitE$,                                                                          &                                                              \\
+    Have: & $\Abs\InitE\in$                     & $\Abs{v}.1.2$                                                                      &                                                              \\
+    Need: & $\Abs{v}_+\sqsupseteq$              & $\:\Abs\ctx_0$                                                                     &                                                              \\
+          & $\Abs\ptree_+\sqsupseteq$           & $\:\Abs\ptree_0$                                                                   &                                                              \\
     \hline
-    When: & $w=$                                & $\ReadE(\event,x)$,                                                        &                                                              \\
-    Have: & $\Abs\ReadE(p',x)$                  & $\in\Abs{v}.1.2$ and $[\event]\le\Abs\ptree(p').1$                         &                                                              \\
-    Need: & $\Abs{v}_+\sqsupseteq$              & $\:\Abs\ptree_+(p'').2$                                                    & for $p''\in\Abs\ptree_+(p').1.1(x)$                          \\
-          & $\Abs{v}_+\sqsupseteq$              & $\:(([],\{\Abs\ReadE(p',x)\}),\varnothing)$                                & if $\Abs\ptree_+(p').1.2\neq\varnothing$                     \\
+    When: & $w=$                                & $\ReadE(\event,x)$,                                                                &                                                              \\
+    Have: & $\Abs\ReadE(p',x)$                  & $\in\Abs{v}.1.2$ and $[\event]\preceq\Abs\ptree(p').1$                             &                                                              \\
+    Need: & $\Abs{v}_+\sqsupseteq$              & $\:\Abs\ptree_+(p'').2$                                                            & for $p''\in\Abs\ptree_+(p').1.1(x)$                          \\
+          & $\Abs{v}_+\sqsupseteq$              & $\:(([],\{\Abs\ReadE(p',x)\}),\varnothing)$                                        & if $\Abs\ptree_+(p').1.2\neq\varnothing$                     \\
     \hline
-    When: & $w=$                                & $\CallE(\event,v)$,                                                        &                                                              \\
-    Have: & $\Abs\CallE(p_1,p_2)\in$            & $\Abs{v}.1.2$ and $\event\le\Abs\ptree(p_1).2$ and $v\le\Abs\ptree(p_2).2$ &                                                              \\
-    Need: & $\Abs{v}_+\sqsupseteq$              & $\:\Abs\ptree_+(p').2$                                                     & for $\langle\lambda x.p',p''\rangle\in\Abs\ptree_+(p_1).2.2$ \\
-          & $\Abs{v}_+\sqsupseteq$              & $\:(([],\{\Abs\CallE(p_1,p_2)\}),\varnothing)$                             & if $\Abs\ptree_+(p_1).2.1.2\neq\varnothing$                  \\
-          & $\Abs\ptree_+(p')\sqsupseteq$       & $\:(\Abs\ptree_+(p'').1\sqcup([x\mapsto\{p_2\}],\varnothing),\varnothing)$ & for $\langle\lambda x.p',p''\rangle\in\Abs\ptree_+(p_1).2.2$ \\
-          & $\Abs\ptree_+\sqsupseteq$           & $\:\Abs\Step(\Abs\ptree_+)$                                                &                                                              \\
+    When: & $w=$                                & $\CallE(\event,v)$,                                                                &                                                              \\
+    Have: & $\Abs\CallE(p_1,p_2)\in$            & $\Abs{v}.1.2$ and $\event\preceq\Abs\ptree(p_1).2$ and $v\preceq\Abs\ptree(p_2).2$ &                                                              \\
+    Need: & $\Abs{v}_+\sqsupseteq$              & $\:\Abs\ptree_+(p').2$                                                             & for $\langle\lambda x.p',p''\rangle\in\Abs\ptree_+(p_1).2.2$ \\
+          & $\Abs{v}_+\sqsupseteq$              & $\:(([],\{\Abs\CallE(p_1,p_2)\}),\varnothing)$                                     & if $\Abs\ptree_+(p_1).2.1.2\neq\varnothing$                  \\
+          & $\Abs\ptree_+(p')\sqsupseteq$       & $\:(\Abs\ptree_+(p'').1\sqcup([x\mapsto\{p_2\}],\varnothing),\varnothing)$         & for $\langle\lambda x.p',p''\rangle\in\Abs\ptree_+(p_1).2.2$ \\
+          & $\Abs\ptree_+\sqsupseteq$           & $\:\Abs\Step(\Abs\ptree_+)$                                                        &                                                              \\
     \hline
-    When: & $w=$                                & $(x,\llabel{p'}{\ell})\cons\ctx$,                                          &                                                              \\
-    Have: & $p'\in$                             & $\Abs{v}.1.1(x)$ and $\ctx\le\Abs{v}$                                      &                                                              \\
-    Need: & $\Abs{v}_+.1.1(x)\ni$               & $\:p'$                                                                     &                                                              \\
+    When: & $w=$                                & $(x,\llabel{p'}{\ell})\cons\ctx$,                                                  &                                                              \\
+    Have: & $p'\in$                             & $\Abs{v}.1.1(x)$ and $\ctx\preceq\Abs{v}$                                          &                                                              \\
+    Need: & $\Abs{v}_+.1.1(x)\ni$               & $\:p'$                                                                             &                                                              \\
     \hline
-    When: & $w=$                                & $(x,w')\cons\ctx$,                                                         &                                                              \\
-    Have: & $p'\in$                             & $\Abs{v}.1.1(x)$ and $w'\in\Abs\ptree(p').1$ and $\ctx\le\Abs{v}$          &                                                              \\
-    Need: & $\Abs{v}_+.1.1(x)\ni$               & $\:p'$                                                                     &                                                              \\
+    When: & $w=$                                & $(x,w')\cons\ctx$,                                                                 &                                                              \\
+    Have: & $p'\in$                             & $\Abs{v}.1.1(x)$ and $w'\preceq\Abs\ptree(p').2$ and $\ctx\preceq\Abs{v}$          &                                                              \\
+    Need: & $\Abs{v}_+.1.1(x)\ni$               & $\:p'$                                                                             &                                                              \\
     \hline
-    When: & $w=$                                & $\langle\lambda x.p',\ctx\rangle$,                                         &                                                              \\
-    Have: & $\langle\lambda x.p',p''\rangle\in$ & $\Abs{v}.2$ and $\ctx\le\Abs\ptree(p'').1$                                 &                                                              \\
-    Need: & $\Abs{v}_+.2\ni$                    & $\:\langle\lambda x.p',p''\rangle$                                         &                                                              \\
+    When: & $w=$                                & $\langle\lambda x.p',\ctx\rangle$,                                                 &                                                              \\
+    Have: & $\langle\lambda x.p',p''\rangle\in$ & $\Abs{v}.2$ and $\ctx\preceq\Abs\ptree(p'').1$                                     &                                                              \\
+    Need: & $\Abs{v}_+.2\ni$                    & $\:\langle\lambda x.p',p''\rangle$                                                 &                                                              \\
     \hline
   \end{tabular}
 \end{center}
@@ -228,7 +228,7 @@ Note that the left-hand side contains only $\Abs\link$ and the right-hand side d
 
 Some auxiliary lemmas:
 \begin{lem}[Substitution of values]
-  \[w\le(\Abs{v},\Abs\ptree)\text{ and }u\le(\Abs\ptree(p).2,\Abs\ptree)\Rightarrow w[u/\llabel{p}{\ell}]\le(\Abs{v},\Abs\ptree)\]
+  \[w\preceq(\Abs{v},\Abs\ptree)\text{ and }u\preceq(\Abs\ptree(p).2,\Abs\ptree)\Rightarrow w[u/\llabel{p}{\ell}]\preceq(\Abs{v},\Abs\ptree)\]
 \end{lem}
 \begin{lem}[Sound $\Abs\step$]
   \[\forall p,\ptree,\Abs\ptree:\ptree\subseteq\gamma(\Abs\ptree)\Rightarrow\step(\ptree,p)\cup\ptree\subseteq\gamma(\Abs\step(\Abs\ptree,p)\sqcup\Abs\ptree)\]

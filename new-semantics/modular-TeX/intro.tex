@@ -1,0 +1,70 @@
+\section{Introduction}
+``There's a library for everything'' is one way of summarizing modern software development.
+A library is a reusable component of software that is packaged into a module, which can be imported and used by others that require similar features.
+Since libraries promote code reuse and modular code design, both recommended practices, the number of libraries continues to grow.
+
+Libraries, however, mean trouble for static program analyzers.
+Using values from libraries that cannot be resolved from analyzing the local code prevent the analyzer from creating accurate summaries of the program behavior.
+Realistic program analyzers resort to making either angelic assumptions about unknown functions (such as \href{https://fbinfer.com/docs/next/checker-pulse/#unknown-functions}{Infer}), which may lead to false negatives,
+or demonic assumptions, which greatly drops the precision of the analysis.
+
+Thus, a method of analysis that allows uninterpreted function symbols is needed.
+Even in the presence of unresolved variables, a program analyzer should be able to produce a result that can be reused when the names are resolved \emph{separately}.
+
+We present such a framework powered by \emph{abstract interpretation}.
+What abstract interpretation teaches us is that given a concrete semantics of a program and semantic operators that act on the semantic domains, approximating each with a sound abstract version leads to a sound analysis.
+Thus we present a semantics of programs that works even when the initial environment the program is evaluated under is not fully given.
+We call this the ``shadow semantics'', since it computes a shadow of the expected program execution.
+Also, we present a semantic linking operator that can fill in the missing parts later.
+
+\begin{center}
+  \begin{tabular}{p{200pt}|p{200pt}}
+    \hline
+    Example 1: Error handling                                   & Example 2: React-like state management                                                                     \\
+    \hline
+    \begin{verbatim}
+let _ =
+  match f 42 with
+  | Ok result -> result
+  | Err trace -> trace - 1
+\end{verbatim}
+                                                                &
+    \begin{verbatim}
+let make = fun cur ->
+  let x, setX =
+    useState { cur with val = 0 }
+  in setX (x + 1)
+\end{verbatim}
+    \\\hline
+    Shadow 1: value of the \texttt{let} binding                 & Shadow 2: body of the \texttt{make} function
+    \\\hline
+    \\
+    $\textsf{Match}(\textsf{ret},\texttt{Ok})$ or               & $\CallE(\textsf{Get}(\textsf{ret},1),\textsf{Add}(\textsf{Get}(\textsf{ret},0), 1))$ \\
+    $\textsf{Sub}(\textsf{Match}(\textsf{ret},\texttt{Err}),1)$ & where $\textsf{ret}=\CallE(\textsf{useState},(\texttt{val},0)\cons[\textsf{cur}])$   \\
+    where $\textsf{ret}=\CallE(\textsf{f},42)$                  & and $\textsf{useState}=\ReadE(\InitE,\texttt{useState})$                             \\
+    and $\textsf{f}=\ReadE(\InitE,\texttt{f})$                  & and $\textsf{cur}=\ReadE(\InitE,\texttt{cur})$                                       \\
+    \\\hline
+  \end{tabular}
+\end{center}
+
+As a preview, see the examples.
+The first example calls an unknown function \texttt{f} with argument \texttt{42}, and performs different actions depending on the result of the function call.
+There are two shadows for this program, one from the \texttt{Ok} branch and another from the \texttt{Err} branch.
+When the code for the \texttt{f} function is given in the initial environment, the shadow can be colored in to a specific branch.
+For example, when
+\[\ctx_0=(\texttt{f},\langle\lambda\texttt{x}.\texttt{if x = 0 then Err -1 else Ok (42 / x)},[]\rangle)\cons[]\]
+is given as an answer to the $\InitE$ shadow, the linked result will contain only $42/42=1$.
+
+The second example is adapted from how JavaScript programmers use \href{https://react.dev/}{React}, a library for building reactive web applications.
+In the example, the function \texttt{make} is called with the \emph{current state} of the reactive component \texttt{x} each time the web page is rendered, and updates \texttt{x} with its incremented value.
+What is noticable is that idioms such as functions that returns functions (\texttt{useState} returning \texttt{setX}) is used to hide how the library manipulates the local state.
+To analyze this program, one has to record what calls affect the result in what order.
+The answer can be obtained by linking the details of how React schedules state updates, which can change over library versions.
+
+The example also shows how shadows are no different from ``normal'' values.
+Note the record $(\texttt{val},0)\cons[\textsf{cur}]$ that is given as the argument to \texttt{useState}.
+\textsf{cur} is a shadow, yet it is consed with a concrete value $(\texttt{val},0)$.
+That is, the shadows we create live in a semantic domain, which can be subjected to regular techniques in abstract interpretation.
+
+Our modular analysis framework consists of two parts; abstracting the shadow semantics and abstracting the semantic linking operator.
+

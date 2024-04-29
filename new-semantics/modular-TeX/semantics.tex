@@ -213,27 +213,3 @@ The definition for $w\sim(\ctx,\mem,L)$ is:
 \[w\sim_\bot(\ctx,\mem)\text{ and }\FLoc(w)\subseteq L\]
 where the definition for $\sim_f$ is given in Figure \ref{fig:equivrel}.
 
-The proof of Theorem \ref{thm:equivsem} uses some useful lemmas, such as:
-\begin{lem}[Free locations not in $f$ are free in memory]
-  \[w\sim_f v',\mem\Rightarrow m|_{\FLoc(w)-\dom(f)}=\bot\]
-\end{lem}
-
-\begin{lem}[Equivalence is preserved by extension of memory]
-  \[w\sim_f v',\mem\text{ and }m\sqsubseteq m'\text{ and }m'|_{\FLoc(w)-\dom(f)}=\bot\Rightarrow w\sim_f v',m\]
-\end{lem}
-
-\begin{lem}[Equivalence only cares about $f$ on free locations]
-  \[w\sim_f v',\mem\text{ and }f|_{\FLoc(w)}=f|_{\FLoc(w)}\Rightarrow w\sim_{f'}v',m\]
-\end{lem}
-
-\begin{lem}[Extending equivalence on free locations]
-  \[w\sim_f v',\mem\text{ and }\ell\not\in\dom(f)\text{ and }\ell\not\in\dom(\mem)\Rightarrow\forall u',w\sim_{f[\ell\mapsto\ell]}v',m[\ell\mapsto u']\]
-\end{lem}
-
-\begin{lem}[Substitution of values]
-  \[w\sim_f v',\mem\text{ and }f(\ell)=\ell'\text{ and }\mem(\ell')=u'\text{ and }u\sim_{f-\ell}u',\mem\Rightarrow w[u/\ell]\sim_{f-\ell}v',\mem\]
-\end{lem}
-
-\begin{lem}[Substitution of locations]
-  \[w\sim_f v',\mem\text{ and }\ell\in\dom(f)\text{ and }\nu\not\in\FLoc(w)\Rightarrow w[\nu/\ell]\sim_{f\circ(\nu\leftrightarrow\ell)}v',\mem\]
-\end{lem}

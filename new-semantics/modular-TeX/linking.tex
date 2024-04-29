@@ -93,7 +93,7 @@ A modular analysis consists of two requirements: an abstraction for the semantic
 \begin{thm}[Modular analysis]
   Assume:
   \begin{enumerate}
-    \item An abstract domain $\Abs\Walue$ that is concretized by a monotonic $\gamma\in\pset(\Walue)\rightarrow\Abs\Walue$
+    \item An abstract domain $\Abs\Walue$ that is concretized by a monotonic $\gamma\in\Abs\Walue\rightarrow\pset(\Walue)$
     \item A sound $\Abs\eval$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\Rightarrow\eval(e,\Sigma_0)\subseteq\gamma(\Abs\eval(e,\Abs\ctx_0))$
     \item A sound $\Abs\semlink$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }W\subseteq\gamma(\Abs{w})\Rightarrow\Sigma_0\semlink W\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs{w})$
   \end{enumerate}
