@@ -84,7 +84,9 @@ Using the program points that are labelled in the example, we may say that the a
 where each program point stores
 \[
   \ell_1.\text{out}\mapsto\{\Abs\CallE(\ell_3,\ell_4)\}\quad
-  \ell_2.\text{out}\mapsto\{[],\ell_1\cons \ell_2\}\quad
+  \ell_2.\text{out}\mapsto\{[],\ell_1\cons \ell_2\}
+\]
+\[
   \ell_3.\text{out}\mapsto\{\Abs\ReadE(\ell_5,\texttt{g})\}\quad
   \ell_4.\text{out}\mapsto[1,3]\quad
   \ell_5.\text{in}\mapsto\{\Abs\InitE\}
@@ -130,7 +132,9 @@ is the abstract shadow for the second closing fragment.
 Applying a sound abstract version of the linking operator will result in
 \[
   \ell_1.\text{out}\mapsto[2,4]\quad
-  \ell_2.\text{out}\mapsto\{[],\ell_1\cons \ell_2\}\quad
+  \ell_2.\text{out}\mapsto\{[],\ell_1\cons \ell_2\}
+\]
+\[
   \ell_3.\text{out}\mapsto\{\langle\lambda\texttt{x}.\ell_{-2},\ell_{-1}\rangle\}\quad
   \ell_4.\text{out}\mapsto[1,3]\quad
   \ell_5.\text{in}\mapsto\Abs\ctx_{0,1}
@@ -138,7 +142,9 @@ Applying a sound abstract version of the linking operator will result in
 for the first shadow, and
 \[
   \ell_1.\text{out}\mapsto\{\Abs{\textsf{PrimCall}}(\texttt{incr},\ell_4)\}\quad
-  \ell_2.\text{out}\mapsto\{[],\ell_1\cons \ell_2\}\quad
+  \ell_2.\text{out}\mapsto\{[],\ell_1\cons \ell_2\}
+\]
+\[
   \ell_3.\text{out}\mapsto\{\textsf{Prim}(\texttt{incr})\}\quad
   \ell_4.\text{out}\mapsto[1,3]\quad
   \ell_5.\text{in}\mapsto\Abs\ctx_{0,2}

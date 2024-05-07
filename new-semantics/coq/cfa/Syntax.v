@@ -38,12 +38,12 @@ Section syntax.
   Definition aval_bot := {| _σ := aenv_bot; _λ := nil |}.
 
   Record io := mkIO {
-    _i : abs_env;
-    _o : abs_val;
+    _i : option abs_env;
+    _o : option abs_val;
   }.
 
   Definition abs_sem : Type := lbl -> io.
 
-  Definition asem_bot : abs_sem := fun _ => {| _i := aenv_bot; _o := aval_bot |}.
+  Definition asem_bot : abs_sem := fun _ => {| _i := None; _o := None |}.
 End syntax.
 

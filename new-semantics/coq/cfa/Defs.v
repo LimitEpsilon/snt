@@ -24,10 +24,36 @@ Section defs.
     end
   .
 
-  Definition geq (v1 v2 : @abs_val var lbl) :=
-    (forall x p, In p (v2.(_σ).(_β) x) -> In p (v1.(_σ).(_β) x)) /\
-    (forall E, In E v2.(_σ).(_E) -> In E v1.(_σ).(_E)) /\
+  Definition geq_env (σ1 σ2 : @abs_env var lbl) :=
+    (forall x p, In p (σ2.(_β) x) -> In p (σ1.(_β) x)) /\
+    (forall E, In E σ2.(_E) -> In E σ1.(_E))
+  .
+
+  Definition geq_val (v1 v2 : @abs_val var lbl) :=
+    geq_env v1.(_σ) v2.(_σ) /\
     (forall λ, In λ v2.(_λ) -> In λ v1.(_λ))
+  .
+
+  Definition geq_env_opt (σ1 σ2 : option (@abs_env var lbl)) :=
+    match σ1, σ2 with
+    | Some σ1, Some σ2 => geq_env σ1 σ2
+    | _, None => True
+    | _, _ => False
+    end
+  .
+
+  Definition geq_val_opt (v1 v2 : option (@abs_val var lbl)) :=
+    match v1, v2 with
+    | Some v1, Some v2 => geq_val v1 v2
+    | _, None => True
+    | _, _ => False
+    end
+  .
+
+  Definition geq_sem (t' t : @abs_sem var lbl) :=
+    forall p,
+      geq_env_opt (t' p).(_i) (t p).(_i) /\
+      geq_val_opt (t' p).(_o) (t p).(_o)
   .
 
   Definition aval_of_aenv {var lbl} (σ : @abs_env var lbl) :=
@@ -48,30 +74,36 @@ Section defs.
     (LOC : In p (v.(_σ).(_β) x))
     (ENV : conc t v σ)
   : conc t v (nv_floc x (ℓ, p) σ)
-  | conc_wval x w p (σ : nv _ _ _ _)
+  | conc_wval x w p o (σ : nv _ _ _ _)
     (LOC : In p (v.(_σ).(_β) x))
-    (VAL : conc t (t p).(_o) w)
+    (SOME : (t p).(_o) = Some o)
+    (VAL : conc t o w)
     (ENV : conc t v σ)
   : conc t v (nv_bval x w σ)
-  | conc_clos x e p (σ : nv _ _ _ _)
+  | conc_clos x e p i (σ : nv _ _ _ _)
     (LAM : In (lv_fn x (get_lbl e), p) v.(_λ))
-    (ENV : conc t (t p).(_i) σ)
+    (SOME : (t p).(_i) = Some i)
+    (ENV : conc t i σ)
   : conc t v (vl_clos (v_fn x e) σ)
-  | conc_rec L p v'
+  | conc_rec L p o v'
+    (SOME : (t p).(_o) = Some o)
     (VAL : forall ℓ (nIN : ~ In ℓ L), conc t v (open_loc_vl 0 (ℓ, p) v'))
-    (ROLL : forall ℓ (nIN : ~ In ℓ L), conc t (t p).(_o) (open_loc_vl 0 (ℓ, p) v'))
+    (ROLL : forall ℓ (nIN : ~ In ℓ L), conc t o (open_loc_vl 0 (ℓ, p) v'))
   : conc t v (wvl_recv p v')
   | conc_Init
     (VNT : In AInit v.(_σ).(_E))
   : conc t v Init
-  | conc_Read p (E : vnt _ _ _ _) x
+  | conc_Read p i (E : vnt _ _ _ _) x
     (VNT : In (ARead p x) v.(_σ).(_E))
-    (ENV : conc t (t p).(_i) E)
+    (SOME : (t p).(_i) = Some i)
+    (ENV : conc t i E)
   : conc t v (Read E x)
-  | conc_Call p1 p2 (E : vnt _ _ _ _) (v' : vl _ _ _ _)
+  | conc_Call p1 p2 o1 o2 (E : vnt _ _ _ _) (v' : vl _ _ _ _)
     (VNT : In (ACall p1 p2) v.(_σ).(_E))
-    (FN : conc t (t p1).(_o) E)
-    (ARG : conc t (t p2).(_o) v')
+    (SOME1 : (t p1).(_o) = Some o1)
+    (SOME2 : (t p2).(_o) = Some o2)
+    (FN : conc t o1 E)
+    (ARG : conc t o2 v')
   : conc t v (Call E v')
   .
 
@@ -94,42 +126,97 @@ Section defs.
   Qed.
 
   (* monotonicity of concretization in v *)
-  Lemma conc_mon_fst {loc} t v w (CONC : @conc loc t v w) v' (GEQ : geq v' v) :
+  Lemma conc_mon_fst {loc} t v w (CONC : @conc loc t v w) v' (GEQ : geq_val v' v) :
     conc t v' w.
   Proof.
     induction CONC; ii; ss;
     repeat match goal with
     | H : ?P, IH : ?P -> _ |- _ => specialize (IH H)
-    end; econstructor; eauto;
+    end; econstructor;
     match goal with
-    | GE : geq _ _ |- _ =>
-      destruct GE as (A & B & C); eauto
+    | GE : geq_val _ _ |- _ =>
+      try solve [eauto];
+      destruct GE as ([A B] & C); eauto
     end.
   Qed.
 
+  Ltac des_geq_sem :=
+    repeat match goal with
+    | GEQ : geq_sem ?t' ?t, RR : _o (?t ?p) = Some _ |- _ =>
+      lazymatch goal with
+      | _ : _o (t' p) = Some _ |- _ => fail
+      | _ =>
+        let GEQo := fresh "GEQo" in
+        pose proof (GEQ p) as [_ GEQo];
+        red in GEQo; rewrite RR in GEQo;
+        des_hyp; clarify
+      end
+    | GEQ : geq_sem ?t' ?t, RR : _i (?t ?p) = Some _ |- _ =>
+      lazymatch goal with
+      | _ : _i (t' p) = Some _ |- _ => fail
+      | _ =>
+        let GEQi := fresh "GEQi" in
+        pose proof (GEQ p) as [GEQi _];
+        red in GEQi; rewrite RR in GEQi;
+        des_hyp; clarify
+      end
+    | _ => solve [econstructor; eauto]
+    end.
+
   (* monotonicity of concretization in t *)
   Lemma conc_mon_snd {loc} t v w (CONC : @conc loc t v w) t'
-    (GEQ : forall p, geq (t' p).(_i) (t p).(_i) /\ geq (t' p).(_o) (t p).(_o)) :
-      conc t' v w.
+    (GEQ : geq_sem t' t) :
+  conc t' v w.
   Proof.
     induction CONC; ii; ss;
+    des_geq_sem;
+    clear GEQ;
     econstructor; eauto;
+    try eapply conc_mon_fst;
+    try solve [eauto | split; eauto].
     ii; eapply conc_mon_fst;
-    try_all; eauto; eapply GEQ.
+    try_all; eauto.
   Qed.
 End defs.
 
-Notation "v1 '⊒' v2" := (geq v1 v2)
+Notation "v1 '⊒σ' v2" := (geq_env v1 v2)
+  (at level 100, v2 at next level, right associativity).
+Notation "v1 '⊒v' v2" := (geq_val v1 v2)
   (at level 100, v2 at next level, right associativity).
 Notation "t v '⪰' w" := (conc t v w)
   (at level 100, v at next level, w at next level, right associativity).
 
 Ltac des_geq :=
   match goal with
-  | H : geq _ _ |- _ =>
-    let geσ := fresh "geσ" in
+  | H : geq_env _ _ |- _ =>
+    let geβ := fresh "geβ" in
     let geE := fresh "geE" in
+    destruct H as (geβ & geE)
+  | H : geq_val _ _ |- _ =>
+    let geσ := fresh "geσ" in
     let geλ := fresh "geλ" in
-    destruct H as (geσ & geE & geλ)
+    destruct H as (geσ & geλ)
+  end.
+
+Ltac des_geq_sem :=
+  match goal with
+  | GEQ : geq_sem ?t' ?t, RR : _o (?t ?p) = Some _ |- _ =>
+    lazymatch goal with
+    | _ : _o (t' p) = Some _ |- _ => fail
+    | _ =>
+      let GEQo := fresh "GEQo" in
+      pose proof (GEQ p) as [_ GEQo];
+      red in GEQo; rewrite RR in GEQo;
+      des_hyp; clarify
+    end
+  | GEQ : geq_sem ?t' ?t, RR : _i (?t ?p) = Some _ |- _ =>
+    lazymatch goal with
+    | _ : _i (t' p) = Some _ |- _ => fail
+    | _ =>
+      let GEQi := fresh "GEQi" in
+      pose proof (GEQ p) as [GEQi _];
+      red in GEQi; rewrite RR in GEQi;
+      des_hyp; clarify
+    end
   end.
 
