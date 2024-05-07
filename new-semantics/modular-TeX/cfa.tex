@@ -38,12 +38,12 @@ That is, $(\ctx,v)$ is contained in $\sembracket{p_0}\Sigma_0(p)$ if and only if
 \subsection{Abstract semantics}
 \begin{center}
   \begin{tabular}{rrcl}
-    Abstract event       & $\Abs{\event}$                 & $\in$         & $\Abs{\Event}$                                                                     \\
+    Abstract shadow      & $\Abs{\event}$                 & $\in$         & $\Abs{\Event}$                                                                     \\
     Abstract environment & $\Abs{\ctx}$                   & $\in$         & $\Abs{\Ctx}\triangleq(\fin{\ExprVar}{\pset(\mathbb{P})})\times\pset(\Abs{\Event})$ \\
     Abstract closure     & $\langle\lambda x.p,p'\rangle$ & $\in$         & $\Abs{\text{Clos}}\triangleq\ExprVar\times\mathbb{P}\times\mathbb{P}$              \\
     Abstract value       & $\Abs{v}$                      & $\in$         & $\Abs{\Value}\triangleq\Abs{\Ctx}\times\pset(\Abs{\text{Clos}})$                   \\
     Abstract semantics   & $\Abs\ptree$                   & $\in$         & $\Abs{\mathbb{T}}\triangleq\mathbb{P}\rightarrow\Abs{\Ctx}\times\Abs{\Value}$      \\
-    Abstract event       & $\Abs{\event}$                 & $\rightarrow$ & $\Abs{\InitE}$ | $\Abs{\ReadE}(p,x)$ | $\Abs{\CallE}(p,p)$
+    Abstract shadow      & $\Abs{\event}$                 & $\rightarrow$ & $\Abs{\InitE}$ | $\Abs{\ReadE}(p,x)$ | $\Abs{\CallE}(p,p)$
   \end{tabular}
 \end{center}
 \begin{figure}[h!]
@@ -53,59 +53,69 @@ That is, $(\ctx,v)$ is contained in $\sembracket{p_0}\Sigma_0(p)$ if and only if
     \fbox{$\ctx\preceq(\Abs\ctx,\Abs\ptree)$}
   \end{flushright}
   \[
-    \begin{InfRule}{Conc-Nil}
-      \infer0{\bullet\preceq\Abs\ctx}
-    \end{InfRule}\:
-    \begin{InfRule}{Conc-ENil}
-      \hypo{\event\preceq(\Abs\ctx,\varnothing)}
-      \infer1{[\event]\preceq\Abs\ctx}
-    \end{InfRule}\:
-    \begin{InfRule}{Conc-ConsLoc}
-      \hypo{p\in\Abs\ctx.1(x)}
-      \hypo{\ctx\preceq\Abs\ctx}
-      \infer2{(x,\llabel{p}{\ell})\cons\ctx\preceq\Abs\ctx}
-    \end{InfRule}\:
-    \begin{InfRule}{Conc-ConsWVal}
-      \hypo{p\in\Abs\ctx.1(x)}
-      \hypo{w\preceq\Abs\ptree(p).2}
-      \hypo{\ctx\preceq\Abs\ctx}
-      \infer3{(x,w)\cons\ctx\preceq\Abs\ctx}
-    \end{InfRule}
+    \infer[Conc-Nil]
+    {\:}
+    {\bullet\preceq\Abs\ctx}
+    \quad
+    \infer[Conc-ENil]
+    {\event\preceq(\Abs\ctx,\varnothing)}
+    {[\event]\preceq\Abs\ctx}
+    \quad
+    \infer[Conc-ConsLoc]
+    {
+    {p\in\Abs\ctx.1(x)}\\
+    {\ctx\preceq\Abs\ctx}
+    }
+    {(x,\llabel{p}{\ell})\cons\ctx\preceq\Abs\ctx}
+    \quad
+    \infer[Conc-ConsWVal]
+    {
+    {p\in\Abs\ctx.1(x)}\\
+    {w\preceq\Abs\ptree(p).2}\\
+    {\ctx\preceq\Abs\ctx}
+    }
+    {(x,w)\cons\ctx\preceq\Abs\ctx}
   \]
   \begin{flushright}
     \fbox{$w\preceq(\Abs{v},\Abs\ptree)$}
   \end{flushright}
   \[
-    \begin{InfRule}{Conc-Clos}
-      \hypo{\langle\lambda x.p,p'\rangle\in\Abs{v}.2}
-      \hypo{\ctx\preceq\Abs\ptree(p').1}
-      \infer2{\langle\lambda x.p,\ctx\rangle\preceq\Abs{v}}
-    \end{InfRule}\:
-    \begin{InfRule}{Conc-Rec}
-      \hypo{v\preceq\Abs\ptree(p).2}
-      \hypo{v\preceq\Abs{v}}
-      \infer2{\mu\llabel{p}{\ell}.v\preceq\Abs{v}}
-    \end{InfRule}
+    \infer[Conc-Clos]
+    {
+    {\langle\lambda x.p,p'\rangle\in\Abs{v}.2}\\
+    {\ctx\preceq\Abs\ptree(p').1}
+    }
+    {\langle\lambda x.p,\ctx\rangle\preceq\Abs{v}}
+    \quad
+    \infer[Conc-Rec]
+    {
+    {v\preceq\Abs\ptree(p).2}\\
+    {v\preceq\Abs{v}}
+    }
+    {\mu\llabel{p}{\ell}.v\preceq\Abs{v}}
   \]
 
   \[
-    \begin{InfRule}{Conc-Init}
-      \hypo{\Abs\InitE\in\Abs{v}.1.2}
-      \infer1{\InitE\preceq\Abs{v}}
-    \end{InfRule}\:
-    \begin{InfRule}{Conc-Read}
-      \hypo{\Abs\ReadE(p,x)\in\Abs{v}.1.2}
-      \hypo{[\event]\preceq\Abs\ptree(p).1}
-      \infer2{\ReadE(\event,x)\preceq\Abs{v}}
-    \end{InfRule}\:
-    \begin{InfRule}{Conc-Call}
-      \hypo{\Abs\CallE(p_1,p_2)\in\Abs{v}.1.2}
-      \hypo{\event\preceq\Abs\ptree(p_1).2}
-      \hypo{v\preceq\Abs\ptree(p_2).2}
-      \infer3{\CallE(\event,v)\preceq\Abs{v}}
-    \end{InfRule}
+    \infer[Conc-Init]
+    {\Abs\InitE\in\Abs{v}.1.2}
+    {\InitE\preceq\Abs{v}}
+    \quad
+    \infer[Conc-Read]
+    {
+    {\Abs\ReadE(p,x)\in\Abs{v}.1.2}\\
+    {[\event]\preceq\Abs\ptree(p).1}
+    }
+    {\ReadE(\event,x)\preceq\Abs{v}}
+    \quad
+    \infer[Conc-Call]
+    {
+    {\Abs\CallE(p_1,p_2)\in\Abs{v}.1.2}\\
+    {\event\preceq\Abs\ptree(p_1).2}\\
+    {v\preceq\Abs\ptree(p_2).2}
+    }
+    {\CallE(\event,v)\preceq\Abs{v}}
   \]
-  \caption{The concretization relation between weak values and abstract values. $\Abs\ptree$ is omitted.}
+  \caption{The concretization relation between weak values and abstract values. $\Abs\ptree$ is omitted for brevity.}
   \label{fig:concretrel}
 \end{figure}
 

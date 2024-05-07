@@ -10,8 +10,7 @@
 \usepackage{xcolor}
 \usepackage{kotex}
 \usepackage{csquotes}
-\usepackage{tabularray}
-\usepackage{relsize}
+\usepackage{fancyvrb}
 \usepackage{hyperref}
 
 %%% Math settings
@@ -26,8 +25,7 @@
 
 %%% PL constructs
 \usepackage{galois}
-\usepackage{ebproofx}
-\ebproofxset{center=false}
+\usepackage{mathpartir}
 
 %%% Custom commands
 \newcommand*{\vbar}{|}
@@ -144,8 +142,8 @@
 \newcommand*{\Safe}{S}
 \newcommand*{\unsafe}{\text{unsafe}}
 
-\newcommand*{\event}{E}
-\newcommand*{\Event}{\text{Event}}
+\newcommand*{\event}{S}
+\newcommand*{\Event}{\text{Shadow}}
 \newcommand*{\InitE}{\textsf{Init}}
 \newcommand*{\ReadE}{\textsf{Read}}
 \newcommand*{\CallE}{\textsf{Call}}

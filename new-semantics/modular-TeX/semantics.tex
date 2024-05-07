@@ -41,40 +41,46 @@
   \centering
   \vspace{0pt} % -0.75em}
   \[
-    \begin{InfRule}{Id}
-      \hypo{\ctx(x)=v}
-      \infer1{\evjudg{\ctx}{x}{v}}
-    \end{InfRule}\:
-    \begin{InfRule}{RecId}
-      \hypo{\ctx(x)=\mu\ell.v}
-      \infer1{\evjudg{\ctx}{x}{v[\mu\ell.v/\ell]}}
-    \end{InfRule}\:
-    \begin{InfRule}{Fn}
-      \infer0{\evjudg{\ctx}{\lambda x.e}{\langle\lambda x.e, \ctx\rangle}}
-    \end{InfRule}\:
-    \begin{InfRule}{App}
-      \hypo{\evjudg{\ctx}{e_1}{\langle\lambda x.e, \ctx_1\rangle}}
-      \hypo{\evjudg{\ctx}{e_2}{v_2}}
-      \hypo{\evjudg{(x, v_2)\cons \ctx_1}{e}{v}}
-      \infer{2,1}{\evjudg{\ctx}{e_1\:e_2}{v}}
-    \end{InfRule}
+    \infer[Id]
+    {\ctx(x)=v}
+    {\evjudg{\ctx}{x}{v}}
+    \quad
+    \infer[RecId]
+    {\ctx(x)=\mu\ell.v}
+    {\evjudg{\ctx}{x}{v[\mu\ell.v/\ell]}}
+    \quad
+    \infer[Fn]
+    {\:}
+    {\evjudg{\ctx}{\lambda x.e}{\langle\lambda x.e, \ctx\rangle}}
+    \quad
+    \infer[App]
+    {
+    {\evjudg{\ctx}{e_1}{\langle\lambda x.e, \ctx_1\rangle}}\\
+    {\evjudg{\ctx}{e_2}{v_2}}\\
+    {\evjudg{(x, v_2)\cons \ctx_1}{e}{v}}
+    }
+    {\evjudg{\ctx}{e_1\:e_2}{v}}
   \]
 
   \[
-    \begin{InfRule}{Link}
-      \hypo{\evjudg{\ctx}{e_1}{\ctx_1}}
-      \hypo{\evjudg{\ctx_1}{e_2}{v}}
-      \infer2{\evjudg{\ctx}{{e_1}\synlink{e_2}}{v}}
-    \end{InfRule}\quad
-    \begin{InfRule}{Empty}
-      \infer0{\evjudg{\ctx}{\varepsilon}{\bullet}}
-    \end{InfRule}\quad
-    \begin{InfRule}{Bind}
-      \hypo{\ell\not\in\FLoc(\ctx)}
-      \hypo{\evjudg{(x,\ell)\cons\ctx}{e_1}{v_1}}
-      \hypo{\evjudg{(x, \mu\ell.v_1)\cons \ctx}{e_1}{\ctx_2}}
-      \infer{2,1}{\evjudg{\ctx}{x\:\texttt{=}\:e_1; e_2}{(x,\mu\ell.v_1)\cons\ctx_2}}
-    \end{InfRule}
+    \infer[Link]
+    {
+    {\evjudg{\ctx}{e_1}{\ctx_1}}\\
+    {\evjudg{\ctx_1}{e_2}{v}}
+    }
+    {\evjudg{\ctx}{{e_1}\synlink{e_2}}{v}}
+    \quad
+    \infer[Empty]
+    {\:}
+    {\evjudg{\ctx}{\varepsilon}{\bullet}}
+    \quad
+    \infer[Bind]
+    {
+    {\ell\not\in\FLoc(\ctx)}\\
+    {\evjudg{(x,\ell)\cons\ctx}{e_1}{v_1}}\\
+    {\evjudg{(x, \mu\ell.v_1)\cons \ctx}{e_1}{\ctx_2}}
+    }
+    {\evjudg{\ctx}{x\:\texttt{=}\:e_1; e_2}{(x,\mu\ell.v_1)\cons\ctx_2}}
   \]
   \caption{The big-step operational semantics.}
   \label{fig:bigstep}
@@ -106,44 +112,50 @@ The big-step operational semantics is \emph{deterministic} up to $\alpha$-equiva
   \centering
   \vspace{0pt} % -0.75em}
   \[
-    \begin{InfRule}{Id}
-      \hypo{\ctx(x)=\ell}
-      \hypo{\mem(\ell)=v}
-      \infer2{\evjudg{\ctx,\mem,L}{x}{v,\mem,L}}
-    \end{InfRule}\:
-    \begin{InfRule}{Fn}
-      \infer0{\evjudg{\ctx,\mem,L}{\lambda x.e}{\langle\lambda x.e,\ctx\rangle,\mem,L}}
-    \end{InfRule}
+    \infer[Id]
+    {
+    {\ctx(x)=\ell}\\
+    {\mem(\ell)=v}
+    }
+    {\evjudg{\ctx,\mem,L}{x}{v,\mem,L}}
+    \quad
+    \infer[Fn]
+    {\:}
+    {\evjudg{\ctx,\mem,L}{\lambda x.e}{\langle\lambda x.e,\ctx\rangle,\mem,L}}
   \]
 
   \[
-    \begin{InfRule}{App}
-      \hypo{\evjudg{\ctx,\mem,L}{e_1}{\langle\lambda x.e,\ctx_1\rangle,\mem_1,L_1}}
-      \hypo{\evjudg{\ctx,\mem_1,L_1}{e_2}{v_2,\mem_2,L_2}}
-      \hypo{\ell\not\in\dom(\mem_2)\cup L_2}
-      \hypo{\evjudg{(x,\ell)\cons\ctx_1,\mem_2[\ell\mapsto v_2],L_2}{e}{v,\mem',L'}}
-      \infer{3,1}{\evjudg{\ctx,\mem,L}{e_1\:e_2}{v,\mem',L'}}
-    \end{InfRule}
+    \infer[App]
+    {
+    {\evjudg{\ctx,\mem,L}{e_1}{\langle\lambda x.e,\ctx_1\rangle,\mem_1,L_1}}\\
+    {\evjudg{\ctx,\mem_1,L_1}{e_2}{v_2,\mem_2,L_2}}\\
+    {\ell\not\in\dom(\mem_2)\cup L_2}\\
+    {\evjudg{(x,\ell)\cons\ctx_1,\mem_2[\ell\mapsto v_2],L_2}{e}{v,\mem',L'}}
+    }
+    {\evjudg{\ctx,\mem,L}{e_1\:e_2}{v,\mem',L'}}
   \]
 
   \[
-    \begin{InfRule}{Link}
-      \hypo{\evjudg{\ctx,\mem,L}{e_1}{\ctx_1,\mem_1,L_1}}
-      \hypo{\evjudg{\ctx_1,\mem_1,L_1}{e_2}{v,\mem',L'}}
-      \infer2{\evjudg{\ctx,\mem,L}{{e_1}\synlink{e_2}}{v,\mem',L'}}
-    \end{InfRule}\quad
-    \begin{InfRule}{Empty}
-      \infer0{\evjudg{\ctx,\mem,L}{\varepsilon}{\bullet,\mem,L}}
-    \end{InfRule}
+    \infer[Link]
+    {
+    {\evjudg{\ctx,\mem,L}{e_1}{\ctx_1,\mem_1,L_1}}\\
+    {\evjudg{\ctx_1,\mem_1,L_1}{e_2}{v,\mem',L'}}
+    }
+    {\evjudg{\ctx,\mem,L}{{e_1}\synlink{e_2}}{v,\mem',L'}}
+    \quad
+    \infer[Empty]
+    {\:}
+    {\evjudg{\ctx,\mem,L}{\varepsilon}{\bullet,\mem,L}}
   \]
 
   \[
-    \begin{InfRule}{Bind}
-      \hypo{\ell\not\in\dom(\mem)\cup L}
-      \hypo{\evjudg{(x,\ell)\cons\ctx,\mem,L\cup\{\ell\}}{e_1}{v_1,\mem_1,L_1}}
-      \hypo{\evjudg{(x,\ell)\cons\ctx,\mem_1[\ell\mapsto v_1],L_1}{e_2}{\ctx_2,\mem',L'}}
-      \infer{2,1}{\evjudg{\ctx,\mem,L}{x=e_1;e_2}{(x,\ell)\cons\ctx_2,\mem',L'}}
-    \end{InfRule}
+    \infer[Bind]
+    {
+    {\ell\not\in\dom(\mem)\cup L}\\
+    {\evjudg{(x,\ell)\cons\ctx,\mem,L\cup\{\ell\}}{e_1}{v_1,\mem_1,L_1}}\\
+    {\evjudg{(x,\ell)\cons\ctx,\mem_1[\ell\mapsto v_1],L_1}{e_2}{\ctx_2,\mem',L'}}
+    }
+    {\evjudg{\ctx,\mem,L}{x=e_1;e_2}{(x,\ell)\cons\ctx_2,\mem',L'}}
   \]
   \caption{The big-step operational semantics with memory.}
   \label{fig:membigstep}
@@ -155,40 +167,47 @@ The big-step operational semantics is \emph{deterministic} up to $\alpha$-equiva
     \fbox{$w\sim_f v,\mem$}
   \end{flushright}
   \[
-    \begin{InfRule}{Eq-Nil}
-      \infer0{\bullet\sim_f\bullet}
-    \end{InfRule}\:
-    \begin{InfRule}{Eq-ConsFree}
-      \hypo{\ell\not\in\dom(f)}
-      \hypo{\ell\not\in\dom(\mem)}
-      \hypo{\ctx\sim_f\ctx'}
-      \infer3{(x,\ell)\cons\ctx\sim_f(x,\ell)\cons\ctx'}
-    \end{InfRule}\:
-    \begin{InfRule}{Eq-ConsBound}
-      \hypo{f(\ell)=\ell'}
-      \hypo{\ell'\in\dom(\mem)}
-      \hypo{\ctx\sim_f\ctx'}
-      \infer3{(x,\ell)\cons\ctx\sim_f(x,\ell')\cons\ctx'}
-    \end{InfRule}
+    \infer[Eq-Nil]
+    {\:}
+    {\bullet\sim_f\bullet}
+    \quad
+    \infer[Eq-ConsFree]
+    {
+    {\ell\not\in\dom(f)}\\
+    {\ell\not\in\dom(\mem)}\\
+    {\ctx\sim_f\ctx'}
+    }
+    {(x,\ell)\cons\ctx\sim_f(x,\ell)\cons\ctx'}
+    \quad
+    \infer[Eq-ConsBound]
+    {
+    {f(\ell)=\ell'}\\
+    {\ell'\in\dom(\mem)}\\
+    {\ctx\sim_f\ctx'}
+    }
+    {(x,\ell)\cons\ctx\sim_f(x,\ell')\cons\ctx'}
   \]
 
   \[
-    \begin{InfRule}{Eq-ConsWVal}
-      \hypo{\mem(\ell')=v'}
-      \hypo{w\sim_f v'}
-      \hypo{\ctx\sim_f\ctx'}
-      \infer3{(x,w)\cons\ctx\sim_f(x,\ell')\cons\ctx'}
-    \end{InfRule}\:
-    \begin{InfRule}{Eq-Clos}
-      \hypo{\ctx\sim_f\ctx'}
-      \infer1{\langle\lambda x.e,\ctx\rangle\sim_f\langle\lambda x.e,\ctx'\rangle}
-    \end{InfRule}\:
-    \begin{InfRule}{Eq-Rec}
-      \hypo{L\text{ finite}}
-      \hypo{\mem(\ell')=v'}
-      \hypo{\forall\nu\not\in L,\:v[\nu/\ell]\sim_{f[\nu\mapsto\ell']}v'}
-      \infer3{\mu\ell.v\sim_f v'}
-    \end{InfRule}
+    \infer[Eq-ConsWVal]
+    {
+    {\mem(\ell')=v'}\\
+    {w\sim_f v'}\\
+    {\ctx\sim_f\ctx'}
+    }
+    {(x,w)\cons\ctx\sim_f(x,\ell')\cons\ctx'}
+    \quad
+    \infer[Eq-Clos]
+    {\ctx\sim_f\ctx'}
+    {\langle\lambda x.e,\ctx\rangle\sim_f\langle\lambda x.e,\ctx'\rangle}
+    \quad
+    \infer[Eq-Rec]
+    {
+    {L\text{ finite}}\\
+    {\mem(\ell')=v'}\\
+    {\forall\nu\not\in L,\:v[\nu/\ell]\sim_{f[\nu\mapsto\ell']}v'}
+    }
+    {\mu\ell.v\sim_f v'}
   \]
   \caption{The equivalence relation between weak values in the original semantics and values in the semantics with memory.
     $f\in\fin{\Loc}{\Loc}$ tells what the free locations in $w$ that were \emph{opened} should be mapped to in memory.

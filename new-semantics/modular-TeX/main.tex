@@ -6,12 +6,164 @@
 \author{Joonhyup Lee}
 \begin{document}
 \maketitle
-\input{intro.tex}
-\clearpage
+\begin{abstract}
+  We present a framework of modular static analysis that analyzes open
+  program fragments in advance and complete the whole analysis later
+  when the fragments are closed. The framework is defined for a
+  call-by-value lambda calculus extended with constructs for defining and
+  linking first-class modules (a collection of bindings) that support
+  recursive bindings for values, modules, and functors(module
+  functions). Thanks to the abstract interpretation framework, our
+  modular analysis framework's key is how to define the semantics,
+  called ``shadow'' semantics of open program fragments so that the
+  computation with free variables should be captured in advance
+  and be completed later at link-time. A modular
+  static analysis is abstractions of this shadow semantics and of the
+  linking operation. The safety of the framework is proven in Coq.
+  Two instances of the framwork are presented: value analyses for an
+  applicative language(control-flow, closure analysis) and for
+  an imperative language.
+  %  The framework is intended to be a guide in
+  %  designing modular analyses in practice for the specific source language at hand. 
+\end{abstract}
+
+\section{Problem}
+By modular analysis we mean a static analysis technology that analyzes
+programs in the compositional way. Modular analysis partially analyzes
+program fragments separately and then complete the analysis when all
+the fragments are available and linked.
+
+Designing a modular analysis decides on two factors: how to build
+sound partial semantic summaries of program fragments and how to
+complete them at link time. A particular modular analysis strikes a
+balance between the two factors. Depending on how much analysis work
+is invested on each factor, modular analyses range from one extreme, a
+trivial one (wait until the whole code is available and do the
+whole-program analysis) to another extreme, non-trivial yet
+hardly-automatic ones (abduct assumptions about free variables and
+check them at link-time).
+
+However, designing a modular analysis has been elusive. There is a
+lack of a general framework by which we can design sound modular
+analyses with varying balance and accuracy of our choice.
+We need a general framework by which static analysis designers can
+design non-trivial sound modular analyses.
+
+\section{Framework Sketch}
+Thanks to the abstract interpretation framework, the key in our
+modular analysis framework is how to define the semantics (we call it
+``shadow'' semantics) of open program fragments so that the
+computation with free variables should be captured in advance
+and be completed later at link-time. A modular static analysis is
+then nothing but abstractions of this shadow semantics and of the
+linking operation.
+
+Shadow semantics is the semantics for the computation involving
+free variables. For exmaple, consider the following program fragment.
+\begin{center}
+  \begin{BVerbatim}[commandchars=\\\{\}]
+let rec map f l =
+  match l with
+  | [] -> []
+  | hd :: tl -> \textsuperscript{1}(\textsuperscript{3}f \textsuperscript{4}hd) :: \textsuperscript{2}(map f tl)
+in
+map \textsuperscript{5}g (1 :: 2 :: 3 :: [])
+  \end{BVerbatim}
+\end{center}
+The shadow semantics of the above fragment is
+\[\CallE(\textsf{G},1)\cons\CallE(\textsf{G},2)\cons\CallE(\textsf{G},3)\cons[]\text{ where }\textsf{G}=\ReadE(\InitE,\texttt{g})\]
+Shadows such as $\CallE$, $\ReadE$ correspond to semantic operations, like function application and reading from the environment.
+The $\InitE$ shadow is the unknown initial environment that the fragment will execute under.
+
+Computing a sound and finite approximation of the shadow
+semantics of program fragments corresponds to building a sound partial
+semantic summaries in advance. For the above example,
+we may use an abstraction that stores summaries of each input \emph{environment} and output \emph{value} per program point.
+Using the program points that are labelled in the example, we may say that the abstract shadow that is returned is
+\[\ell_1\cons \ell_2\]
+where each program point stores
+\[
+  \ell_1.\text{out}\mapsto\{\Abs\CallE(\ell_3,\ell_4)\}\quad
+  \ell_2.\text{out}\mapsto\{[],\ell_1\cons \ell_2\}\quad
+  \ell_3.\text{out}\mapsto\{\Abs\ReadE(\ell_5,\texttt{g})\}\quad
+  \ell_4.\text{out}\mapsto[1,3]\quad
+  \ell_5.\text{in}\mapsto\{\Abs\InitE\}
+\]
+
+The shadow semantics become actual when the involved free variables
+are known at link time. The linking semantics, the semantics of the link
+operation, defines this actualization operation. For the above fragment, let's
+consider that a closing fragment is available.
+\begin{center}
+  \begin{BVerbatim}[commandchars=\\\{\}]
+let g \textsuperscript{-1}x = \textsuperscript{-2}(x + 1)
+  \end{BVerbatim}
+\end{center}
+This is a module which returns the environment $\ctx_{0,1}=[\texttt{g}\mapsto\langle\lambda\texttt{x}.\texttt{x + 1},[]\rangle]$.
+Linking this with the concrete shadow gives:
+\[2\cons3\cons4\cons[]\]
+
+The function \texttt{g} might also be a foreign function.
+\begin{center}
+  \begin{BVerbatim}
+external g : int -> int = "incr"
+  \end{BVerbatim}
+\end{center}
+The return value of this module is $\ctx_{0,2}=[\texttt{g}\mapsto\textsf{Prim}(\texttt{incr})]$, where \textsf{Prim} stands for a \emph{primitive} value.
+Linking this with the concrete shadow gives:
+\[\textsf{PrimCall}(\texttt{incr},1)\cons\textsf{PrimCall}(\texttt{incr},2)\cons\textsf{PrimCall}(\texttt{incr},3)\cons[]\]
+
+Computing a sound and finite approximation of the linking semantics
+corresponds to completing partial analysis summaries at link time when
+the analysis results for the involved free variable are available. For
+the above example,
+\[
+  \Abs\ctx_{0,1}=[\texttt{g}\mapsto\{\langle\lambda\texttt{x}.\ell_{-2},\ell_{-1}\rangle\}]\text{ where }
+  \ell_{-1}.\text{in}\mapsto[]
+\]
+is the abstract shadow for the first closing fragment, and
+\[
+  \Abs\ctx_{0,2}=[\texttt{g}\mapsto\{\textsf{Prim}(\texttt{incr})\}]
+\]
+is the abstract shadow for the second closing fragment.
+
+Applying a sound abstract version of the linking operator will result in
+\[
+  \ell_1.\text{out}\mapsto[2,4]\quad
+  \ell_2.\text{out}\mapsto\{[],\ell_1\cons \ell_2\}\quad
+  \ell_3.\text{out}\mapsto\{\langle\lambda\texttt{x}.\ell_{-2},\ell_{-1}\rangle\}\quad
+  \ell_4.\text{out}\mapsto[1,3]\quad
+  \ell_5.\text{in}\mapsto\Abs\ctx_{0,1}
+\]
+for the first shadow, and
+\[
+  \ell_1.\text{out}\mapsto\{\Abs{\textsf{PrimCall}}(\texttt{incr},\ell_4)\}\quad
+  \ell_2.\text{out}\mapsto\{[],\ell_1\cons \ell_2\}\quad
+  \ell_3.\text{out}\mapsto\{\textsf{Prim}(\texttt{incr})\}\quad
+  \ell_4.\text{out}\mapsto[1,3]\quad
+  \ell_5.\text{in}\mapsto\Abs\ctx_{0,2}
+\]
+for the second shadow.
+
+We present our framework for a call-by-value lambda calculus extended
+with constructs for defining and linking first-class modules (a
+collection of bindings) that support recursive bindings for values,
+modules, and functors(module functions).
+
+The framework shows two points: how to define the shadow semantics and
+what to prove for the soundness of consequent modular analysis. The
+safety of the framework is proven in Coq. We present wwo instances of the
+framework: for high-order applicative language we show modular
+closure analysis design, and for imperative languages we show modular
+  [TODO] analysis design.
+
 \input{semantics.tex}
 \clearpage
 \input{linking.tex}
 \clearpage
 \input{cfa.tex}
+
+\section{Conclusion}
+
 \end{document}
 

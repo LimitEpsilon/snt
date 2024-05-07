@@ -1,20 +1,20 @@
-\section{Generating and Resolving Events}
-Now we formulate the semantics for generating events.
+\section{Generating and Resolving Shadows}
+Now we formulate the semantics for generating shadows.
 
 \begin{figure}[h!]
   \centering
   \small
   \begin{tabular}{rrcll}
-    Event       & $\event$ & $\rightarrow$ & $\InitE$           & initial environment \\
-                &          & $\vbar$       & $\ReadE(\event,x)$ & read event          \\
-                &          & $\vbar$       & $\CallE(\event,v)$ & call event          \\
+    Shadow      & $\event$ & $\rightarrow$ & $\InitE$           & initial environment \\
+                &          & $\vbar$       & $\ReadE(\event,x)$ & read shadow         \\
+                &          & $\vbar$       & $\CallE(\event,v)$ & call shadow         \\
     Environment & $\ctx$   & $\rightarrow$ & $\cdots$                                 \\
-                &          & $\vbar$       & $[\event]$         & answer to an event  \\
+                &          & $\vbar$       & $[\event]$         & answer to an shadow \\
     Value       & $v$      & $\rightarrow$ & $\cdots$                                 \\
-                &          & $\vbar$       & $\event$           & answer to an event
+                &          & $\vbar$       & $\event$           & answer to an shadow
   \end{tabular}
-  \caption{Definition of the semantic domains with events. All other semantic domains are equal to Figure \ref{fig:domain}.}
-  \label{fig:eventdomain}
+  \caption{Definition of the semantic domains with shadows. All other semantic domains are equal to Figure \ref{fig:domain}.}
+  \label{fig:shadowdomain}
 \end{figure}
 
 We extend how to read weak values given an environment.
@@ -23,30 +23,35 @@ We extend how to read weak values given an environment.
   [\event](x) & \triangleq\ReadE(\event,x) &  &  & ((x',w)\cons\ctx)(x)    & \triangleq (x=x'?w:\ctx(x))    \\
 \end{align*}
 
-Then we need to add only three rules to the semantics in Figure \ref{fig:bigstep} for the semantics to incorporate events.
-  {\small
-    \[
-      \begin{InfRule}{LinkEvent}
-        \hypo{\evjudg{\ctx}{e_1}{\event}}
-        \hypo{\evjudg{[\event]}{e_2}{v}}
-        \infer2{\evjudg{\ctx}{e_1\synlink e_2}{v}}
-      \end{InfRule}\:
-      \begin{InfRule}{AppEvent}
-        \hypo{\evjudg{\ctx}{e_1}{\event}}
-        \hypo{\evjudg{\ctx}{e_2}{v}}
-        \infer2{\evjudg{\ctx}{e_1\:e_2}{\CallE(\event,v)}}
-      \end{InfRule}\:
-      \begin{InfRule}{BindEvent}
-        \hypo{\ell\not\in\FLoc(\ctx)}
-        \hypo{\evjudg{(x,\ell)\cons\ctx}{e_1}{v_1}}
-        \hypo{\evjudg{(x, \mu\ell.v_1)\cons \ctx}{e_1}{\event_2}}
-        \infer{2,1}{\evjudg{\ctx}{x\:\texttt{=}\:e_1; e_2}{(x,\mu\ell.v_1)\cons[\event_2]}}
-      \end{InfRule}
-    \]
+Then we need to add only three rules to the semantics in Figure \ref{fig:bigstep} for the semantics to incorporate shadows.
+{\small
+\[
+  \infer[LinkShadow]
+  {
+  {\evjudg{\ctx}{e_1}{\event}}\\
+  {\evjudg{[\event]}{e_2}{v}}
   }
+  {\evjudg{\ctx}{e_1\synlink e_2}{v}}
+  \quad
+  \infer[AppShadow]
+  {
+  {\evjudg{\ctx}{e_1}{\event}}\\
+  {\evjudg{\ctx}{e_2}{v}}
+  }
+  {\evjudg{\ctx}{e_1\:e_2}{\CallE(\event,v)}}
+  \quad
+  \infer[BindShadow]
+  {
+  {\ell\not\in\FLoc(\ctx)}\\
+  {\evjudg{(x,\ell)\cons\ctx}{e_1}{v_1}}\\
+  {\evjudg{(x, \mu\ell.v_1)\cons \ctx}{e_1}{\event_2}}
+  }
+  {\evjudg{\ctx}{x\:\texttt{=}\:e_1; e_2}{(x,\mu\ell.v_1)\cons[\event_2]}}
+\]
+}
 
 Now we need to formulate the \emph{concrete linking} rules.
-The concrete linking rule $\ctx_0\semlink w$, given an answer $\ctx_0$ to the $\InitE$ event, resolves all events within $w$ to obtain a set of final results.
+The concrete linking rule $\ctx_0\semlink w$, given an answer $\ctx_0$ to the $\InitE$ shadow, resolves all shadows within $w$ to obtain a set of final results.
 \begin{align*}
   \fbox{$\semlink\in\Ctx\rightarrow\Event\rightarrow\pset(\Value)$}                                                                                                                           \\
   \ctx_0\semlink\InitE\triangleq                         & \: \{\ctx_0\}                                                                                                                      \\
@@ -80,16 +85,14 @@ The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
   \[\forall w_+,u_+:w_+\in\ctx_0\semlink w\wedge u_+\in\ctx_0\semlink u\Rightarrow w_+[u_+/\ell]\in\ctx_0\semlink w[u/\ell]\]
 \end{lem}
 \begin{lem}[Linking is compatible with reads]
-  Let $\ctx_0$ be the external environment that is linked with some environment $\ctx$.
-  Let $w$ be the value obtained from reading $x$ from $\ctx$.
-  Let $\text{unfold}:\Walue\rightarrow\Value$ be defined as:
-  \[\text{unfold}(\mu\ell.v)\triangleq v[\mu\ell.v/\ell]\qquad\text{unfold}(v)\triangleq v\]
-  Then for all $\ctx_+\in\ctx_0\semlink\ctx$, we have:
-  \[\exists w_+\in\Walue:\ctx_+(x)=w_+\land\text{unfold}(w_+)\in\ctx_0\semlink\text{unfold}(w)\]
+  Let $\text{unroll}:\Walue\rightarrow\Value$ be defined as:
+  \[\text{unroll}(\mu\ell.v)\triangleq v[\mu\ell.v/\ell]\qquad\text{unroll}(v)\triangleq v\]
+  For $\ctx_+\in\ctx_0\semlink\ctx$, if $\ctx_+(x)=w_+$, we have:
+  \[\text{There exists } w\text{ such that }\ctx(x)=w\text{ and }\text{unroll}(w_+)\in\ctx_0\semlink\text{unroll}(w)\]
 \end{lem}
 
 Now we can formulate modular analysis.
-A modular analysis consists of two requirements: an abstraction for the semantics with events and an abstraction for the semantic linking operator.
+A modular analysis consists of two requirements: an abstraction for the semantics with shadows and an abstraction for the semantic linking operator.
 \begin{thm}[Modular analysis]
   Assume:
   \begin{enumerate}
