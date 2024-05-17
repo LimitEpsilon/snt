@@ -120,9 +120,9 @@ A more interesting case is when even the list is replaced with a free variable.
 The shadow semantics of the above fragment is
 \begin{center}
   \begin{tabular}{c}
-    $\{[],\CallE(\text{G},\Hd(\text{Lst}))\cons[],\CallE(\text{G},\Hd(\Tl(\text{Lst})))\cons\CallE(\text{G},\Hd(\text{Lst}))\cons[],$ \\
+    $\{[],\CallE(\text{G},\Hd(\text{Lst}))\cons[],\CallE(\text{G},\Hd(\text{Lst}))\cons\CallE(\text{G},\Hd(\Tl(\text{Lst})))\cons[],$ \\
     [4pt]
-    $\dots,\CallE(\text{G},\Hd(\Tl^{n}(\text{Lst})))\cons\cdots\cons[],\dots\}$
+    $\dots,\CallE(\text{G},\Hd(\text{Lst}))\cons\cdots\cons\CallE(\text{G},\Hd(\Tl^{n}(\text{Lst})))\cons[],\dots\}$
   \end{tabular}
 \end{center}
 where
@@ -180,7 +180,7 @@ The ``most recent shadow'' must be recorded due to unresolved function calls.
 For example, if there is a call to a \emph{shadow} G with argument $v$ under memory
 \[m=\langle\{(a_1,\{S_1,S_2\})\mapsto v_1,\{S_3\}\mapsto v_2\},S_4\rangle\]
 the memory will be updated to
-\[\langle\{(a_1,\{S_1,S_2\})\mapsto\DerefAE(\text{C},a_1),\dots,\{S_3\}\mapsto\DerefSE(\text{C},S_3)\},\text{C}\rangle\]
+\[\langle\{(a_1,\{S_1,S_2\})\mapsto\DerefAE(\text{C},a_1),\{S_3\}\mapsto\DerefSE(\text{C},S_3)\},\text{C}\rangle\]
 where
 \[\text{C}=\CallE(\text{G},v|m)\quad(m\text{ records that the call happened under memory }m)\]
 
@@ -201,7 +201,7 @@ let g = \textsuperscript{7}fun x -> x + 1
   \end{BVerbatim}
 \end{center}
 This is a module which returns the environment
-$\ctx=\{\texttt{g}\mapsto\langle\lambda\texttt{x}.\texttt{x + 1},[]\rangle\}$.
+$\ctx=\{\texttt{g}\mapsto\langle\lambda\texttt{x}.\texttt{x + 1},\varnothing\rangle\}$.
 Linking this with the concrete shadow in Example 1 gives:
 \[\{2\cons3\cons4\cons[]\}\]
 
@@ -211,7 +211,7 @@ the analysis results for the involved free variable are available. For
 the above example,
 \[
   \Abs\ctx=\{\texttt{g}\mapsto\{\langle\lambda\texttt{x}.\texttt{x + 1},\ppoint_7.\text{in}\rangle\}\}\text{ where }
-  \ppoint_7.\text{in}:[]
+  \ppoint_7.\text{in}:\varnothing
 \]
 is the abstract shadow.
 
@@ -266,8 +266,8 @@ where
 
 The reason for this imprecision is because the concrete shadows dropped some constraints.
 For example, the output of Example 2 can be $[]$ if and only if
-$\Tl(\text{Lst})$ is matched with $[]$. To prevent this, shadows may be augmented with
-constraints, such as $([],\Tl(\text{Lst})\dot{=}[])$, but we elide this detail
+$\text{Lst}$ is matched with $[]$. To prevent this, shadows may be augmented with
+constraints, such as $\textsf{Matched}(\text{Lst},[])$, but we elide this detail
 for presentation.
 
 The sound abstraction for $\ctx$ is
