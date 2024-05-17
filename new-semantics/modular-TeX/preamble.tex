@@ -1,20 +1,20 @@
 \usepackage{setspace}
 \usepackage{graphicx}
 \usepackage{xcolor}
-\usepackage{kotex}
 \usepackage{csquotes}
 \usepackage{fancyvrb}
 \usepackage{hyperref}
 
 %%% Math settings
 \usepackage{amssymb,amsmath,amsthm,mathtools}
-\theoremstyle{definition}
-\newtheorem{definition}{Definition}[section]
-\newtheorem{example}{Example}[section]
 \newtheorem{lem}{Lemma}[section]
 \newtheorem{thm}{Theorem}[section]
 \newtheorem{cor}{Corollary}[section]
 \newtheorem{clm}{Claim}[section]
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]
 
 %%% PL constructs
 \usepackage{galois}
@@ -24,7 +24,7 @@
 \newcommand*{\vbar}{|}
 \newcommand*{\lBrack}{⟦}
 \newcommand*{\rBrack}{⟧}
-\newcommand*{\finto}{\xrightarrow{\text{\textrm{fin}}}}
+\newcommand*{\finto}{\xrightarrow{\textnormal{\textrm{fin}}}}
 \newcommand*{\istype}{\mathrel{⩴}}
 \newcommand*{\ortype}{\mathrel{|}}
 \newcommand*{\cons}{::}
@@ -40,60 +40,65 @@
 \newcommand{\pushleft}[1]{\ifmeasuring@#1\else\omit$\displaystyle#1$\hfill\fi\ignorespaces}
 \makeatother
 
+\newcommand*{\ctxofevent}[1]{[{#1}]_{\textnormal{env}}}
+\newcommand*{\memofevent}[1]{[{#1}]_{\textnormal{mem}}}
+
 \def\ovbarw{1.2mu}
 \def\ovbarh{1}
 \newcommand*{\ovbar}[1]{\mkern \ovbarw\overline{\mkern-\ovbarw{\smash{#1}\scalebox{1}[\ovbarh]{\vphantom{i}}}\mkern-\ovbarw}\mkern \ovbarw}
 \newcommand*{\A}[1]{\overset{\,_{\mbox{\Large .}}}{#1}}
 \newcommand*{\Abs}[1]{{#1}^{\#}}
-\newcommand*{\Expr}{\text{Expr}}
-\newcommand*{\ExprVar}{\text{Var}}
-\newcommand*{\Module}{\text{Module}}
-\newcommand*{\ModVar}{\text{ModVar}}
+\newcommand*{\Expr}{\textnormal{Expr}}
+\newcommand*{\ExprVar}{\textnormal{Var}}
+\newcommand*{\Module}{\textnormal{Module}}
+\newcommand*{\ModVar}{\textnormal{ModVar}}
 \newcommand*{\modid}{d}
 \newcommand*{\Time}{\mathbb{T}}
 \newcommand*{\ATime}{\A{\Time}}
-\newcommand*{\Ctx}{\text{Env}}
-\newcommand*{\Mtx}{\text{MEnv}}
+\newcommand*{\Ctx}{\textnormal{Env}}
+\newcommand*{\Mtx}{\textnormal{MEnv}}
 \newcommand*{\ctx}{\sigma}
-\newcommand*{\Value}{\text{Val}}
-\newcommand*{\Malue}{\text{MVal}}
-\newcommand*{\Walue}{\text{WVal}}
-\newcommand*{\Mem}{\text{Mem}}
-\newcommand*{\Heap}{\text{Heap}}
-\newcommand*{\Loc}{\text{Loc}}
-\newcommand*{\FLoc}{\text{FLoc}}
-\newcommand*{\Left}{\text{Left}}
-\newcommand*{\Right}{\text{Right}}
-\newcommand*{\Sig}{\text{Sig}}
+\newcommand*{\Value}{\textnormal{Val}}
+\newcommand*{\Malue}{\textnormal{MVal}}
+\newcommand*{\Walue}{\textnormal{WVal}}
+\newcommand*{\Mem}{\textnormal{Mem}}
+\newcommand*{\Heap}{\textnormal{Heap}}
+\newcommand*{\Loc}{\textnormal{Loc}}
+\newcommand*{\FLoc}{\textnormal{FLoc}}
+\newcommand*{\Left}{\textnormal{Left}}
+\newcommand*{\Right}{\textnormal{Right}}
+\newcommand*{\Sig}{\textnormal{Sig}}
 \newcommand*{\mem}{m}
 \newcommand*{\heap}{H}
-\newcommand*{\dom}{\text{dom}}
-\newcommand*{\AMem}{\A{\text{Heap}}}
-\newcommand*{\State}{\text{State}}
-\newcommand*{\AState}{\A{\text{State}}}
-\newcommand*{\Result}{\text{Result}}
-\newcommand*{\AResult}{\A{\text{Result}}}
-\newcommand*{\Tick}{\text{Tick}}
-\newcommand*{\lfp}{\text{lfp}}
-\newcommand*{\Step}{\text{Step}}
-\newcommand*{\step}{\text{step}}
+\newcommand*{\dom}{\textnormal{dom}}
+\newcommand*{\AMem}{\A{\textnormal{Heap}}}
+\newcommand*{\State}{\textnormal{State}}
+\newcommand*{\AState}{\A{\textnormal{State}}}
+\newcommand*{\Result}{\textnormal{Result}}
+\newcommand*{\AResult}{\A{\textnormal{Result}}}
+\newcommand*{\Tick}{\textnormal{Tick}}
+\newcommand*{\lfp}{\textnormal{lfp}}
+\newcommand*{\Step}{\textnormal{Step}}
+\newcommand*{\step}{\textnormal{step}}
 \newcommand*{\semarrow}{\Downarrow}
 \newcommand*{\asemarrow}{\A{\rightsquigarrow}}
 \newcommand*{\synlink}{\rtimes}
-\newcommand*{\semlink}{\mathbin{\text{\rotatebox[origin=c]{180}{$\propto$}}}}
+\newcommand*{\semlink}{\mathbin{\textnormal{\rotatebox[origin=c]{180}{$\propto$}}}}
 \newcommand*{\mt}{\mathsf{empty}}
 \newcommand*{\valid}{\mathsf{valid}}
-\newcommand*{\Path}{\text{Path}}
+\newcommand*{\Path}{\textnormal{Path}}
 \newcommand*{\equivalent}{\sim}
 \newcommand*{\tystate}{t}
 
 \newcommand*{\doubleplus}{\ensuremath{\mathbin{+\mkern-3mu+}}}
-\newcommand*{\project}{\text{\texttt{:>} }}
+\newcommand*{\Hd}{\textnormal{Hd}}
+\newcommand*{\Tl}{\textnormal{Tl}}
+\newcommand*{\project}{\textnormal{\texttt{:>} }}
 \newcommand*{\Exp}{\mathsf{Exp}}
 \newcommand*{\Imp}{\mathsf{Imp}}
 \newcommand*{\Fin}{\mathsf{Fin}}
-\newcommand*{\Link}{\text{Link}}
-\newcommand*{\link}{\text{link}}
+\newcommand*{\Link}{\textnormal{Link}}
+\newcommand*{\link}{\textnormal{link}}
 \newcommand*{\sembracket}[1]{\lBrack{#1}\rBrack}
 \newcommand*{\fin}[2]{{#1}\xrightarrow{\mbox{\tiny{fin}}}{#2}}
 \newcommand*{\addr}{\mathsf{addr}}
@@ -107,11 +112,14 @@
 \newcommand*{\filter}{\mathsf{filter}}
 \newcommand*{\Lete}{\mathtt{val}}
 \newcommand*{\Letm}{\mathtt{mod}}
-\newcommand*{\textand}{\text{ and }}
-\newcommand*{\eval}{\text{eval}}
+\newcommand*{\textand}{\textnormal{ and }}
+\newcommand*{\eval}{\textnormal{eval}}
 
 % symbol standing for partial proof tree
 \newcommand*{\ptree}{t}
+
+% program point
+\newcommand*{\ppoint}{p}
 
 % labelled expressions {p:e}
 \newcommand*{\plabel}[2]{\{{#1}:{#2}\}}
@@ -135,19 +143,21 @@
 \newcommand*{\CtxRel}[1]{\mathcal{C}\sembracket{#1}}
 \newcommand*{\EvtRel}[1]{\mathcal{\event}\sembracket{#1}}
 \newcommand*{\ModRel}[1]{\mathcal{M}\sembracket{#1}}
-\newcommand*{\TyEnv}{\text{TyEnv}}
-\newcommand*{\TyVar}{\text{TyVar}}
-\newcommand*{\Type}{\text{Type}}
-\newcommand*{\Subst}{\text{Subst}}
+\newcommand*{\TyEnv}{\textnormal{TyEnv}}
+\newcommand*{\TyVar}{\textnormal{TyVar}}
+\newcommand*{\Type}{\textnormal{Type}}
+\newcommand*{\Subst}{\textnormal{Subst}}
 \newcommand*{\external}{\Gamma_0}
 \newcommand*{\Safe}{S}
-\newcommand*{\unsafe}{\text{unsafe}}
+\newcommand*{\unsafe}{\textnormal{unsafe}}
 
 \newcommand*{\event}{S}
-\newcommand*{\Event}{\text{Shadow}}
-\newcommand*{\InitE}{\textsf{Init}}
-\newcommand*{\ReadE}{\textsf{Read}}
-\newcommand*{\CallE}{\textsf{Call}}
+\newcommand*{\Event}{\textnormal{Shadow}}
+\newcommand*{\InitE}{\mathsf{Init}}
+\newcommand*{\ReadE}{\mathsf{Read}}
+\newcommand*{\CallE}{\mathsf{Call}}
+\newcommand*{\DerefSE}{\mathsf{DerefShadow}}
+\newcommand*{\DerefAE}{\mathsf{DerefAddr}}
 \newcommand*{\resolve}{\downarrow_{\ctx_0}}
 \newcommand*{\cstr}{c}
 \newcommand*{\Cstr}{C}

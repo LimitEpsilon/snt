@@ -58,99 +58,231 @@ and be completed later at link-time. A modular static analysis is
 then nothing but abstractions of this shadow semantics and of the
 linking operation.
 
+\subsection{Examples of Shadow Semantics and its Abstraction}
 Shadow semantics is the semantics for the computation involving
-free variables. For exmaple, consider the following program fragment.
+free variables. We give examples of shadows for program fragments
+written in OCaml.
+
+\paragraph{Example 1: Mapping an Unknown Function Over a Known List}
 \begin{center}
   \begin{BVerbatim}[commandchars=\\\{\}]
-let rec map f l =
-  match l with
+let rec map = fun f -> fun l ->
+  match \textsuperscript{0}l with
   | [] -> []
   | hd :: tl -> \textsuperscript{1}(\textsuperscript{3}f \textsuperscript{4}hd) :: \textsuperscript{2}(map f tl)
-in
-map \textsuperscript{5}g (1 :: 2 :: 3 :: [])
+in map \textsuperscript{5}g \textsuperscript{6}(1 :: 2 :: 3 :: [])
   \end{BVerbatim}
 \end{center}
 The shadow semantics of the above fragment is
-\[\CallE(\textsf{G},1)\cons\CallE(\textsf{G},2)\cons\CallE(\textsf{G},3)\cons[]\text{ where }\textsf{G}=\ReadE(\InitE,\texttt{g})\]
-Shadows such as $\CallE$, $\ReadE$ correspond to semantic operations, like function application and reading from the environment.
+\[
+  \{\CallE(\text{G},1)\cons\CallE(\text{G},2)\cons\CallE(\text{G},3)\cons[]\}
+  \text{ where }
+  \text{G}=\ReadE(\InitE,\texttt{g})
+\]
+Shadows such as $\CallE$, $\ReadE$ correspond to semantic operations,
+like function application and reading from the environment.
 The $\InitE$ shadow is the unknown initial environment that the fragment will execute under.
 
 Computing a sound and finite approximation of the shadow
 semantics of program fragments corresponds to building a sound partial
 semantic summaries in advance. For the above example,
-we may use an abstraction that stores summaries of each input \emph{environment} and output \emph{value} per program point.
-Using the program points that are labelled in the example, we may say that the abstract shadow that is returned is
-\[\ell_1\cons \ell_2\]
-where each program point stores
-\[
-  \ell_1.\text{out}\mapsto\{\Abs\CallE(\ell_3,\ell_4)\}\quad
-  \ell_2.\text{out}\mapsto\{[],\ell_1\cons \ell_2\}
-\]
-\[
-  \ell_3.\text{out}\mapsto\{\Abs\ReadE(\ell_5,\texttt{g})\}\quad
-  \ell_4.\text{out}\mapsto[1,3]\quad
-  \ell_5.\text{in}\mapsto\{\Abs\InitE\}
-\]
+we may use an abstraction that stores summaries of each input \emph{environment}
+and output \emph{value} per program point.
 
-The shadow semantics become actual when the involved free variables
-are known at link time. The linking semantics, the semantics of the link
-operation, defines this actualization operation. For the above fragment, let's
-consider that a closing fragment is available.
+\vspace{\topsep}
+\noindent\textbf{Notation.}
+We write $\ppoint_i$ for each program point $i$.
+$\ppoint_i.\text{in}$ denotes the input to $\ppoint_i$, and $\ppoint_i.\text{out}$
+denotes the output from $\ppoint_i$.
+For brevity, we omit the selector in $\ppoint_i.\text{out}$ and write $\ppoint_i$.
+We write $[a,b]_{\text{itv}}$ to denote the interval from integer $a$ to $b$.
+
+\vspace{\topsep}
+Now, the abstract shadow
+\[\{\ppoint_1\cons \ppoint_2\}\]
+is a sound approximation of the concrete shadow. To illustrate why,
+here are abstract shadows from some program points involved in the map computation.
+\begin{align*}
+  \ppoint_1.\text{out}:\{ & \Abs\CallE(\ppoint_3,\ppoint_4)\}            &  &  & \ppoint_4.\text{out}: & \;[1,3]_{\text{itv}}                                                                 \\
+  \ppoint_2.\text{out}:\{ & [],\ppoint_1\cons \ppoint_2\}                &  &  & \ppoint_5.\text{in}:  & \;\{\Abs\InitE,\texttt{map}\mapsto\{\langle\lambda\texttt{f}.\texttt{...}\rangle\}\} \\
+  \ppoint_3.\text{out}:\{ & \Abs\ReadE(\ppoint_5.\text{in},\texttt{g})\}
+\end{align*}
+Starting from $\ppoint_1\cons\ppoint_2$, we can reach the concrete shadow by
+expanding each program point according to the above table.
+
+\paragraph{Example 2: Mapping an Unknown Function Over an Unknown List}
 \begin{center}
   \begin{BVerbatim}[commandchars=\\\{\}]
-let g \textsuperscript{-1}x = \textsuperscript{-2}(x + 1)
+let rec map = ... in map \textsuperscript{5}g \textsuperscript{6}lst
   \end{BVerbatim}
 \end{center}
-This is a module which returns the environment $\ctx_{0,1}=[\texttt{g}\mapsto\langle\lambda\texttt{x}.\texttt{x + 1},[]\rangle]$.
-Linking this with the concrete shadow gives:
-\[2\cons3\cons4\cons[]\]
-
-The function \texttt{g} might also be a foreign function.
+A more interesting case is when even the list is replaced with a free variable.
+The shadow semantics of the above fragment is
 \begin{center}
-  \begin{BVerbatim}
-external g : int -> int = "incr"
+  \begin{tabular}{c}
+    $\{[],\CallE(\text{G},\Hd(\text{Lst}))\cons[],\CallE(\text{G},\Hd(\Tl(\text{Lst})))\cons\CallE(\text{G},\Hd(\text{Lst}))\cons[],$ \\
+    [4pt]
+    $\dots,\CallE(\text{G},\Hd(\Tl^{n}(\text{Lst})))\cons\cdots\cons[],\dots\}$
+  \end{tabular}
+\end{center}
+where
+\begin{align*}
+  \text{G} & =\ReadE(\InitE,\texttt{g})       &  &  & \text{Lst} & =\ReadE(\InitE,\texttt{lst})     \\
+  \Hd(l)   & =\textsf{Match}(l,\texttt{::},0) &  &  & \Tl(l)     & =\textsf{Match}(l,\texttt{::},1)
+\end{align*}
+
+The same abstraction as in Example 1 results in the same abstract shadow
+\[\{\ppoint_1\cons\ppoint_2\}\]
+but with different shadows for each program point.
+\begin{align*}
+  \ppoint_0.\text{out} :\{ & \Abs\ReadE(\ppoint_6.\text{in},\texttt{lst}),   &  &  & \ppoint_3.\text{out}:\{ & \Abs\ReadE(\ppoint_5.\text{in},\texttt{g})\}                                     \\
+                           & \Abs{\textsf{Match}}(\ppoint_0,\texttt{::},1)\} &  &  & \ppoint_4.\text{out}:\{ & \Abs{\textsf{Match}}(\ppoint_0,\texttt{::},0)\}                                  \\
+  \ppoint_1.\text{out} :\{ & \Abs\CallE(\ppoint_3,\ppoint_4)\}               &  &  & \ppoint_5.\text{in} :\{ & \Abs\InitE,\texttt{map}\mapsto\{\langle\lambda\texttt{f}.\texttt{...}\rangle\}\} \\
+  \ppoint_2.\text{out} :\{ & [],\ppoint_1\cons \ppoint_2\}                   &  &  & \ppoint_6.\text{in} :\{ & \Abs\InitE,\texttt{map}\mapsto\{\langle\lambda\texttt{f}.\texttt{...}\rangle\}\}
+\end{align*}
+
+\paragraph{Example 3: An Imperative Swap}
+\begin{center}
+  \begin{BVerbatim}[commandchars=\\\{\}]
+let t = !x in\textsuperscript{1} x := !y;\textsuperscript{2} y := temp\textsuperscript{3}
   \end{BVerbatim}
 \end{center}
-The return value of this module is $\ctx_{0,2}=[\texttt{g}\mapsto\textsf{Prim}(\texttt{incr})]$, where \textsf{Prim} stands for a \emph{primitive} value.
-Linking this with the concrete shadow gives:
-\[\textsf{PrimCall}(\texttt{incr},1)\cons\textsf{PrimCall}(\texttt{incr},2)\cons\textsf{PrimCall}(\texttt{incr},3)\cons[]\]
+The shadow semantics can be extended to support imperative features.
+We simply have to add shadows that correspond to \emph{dereferencing}, a semantic
+operation central to imperative programs.
+
+For this example, the environment and memory at each program point is
+\[
+  \setlength{\arraycolsep}{2pt}
+  \begin{array}{c|c|c}
+              & \text{Environment}                                  & \text{Memory}                                                                                                                                               \\
+    \hline
+    \ppoint_1 & \langle\{\texttt{t}\mapsto*\text{X}\},\InitE\rangle & \langle\{\{\text{X}\}\mapsto*\text{X}\},\InitE\rangle                                                                                                       \\
+    \ppoint_2 & \langle\{\texttt{t}\mapsto*\text{X}\},\InitE\rangle & \langle\{\{\text{X},\text{Y}\}\mapsto*\text{X}\},\InitE\rangle\text{ or }\langle\{\{\text{X}\}\mapsto*\text{Y},\{\text{Y}\}\mapsto*\text{Y}\},\InitE\rangle \\
+    \ppoint_3 & \langle\{\texttt{t}\mapsto*\text{X}\},\InitE\rangle & \langle\{\{\text{X},\text{Y}\}\mapsto*\text{X}\},\InitE\rangle\text{ or }\langle\{\{\text{X}\}\mapsto*\text{Y},\{\text{Y}\}\mapsto*\text{X}\},\InitE\rangle
+  \end{array}
+\]
+where
+\begin{align*}
+  \text{X}=\ReadE(\InitE,\texttt{x})\quad\text{Y}=\ReadE(\InitE,\texttt{y})\quad*\!S=\DerefSE(\InitE,S)\text{ for shadow }S
+\end{align*}
+
+The memory is represented by a tuple holding the bindings for each concrete address
+and the most recent shadow that affected the memory.
+The concrete address consists of addresses that are allocated during the execution
+of the program, and the \emph{alias set} of shadows.
+The alias set is updated each time there is a read or a write to a shadow address,
+and the memory retains the invariant that the alias sets must be mutually disjoint.
+In the above example, the alias set is updated when the memory is dereferenced with
+X and Y. The resulting memory depends on aliasing, as expected.
+
+The ``most recent shadow'' must be recorded due to unresolved function calls.
+For example, if there is a call to a \emph{shadow} G with argument $v$ under memory
+\[m=\langle\{(a_1,\{S_1,S_2\})\mapsto v_1,\{S_3\}\mapsto v_2\},S_4\rangle\]
+the memory will be updated to
+\[\langle\{(a_1,\{S_1,S_2\})\mapsto\DerefAE(\text{C},a_1),\dots,\{S_3\}\mapsto\DerefSE(\text{C},S_3)\},\text{C}\rangle\]
+where
+\[\text{C}=\CallE(\text{G},v|m)\quad(m\text{ records that the call happened under memory }m)\]
+
+For efficient abstraction of the shadow semantics, one may employ widening.
+For instance, each shadow in the alias sets may be kept in its concrete form
+up until some threshold. After that, the memory may be collapsed to prevent blowup.
+
+\subsection{Examples of Linking and its Abstraction}
+The shadow semantics become actual when the involved free variables
+are known at link time. The linking semantics, the semantics of the link
+operation, defines this actualization operation. For the above fragments, let's
+consider that a closing fragment is available.
+
+\paragraph{Example 4: Module Exporting a Known Function}
+\begin{center}
+  \begin{BVerbatim}[commandchars=\\\{\}]
+let g = \textsuperscript{7}fun x -> x + 1
+  \end{BVerbatim}
+\end{center}
+This is a module which returns the environment
+$\ctx=\{\texttt{g}\mapsto\langle\lambda\texttt{x}.\texttt{x + 1},[]\rangle\}$.
+Linking this with the concrete shadow in Example 1 gives:
+\[\{2\cons3\cons4\cons[]\}\]
 
 Computing a sound and finite approximation of the linking semantics
 corresponds to completing partial analysis summaries at link time when
 the analysis results for the involved free variable are available. For
 the above example,
 \[
-  \Abs\ctx_{0,1}=[\texttt{g}\mapsto\{\langle\lambda\texttt{x}.\ell_{-2},\ell_{-1}\rangle\}]\text{ where }
-  \ell_{-1}.\text{in}\mapsto[]
+  \Abs\ctx=\{\texttt{g}\mapsto\{\langle\lambda\texttt{x}.\texttt{x + 1},\ppoint_7.\text{in}\rangle\}\}\text{ where }
+  \ppoint_7.\text{in}:[]
 \]
-is the abstract shadow for the first closing fragment, and
-\[
-  \Abs\ctx_{0,2}=[\texttt{g}\mapsto\{\textsf{Prim}(\texttt{incr})\}]
-\]
-is the abstract shadow for the second closing fragment.
+is the abstract shadow.
 
 Applying a sound abstract version of the linking operator will result in
-\[
-  \ell_1.\text{out}\mapsto[2,4]\quad
-  \ell_2.\text{out}\mapsto\{[],\ell_1\cons \ell_2\}
-\]
-\[
-  \ell_3.\text{out}\mapsto\{\langle\lambda\texttt{x}.\ell_{-2},\ell_{-1}\rangle\}\quad
-  \ell_4.\text{out}\mapsto[1,3]\quad
-  \ell_5.\text{in}\mapsto\Abs\ctx_{0,1}
-\]
-for the first shadow, and
-\[
-  \ell_1.\text{out}\mapsto\{\Abs{\textsf{PrimCall}}(\texttt{incr},\ell_4)\}\quad
-  \ell_2.\text{out}\mapsto\{[],\ell_1\cons \ell_2\}
-\]
-\[
-  \ell_3.\text{out}\mapsto\{\textsf{Prim}(\texttt{incr})\}\quad
-  \ell_4.\text{out}\mapsto[1,3]\quad
-  \ell_5.\text{in}\mapsto\Abs\ctx_{0,2}
-\]
-for the second shadow.
+\begin{align*}
+  \ppoint_1.\text{out} & :[2,4]_{\text{itv}}                                                     &  &  & \ppoint_4.\text{out} & :[1,3]_{\text{itv}} \\
+  \ppoint_2.\text{out} & :\{[],\ppoint_1\cons \ppoint_2\}                                        &  &  & \ppoint_5.\text{in}  & :\Abs\ctx           \\
+  \ppoint_3.\text{out} & :\{\langle\lambda\texttt{x}.\texttt{x + 1},\ppoint_7.\text{in}\rangle\} &  &  &
+\end{align*}
 
+\paragraph{Example 5: Module Exporting a Foreign Function}
+\begin{center}
+  \begin{BVerbatim}
+external g : int -> int = "incr"
+  \end{BVerbatim}
+\end{center}
+The function \texttt{g} might also be a foreign function.
+The return value of this module is
+$\ctx=\{\texttt{g}\mapsto\textsf{Prim}(\texttt{incr})\}$,
+where \textsf{Prim} stands for a \emph{primitive} value.
+Linking this with the concrete shadow in Example 1 gives:
+\[\{\textsf{PrimCall}(\texttt{incr},1)\cons\textsf{PrimCall}(\texttt{incr},2)\cons\textsf{PrimCall}(\texttt{incr},3)\cons[]\}\]
+
+The sound abstraction for $\ctx$ is
+\[
+  \Abs\ctx=\{\texttt{g}\mapsto\{\textsf{Prim}(\texttt{incr})\}\}
+\]
+Applying a sound abstract version of the linking operator will result in
+\begin{align*}
+  \ppoint_1.\text{out} & :\{\Abs{\textsf{PrimCall}}(\texttt{incr},\ppoint_4)\} &  &  & \ppoint_4.\text{out} & :[1,3]_{\text{itv}} \\
+  \ppoint_2.\text{out} & :\{[],\ppoint_1\cons \ppoint_2\}                      &  &  & \ppoint_5.\text{in}  & :\Abs\ctx           \\
+  \ppoint_3.\text{out} & :\{\textsf{Prim}(\texttt{incr})\}
+\end{align*}
+
+\paragraph{Example 6: Partial Resolution}
+\begin{center}
+  \begin{BVerbatim}[commandchars=\\\{\}]
+let lst = \textsuperscript{7}1 :: \textsuperscript{8}(\textsuperscript{9}2 :: \textsuperscript{10}(\textsuperscript{11}3 :: \textsuperscript{12}[]))
+  \end{BVerbatim}
+\end{center}
+The return value of this module is
+$\ctx=\langle\{\texttt{lst}\mapsto 1\cons2\cons3\cons[]\},\InitE\rangle$.
+Linking this with the concrete shadow in Example 2 gives:
+\[
+  \{[],\CallE(\text{G},1)\cons[],\CallE(\text{G},1)\cons\CallE(\text{G},2)\cons[],
+  \CallE(\text{G},1)\cons\CallE(\text{G},2)\cons\CallE(\text{G},3)\cons[]\}
+\]
+where
+\[
+  \text{G}=\ReadE(\InitE,\texttt{g})
+\]
+
+The reason for this imprecision is because the concrete shadows dropped some constraints.
+For example, the output of Example 2 can be $[]$ if and only if
+$\Tl(\text{Lst})$ is matched with $[]$. To prevent this, shadows may be augmented with
+constraints, such as $([],\Tl(\text{Lst})\dot{=}[])$, but we elide this detail
+for presentation.
+
+The sound abstraction for $\ctx$ is
+\[
+  \Abs\ctx=\{\Abs\InitE,\texttt{lst}\mapsto\{\ppoint_7\cons\ppoint_8\}\}
+  \text{ where }
+  \ppoint_7.\text{out}:[1,1]_{\text{itv}}
+  \text{, }
+  \ppoint_8.\text{out}:\{\ppoint_9\cons\ppoint_{10}\}\dots
+\]
+The result of linking $\Abs\ctx$ to the abstract shadow in Example 2
+is equivalent to the result of Example 1. This means that the
+shadows can be filled in \emph{incrementally}.
+
+\subsection{Paper Overview}
 We present our framework for a call-by-value lambda calculus extended
 with constructs for defining and linking first-class modules (a
 collection of bindings) that support recursive bindings for values,
@@ -158,11 +290,12 @@ modules, and functors(module functions).
 
 The framework shows two points: how to define the shadow semantics and
 what to prove for the soundness of consequent modular analysis. The
-safety of the framework is proven in Coq. We present wwo instances of the
+safety of the framework is proven in Coq. We present two instances of the
 framework: for high-order applicative language we show modular
 closure analysis design, and for imperative languages we show modular
   [TODO] analysis design.
 
+\clearpage
 \input{semantics.tex}
 \clearpage
 \input{linking.tex}

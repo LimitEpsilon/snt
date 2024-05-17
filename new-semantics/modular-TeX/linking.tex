@@ -19,8 +19,8 @@ Now we formulate the semantics for generating shadows.
 
 We extend how to read weak values given an environment.
 \begin{align*}
-  \bullet(x)  & \triangleq\bot             &  &  & ((x',\ell)\cons\ctx)(x) & \triangleq (x=x'?\ell:\ctx(x)) \\
-  [\event](x) & \triangleq\ReadE(\event,x) &  &  & ((x',w)\cons\ctx)(x)    & \triangleq (x=x'?w:\ctx(x))    \\
+  \bullet(x)  & \triangleq\bot             &  &  & ((x',\ell)\cons\ctx)(x) & \triangleq (x=x'\;?\;\ell:\ctx(x)) \\
+  [\event](x) & \triangleq\ReadE(\event,x) &  &  & ((x',w)\cons\ctx)(x)    & \triangleq (x=x'\;?\;w:\ctx(x))    \\
 \end{align*}
 
 Then we need to add only three rules to the semantics in Figure \ref{fig:bigstep} for the semantics to incorporate shadows.
@@ -53,6 +53,7 @@ Then we need to add only three rules to the semantics in Figure \ref{fig:bigstep
 
 Now we need to formulate the \emph{concrete linking} rules.
 The concrete linking rule $\ctx_0\semlink w$, given an answer $\ctx_0$ to the $\InitE$ shadow, resolves all shadows within $w$ to obtain a set of final results.
+
 \begin{align*}
                                                          & \pushright{\fbox{$\semlink\in\Ctx\rightarrow\Event\rightarrow\pset{\Value}$}}                                                      \\
   \ctx_0\semlink\InitE\triangleq                         & \: \{\ctx_0\}                                                                                                                      \\
@@ -64,7 +65,7 @@ The concrete linking rule $\ctx_0\semlink w$, given an answer $\ctx_0$ to the $\
   \ctx_0\semlink\bullet\triangleq                        & \: \{\bullet\}                                                                                                                     \\
   \ctx_0\semlink(x,\ell)\cons\ctx\triangleq              & \: \{(x,\ell)\cons\ctx_+|\ctx_+\in\ctx_0\semlink\ctx\}                                                                             \\
   \ctx_0\semlink(x,w)\cons\ctx\triangleq                 & \: \{(x,w_+)\cons\ctx_+|w_+\in\ctx_0\semlink w,\ctx_+\in\ctx_0\semlink\ctx\}                                                       \\
-  \ctx_0\semlink[E]\triangleq                            & \: \{\ctx_+|\ctx_+\in\ctx_0\semlink\event\}\cup\{[\event_+]|\event_+\in\ctx_0\semlink\event\}                                      \\
+  \ctx_0\semlink[\event]\triangleq                       & \: \{\ctx_+|\ctx_+\in\ctx_0\semlink\event\}\cup\{[\event_+]|\event_+\in\ctx_0\semlink\event\}                                      \\
                                                          & \pushright{\fbox{$\semlink\in\Ctx\rightarrow\Value\rightarrow\pset{\Value}$}}                                                      \\
   \ctx_0\semlink\langle\lambda x.e,\ctx\rangle\triangleq & \: \{\langle\lambda x.e,\ctx_+\rangle|\ctx_+\in\ctx_0\semlink\ctx\}                                                                \\
                                                          & \pushright{\fbox{$\semlink\in\Ctx\rightarrow\Walue\rightarrow\pset{\Walue}$}}                                                      \\
@@ -83,34 +84,34 @@ Then the following holds:
   \[\eval(e,\Sigma_0\semlink\Sigma)\subseteq\Sigma_0\semlink\eval(e,\Sigma)\]
 \end{thm}
 
-The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
-\begin{lem}[Linking distributes under substitution]
-  Let $\ctx_0$ be the external environment that is linked with weak values $w$ and $u$.
-  For all $\ell\not\in\FLoc(\ctx_0)$, we have:
-  \[\forall w_+,u_+:w_+\in\ctx_0\semlink w\wedge u_+\in\ctx_0\semlink u\Rightarrow w_+[u_+/\ell]\in\ctx_0\semlink w[u/\ell]\]
-\end{lem}
-\begin{lem}[Linking is compatible with reads]
-  Let $\text{unroll}:\Walue\rightarrow\Value$ be defined as:
-  \[\text{unroll}(\mu\ell.v)\triangleq v[\mu\ell.v/\ell]\qquad\text{unroll}(v)\triangleq v\]
-  For $\ctx_+\in\ctx_0\semlink\ctx$, if $\ctx_+(x)=w_+$, we have:
-  \[\text{There exists } w\text{ such that }\ctx(x)=w\text{ and }\text{unroll}(w_+)\in\ctx_0\semlink\text{unroll}(w)\]
-\end{lem}
+%The proof of Theorem \ref{thm:linksound} uses some useful lemmas, such as:
+%\begin{lem}[Linking distributes under substitution]
+%  Let $\ctx_0$ be the external environment that is linked with weak values $w$ and $u$.
+%  For all $\ell\not\in\FLoc(\ctx_0)$, we have:
+%  \[\forall w_+,u_+:w_+\in\ctx_0\semlink w\wedge u_+\in\ctx_0\semlink u\Rightarrow w_+[u_+/\ell]\in\ctx_0\semlink w[u/\ell]\]
+%\end{lem}
+%\begin{lem}[Linking is compatible with reads]
+%  Let $\textnormal{unroll}:\Walue\rightarrow\Value$ be defined as:
+%  \[\textnormal{unroll}(\mu\ell.v)\triangleq v[\mu\ell.v/\ell]\qquad\textnormal{unroll}(v)\triangleq v\]
+%  For $\ctx_+\in\ctx_0\semlink\ctx$, if $\ctx_+(x)=w_+$, we have:
+%  \[\textnormal{There exists } w\textnormal{ such that }\ctx(x)=w\textnormal{ and }\textnormal{unroll}(w_+)\in\ctx_0\semlink\textnormal{unroll}(w)\]
+%\end{lem}
 
 Now we can formulate modular analysis.
 A modular analysis consists of two requirements: an abstraction for the semantics with shadows and an abstraction for the semantic linking operator.
 \begin{thm}[Modular analysis]
   Assume:
   \begin{enumerate}
-    \item An abstract domain $\Abs\Walue$ that is concretized by a monotonic $\gamma\in\Abs\Walue\rightarrow\pset{\Walue}$
+    \item An abstract domain $\Abs\Walue$ and a monotonic $\gamma\in\Abs\Walue\rightarrow\pset{\Walue}$
     \item A sound $\Abs\eval$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\Rightarrow\eval(e,\Sigma_0)\subseteq\gamma(\Abs\eval(e,\Abs\ctx_0))$
-    \item A sound $\Abs\semlink$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }W\subseteq\gamma(\Abs{w})\Rightarrow\Sigma_0\semlink W\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs{w})$
+    \item A sound $\Abs\semlink$: $\Sigma_0\subseteq\gamma(\Abs\ctx_0)\textnormal{ and }W\subseteq\gamma(\Abs{w})\Rightarrow\Sigma_0\semlink W\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs{w})$
   \end{enumerate}
   then we have:
-  \[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and }\Sigma\subseteq\gamma(\Abs\ctx)\Rightarrow\eval(e,\Sigma_0\semlink\Sigma)\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs\eval(e,\Abs\ctx))\]
+  \[\Sigma_0\subseteq\gamma(\Abs\ctx_0)\textnormal{ and }\Sigma\subseteq\gamma(\Abs\ctx)\Rightarrow\eval(e,\Sigma_0\semlink\Sigma)\subseteq\gamma(\Abs\ctx_0\Abs\semlink\Abs\eval(e,\Abs\ctx))\]
 \end{thm}
 \begin{cor}[Modular analysis of linked program]
   \begin{align*}
-    \Sigma_0\subseteq\gamma(\Abs\ctx_0)\text{ and } & [\InitE]\in\gamma(\Abs\InitE)\Rightarrow                                                                       \\
-                                                    & \eval(e_1\synlink e_2,\Sigma_0)\subseteq\gamma(\Abs\eval(e_1,\Abs\ctx_0)\Abs\semlink\Abs\eval(e_2,\Abs\InitE))
+    \Sigma_0\subseteq\gamma(\Abs\ctx_0)\textnormal{ and } & [\InitE]\in\gamma(\Abs\InitE)\Rightarrow                                                                       \\
+                                                          & \eval(e_1\synlink e_2,\Sigma_0)\subseteq\gamma(\Abs\eval(e_1,\Abs\ctx_0)\Abs\semlink\Abs\eval(e_2,\Abs\InitE))
   \end{align*}
 \end{cor}
