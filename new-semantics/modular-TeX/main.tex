@@ -75,9 +75,9 @@ in map \textsuperscript{5}g \textsuperscript{6}(1 :: 2 :: 3 :: [])
 \end{center}
 The shadow semantics of the above fragment is
 \[
-  \{\CallE(\text{G},1)\cons\CallE(\text{G},2)\cons\CallE(\text{G},3)\cons[]\}
+  \{\CallE(\abbrtext{G},1)\cons\CallE(\abbrtext{G},2)\cons\CallE(\abbrtext{G},3)\cons[]\}
   \text{ where }
-  \text{G}=\ReadE(\InitE,\texttt{g})
+  \abbrtext{G}=\ReadE(\InitE,\texttt{g})
 \]
 Shadows such as $\CallE$, $\ReadE$ correspond to semantic operations,
 like function application and reading from the environment.
@@ -92,10 +92,10 @@ and output \emph{value} per program point.
 \vspace{\topsep}
 \noindent\textbf{Notation.}
 We write $\ppoint_i$ for each program point $i$.
-$\ppoint_i.\text{in}$ denotes the input to $\ppoint_i$, and $\ppoint_i.\text{out}$
+$\ppoint_i.\abbrtext{in}$ denotes the input to $\ppoint_i$, and $\ppoint_i.\abbrtext{out}$
 denotes the output from $\ppoint_i$.
-For brevity, we omit the selector in $\ppoint_i.\text{out}$ and write $\ppoint_i$.
-We write $[a,b]_{\text{itv}}$ to denote the interval from integer $a$ to $b$.
+For brevity, we omit the selector in $\ppoint_i.\abbrtext{out}$ and write $\ppoint_i$.
+We write $[a,b]_{\abbrtext{itv}}$ to denote the interval from integer $a$ to $b$.
 
 \vspace{\topsep}
 Now, the abstract shadow
@@ -103,9 +103,9 @@ Now, the abstract shadow
 is a sound approximation of the concrete shadow. To illustrate why,
 here are abstract shadows from some program points involved in the map computation.
 \begin{align*}
-  \ppoint_1.\text{out}:\{ & \Abs\CallE(\ppoint_3,\ppoint_4)\}            &  &  & \ppoint_4.\text{out}: & \;[1,3]_{\text{itv}}                                                                 \\
-  \ppoint_2.\text{out}:\{ & [],\ppoint_1\cons \ppoint_2\}                &  &  & \ppoint_5.\text{in}:  & \;\{\Abs\InitE,\texttt{map}\mapsto\{\langle\lambda\texttt{f}.\texttt{...}\rangle\}\} \\
-  \ppoint_3.\text{out}:\{ & \Abs\ReadE(\ppoint_5.\text{in},\texttt{g})\}
+  \ppoint_1.\abbrtext{out}:\{ & \Abs\CallE(\ppoint_3,\ppoint_4)\}                &  &  & \ppoint_4.\abbrtext{out}: & \;[1,3]_{\abbrtext{itv}}                                                             \\
+  \ppoint_2.\abbrtext{out}:\{ & [],\ppoint_1\cons \ppoint_2\}                    &  &  & \ppoint_5.\abbrtext{in}:  & \;\{\Abs\InitE,\texttt{map}\mapsto\{\langle\lambda\texttt{f}.\texttt{...}\rangle\}\} \\
+  \ppoint_3.\abbrtext{out}:\{ & \Abs\ReadE(\ppoint_5.\abbrtext{in},\texttt{g})\}
 \end{align*}
 Starting from $\ppoint_1\cons\ppoint_2$, we can reach the concrete shadow by
 expanding each program point according to the above table.
@@ -120,31 +120,31 @@ A more interesting case is when even the list is replaced with a free variable.
 The shadow semantics of the above fragment is
 \begin{center}
   \begin{tabular}{c}
-    $\{[],\CallE(\text{G},\Hd(\text{Lst}))\cons[],\CallE(\text{G},\Hd(\text{Lst}))\cons\CallE(\text{G},\Hd(\Tl(\text{Lst})))\cons[],$ \\
+    $\{[],\CallE(\abbrtext{G},\Hd(\abbrtext{Lst}))\cons[],\CallE(\abbrtext{G},\Hd(\abbrtext{Lst}))\cons\CallE(\abbrtext{G},\Hd(\Tl(\text{Lst})))\cons[],$ \\
     [4pt]
-    $\dots,\CallE(\text{G},\Hd(\text{Lst}))\cons\cdots\cons\CallE(\text{G},\Hd(\Tl^{n}(\text{Lst})))\cons[],\dots\}$
+    $\dots,\CallE(\abbrtext{G},\Hd(\abbrtext{Lst}))\cons\cdots\cons\CallE(\abbrtext{G},\Hd(\Tl^{n}(\abbrtext{Lst})))\cons[],\dots\}$
   \end{tabular}
 \end{center}
 where
 \begin{align*}
-  \text{G} & =\ReadE(\InitE,\texttt{g})       &  &  & \text{Lst} & =\ReadE(\InitE,\texttt{lst})     \\
-  \Hd(l)   & =\textsf{Match}(l,\texttt{::},0) &  &  & \Tl(l)     & =\textsf{Match}(l,\texttt{::},1)
+  \abbrtext{G} & =\ReadE(\InitE,\texttt{g})       &  &  & \abbrtext{Lst} & =\ReadE(\InitE,\texttt{lst})     \\
+  \Hd(l)       & =\textsf{Match}(l,\texttt{::},0) &  &  & \Tl(l)         & =\textsf{Match}(l,\texttt{::},1)
 \end{align*}
 
 The same abstraction as in Example 1 results in the same abstract shadow
 \[\{\ppoint_1\cons\ppoint_2\}\]
 but with different shadows for each program point.
 \begin{align*}
-  \ppoint_0.\text{out} :\{ & \Abs\ReadE(\ppoint_6.\text{in},\texttt{lst}),   &  &  & \ppoint_3.\text{out}:\{ & \Abs\ReadE(\ppoint_5.\text{in},\texttt{g})\}                                     \\
-                           & \Abs{\textsf{Match}}(\ppoint_0,\texttt{::},1)\} &  &  & \ppoint_4.\text{out}:\{ & \Abs{\textsf{Match}}(\ppoint_0,\texttt{::},0)\}                                  \\
-  \ppoint_1.\text{out} :\{ & \Abs\CallE(\ppoint_3,\ppoint_4)\}               &  &  & \ppoint_5.\text{in} :\{ & \Abs\InitE,\texttt{map}\mapsto\{\langle\lambda\texttt{f}.\texttt{...}\rangle\}\} \\
-  \ppoint_2.\text{out} :\{ & [],\ppoint_1\cons \ppoint_2\}                   &  &  & \ppoint_6.\text{in} :\{ & \Abs\InitE,\texttt{map}\mapsto\{\langle\lambda\texttt{f}.\texttt{...}\rangle\}\}
+  \ppoint_0.\abbrtext{out} :\{ & \Abs\ReadE(\ppoint_6.\abbrtext{in},\texttt{lst}), &  &  & \ppoint_3.\abbrtext{out}:\{ & \Abs\ReadE(\ppoint_5.\abbrtext{in},\texttt{g})\}                                 \\
+                               & \Abs{\textsf{Match}}(\ppoint_0,\texttt{::},1)\}   &  &  & \ppoint_4.\abbrtext{out}:\{ & \Abs{\textsf{Match}}(\ppoint_0,\texttt{::},0)\}                                  \\
+  \ppoint_1.\abbrtext{out} :\{ & \Abs\CallE(\ppoint_3,\ppoint_4)\}                 &  &  & \ppoint_5.\abbrtext{in} :\{ & \Abs\InitE,\texttt{map}\mapsto\{\langle\lambda\texttt{f}.\texttt{...}\rangle\}\} \\
+  \ppoint_2.\abbrtext{out} :\{ & [],\ppoint_1\cons \ppoint_2\}                     &  &  & \ppoint_6.\abbrtext{in} :\{ & \Abs\InitE,\texttt{map}\mapsto\{\langle\lambda\texttt{f}.\texttt{...}\rangle\}\}
 \end{align*}
 
 \paragraph{Example 3: An Imperative Swap}
 \begin{center}
   \begin{BVerbatim}[commandchars=\\\{\}]
-let t = !x in\textsuperscript{1} x := !y;\textsuperscript{2} y := temp\textsuperscript{3}
+let t = !x in\textsuperscript{1} x := !y;\textsuperscript{2} y := t\textsuperscript{3}
   \end{BVerbatim}
 \end{center}
 The shadow semantics can be extended to support imperative features.
@@ -155,16 +155,16 @@ For this example, the environment and memory at each program point is
 \[
   \setlength{\arraycolsep}{2pt}
   \begin{array}{c|c|c}
-              & \text{Environment}                                  & \text{Memory}                                                                                                                                               \\
+              & \text{Environment}                                      & \text{Memory}                                                                                                                                                                           \\
     \hline
-    \ppoint_1 & \langle\{\texttt{t}\mapsto*\text{X}\},\InitE\rangle & \langle\{\{\text{X}\}\mapsto*\text{X}\},\InitE\rangle                                                                                                       \\
-    \ppoint_2 & \langle\{\texttt{t}\mapsto*\text{X}\},\InitE\rangle & \langle\{\{\text{X},\text{Y}\}\mapsto*\text{X}\},\InitE\rangle\text{ or }\langle\{\{\text{X}\}\mapsto*\text{Y},\{\text{Y}\}\mapsto*\text{Y}\},\InitE\rangle \\
-    \ppoint_3 & \langle\{\texttt{t}\mapsto*\text{X}\},\InitE\rangle & \langle\{\{\text{X},\text{Y}\}\mapsto*\text{X}\},\InitE\rangle\text{ or }\langle\{\{\text{X}\}\mapsto*\text{Y},\{\text{Y}\}\mapsto*\text{X}\},\InitE\rangle
+    \ppoint_1 & \langle\{\texttt{t}\mapsto*\abbrtext{X}\},\InitE\rangle & \langle\{\{\abbrtext{X}\}\mapsto*\abbrtext{X}\},\InitE\rangle                                                                                                                           \\
+    \ppoint_2 & \langle\{\texttt{t}\mapsto*\abbrtext{X}\},\InitE\rangle & \langle\{\{\abbrtext{X},\abbrtext{Y}\}\mapsto*\abbrtext{X}\},\InitE\rangle\text{ or }\langle\{\{\abbrtext{X}\}\mapsto*\abbrtext{Y},\{\abbrtext{Y}\}\mapsto*\abbrtext{Y}\},\InitE\rangle \\
+    \ppoint_3 & \langle\{\texttt{t}\mapsto*\abbrtext{X}\},\InitE\rangle & \langle\{\{\abbrtext{X},\abbrtext{Y}\}\mapsto*\abbrtext{X}\},\InitE\rangle\text{ or }\langle\{\{\abbrtext{X}\}\mapsto*\abbrtext{Y},\{\abbrtext{Y}\}\mapsto*\abbrtext{X}\},\InitE\rangle
   \end{array}
 \]
 where
 \begin{align*}
-  \text{X}=\ReadE(\InitE,\texttt{x})\quad\text{Y}=\ReadE(\InitE,\texttt{y})\quad*\!S=\DerefSE(\InitE,S)\text{ for shadow }S
+  \abbrtext{X}=\ReadE(\InitE,\texttt{x})\quad\abbrtext{Y}=\ReadE(\InitE,\texttt{y})\quad*\!S=\DerefSE(\InitE,S)\text{ for shadow }S
 \end{align*}
 
 The memory is represented by a tuple holding the bindings for each concrete address
@@ -174,15 +174,15 @@ of the program, and the \emph{alias set} of shadows.
 The alias set is updated each time there is a read or a write to a shadow address,
 and the memory retains the invariant that the alias sets must be mutually disjoint.
 In the above example, the alias set is updated when the memory is dereferenced with
-X and Y. The resulting memory depends on aliasing, as expected.
+$\abbrtext{X}$ and $\abbrtext{Y}$. The resulting memory depends on aliasing, as expected.
 
 The ``most recent shadow'' must be recorded due to unresolved function calls.
-For example, if there is a call to a \emph{shadow} G with argument $v$ under memory
+For example, if there is a call to a \emph{shadow} $\abbrtext{G}$ with argument $v$ under memory
 \[m=\langle\{(a_1,\{S_1,S_2\})\mapsto v_1,\{S_3\}\mapsto v_2\},S_4\rangle\]
 the memory will be updated to
-\[\langle\{(a_1,\{S_1,S_2\})\mapsto\DerefAE(\text{C},a_1),\{S_3\}\mapsto\DerefSE(\text{C},S_3)\},\text{C}\rangle\]
+\[\langle\{(a_1,\{S_1,S_2\})\mapsto\DerefAE(\abbrtext{C},a_1),\{S_3\}\mapsto\DerefSE(\abbrtext{C},S_3)\},\abbrtext{C}\rangle\]
 where
-\[\text{C}=\CallE(\text{G},v|m)\quad(m\text{ records that the call happened under memory }m)\]
+\[\abbrtext{C}=\CallE(\abbrtext{G},v|m)\quad(m\text{ records that the call happened under memory }m)\]
 
 For efficient abstraction of the shadow semantics, one may employ widening.
 For instance, each shadow in the alias sets may be kept in its concrete form
@@ -210,16 +210,16 @@ corresponds to completing partial analysis summaries at link time when
 the analysis results for the involved free variable are available. For
 the above example,
 \[
-  \Abs\ctx=\{\texttt{g}\mapsto\{\langle\lambda\texttt{x}.\texttt{x + 1},\ppoint_7.\text{in}\rangle\}\}\text{ where }
-  \ppoint_7.\text{in}:\varnothing
+  \Abs\ctx=\{\texttt{g}\mapsto\{\langle\lambda\texttt{x}.\texttt{x + 1},\ppoint_7.\abbrtext{in}\rangle\}\}\text{ where }
+  \ppoint_7.\abbrtext{in}:\varnothing
 \]
 is the abstract shadow.
 
 Applying a sound abstract version of the linking operator will result in
 \begin{align*}
-  \ppoint_1.\text{out} & :[2,4]_{\text{itv}}                                                     &  &  & \ppoint_4.\text{out} & :[1,3]_{\text{itv}} \\
-  \ppoint_2.\text{out} & :\{[],\ppoint_1\cons \ppoint_2\}                                        &  &  & \ppoint_5.\text{in}  & :\Abs\ctx           \\
-  \ppoint_3.\text{out} & :\{\langle\lambda\texttt{x}.\texttt{x + 1},\ppoint_7.\text{in}\rangle\} &  &  &
+  \ppoint_1.\abbrtext{out} & :[2,4]_{\abbrtext{itv}}                                                     &  &  & \ppoint_4.\abbrtext{out} & :[1,3]_{\abbrtext{itv}} \\
+  \ppoint_2.\abbrtext{out} & :\{[],\ppoint_1\cons \ppoint_2\}                                            &  &  & \ppoint_5.\abbrtext{in}  & :\Abs\ctx               \\
+  \ppoint_3.\abbrtext{out} & :\{\langle\lambda\texttt{x}.\texttt{x + 1},\ppoint_7.\abbrtext{in}\rangle\} &  &  &
 \end{align*}
 
 \paragraph{Example 5: Module Exporting a Foreign Function}
@@ -241,9 +241,9 @@ The sound abstraction for $\ctx$ is
 \]
 Applying a sound abstract version of the linking operator will result in
 \begin{align*}
-  \ppoint_1.\text{out} & :\{\Abs{\textsf{PrimCall}}(\texttt{incr},\ppoint_4)\} &  &  & \ppoint_4.\text{out} & :[1,3]_{\text{itv}} \\
-  \ppoint_2.\text{out} & :\{[],\ppoint_1\cons \ppoint_2\}                      &  &  & \ppoint_5.\text{in}  & :\Abs\ctx           \\
-  \ppoint_3.\text{out} & :\{\textsf{Prim}(\texttt{incr})\}
+  \ppoint_1.\abbrtext{out} & :\{\Abs{\textsf{PrimCall}}(\texttt{incr},\ppoint_4)\} &  &  & \ppoint_4.\abbrtext{out} & :[1,3]_{\abbrtext{itv}} \\
+  \ppoint_2.\abbrtext{out} & :\{[],\ppoint_1\cons \ppoint_2\}                      &  &  & \ppoint_5.\abbrtext{in}  & :\Abs\ctx               \\
+  \ppoint_3.\abbrtext{out} & :\{\textsf{Prim}(\texttt{incr})\}
 \end{align*}
 
 \paragraph{Example 6: Partial Resolution}
@@ -256,27 +256,27 @@ The return value of this module is
 $\ctx=\langle\{\texttt{lst}\mapsto 1\cons2\cons3\cons[]\},\InitE\rangle$.
 Linking this with the concrete shadow in Example 2 gives:
 \[
-  \{[],\CallE(\text{G},1)\cons[],\CallE(\text{G},1)\cons\CallE(\text{G},2)\cons[],
-  \CallE(\text{G},1)\cons\CallE(\text{G},2)\cons\CallE(\text{G},3)\cons[]\}
+  \{[],\CallE(\abbrtext{G},1)\cons[],\CallE(\abbrtext{G},1)\cons\CallE(\abbrtext{G},2)\cons[],
+  \CallE(\abbrtext{G},1)\cons\CallE(\abbrtext{G},2)\cons\CallE(\abbrtext{G},3)\cons[]\}
 \]
 where
 \[
-  \text{G}=\ReadE(\InitE,\texttt{g})
+  \abbrtext{G}=\ReadE(\InitE,\texttt{g})
 \]
 
 The reason for this imprecision is because the concrete shadows dropped some constraints.
 For example, the output of Example 2 can be $[]$ if and only if
-$\text{Lst}$ is matched with $[]$. To prevent this, shadows may be augmented with
-constraints, such as $\textsf{Matched}(\text{Lst},[])$, but we elide this detail
+$\abbrtext{Lst}$ is matched with $[]$. To prevent this, shadows may be augmented with
+constraints, such as $\textsf{Matched}(\abbrtext{Lst},[])$, but we elide this detail
 for presentation.
 
 The sound abstraction for $\ctx$ is
 \[
   \Abs\ctx=\{\Abs\InitE,\texttt{lst}\mapsto\{\ppoint_7\cons\ppoint_8\}\}
   \text{ where }
-  \ppoint_7.\text{out}:[1,1]_{\text{itv}}
+  \ppoint_7.\abbrtext{out}:[1,1]_{\abbrtext{itv}}
   \text{, }
-  \ppoint_8.\text{out}:\{\ppoint_9\cons\ppoint_{10}\}\dots
+  \ppoint_8.\abbrtext{out}:\{\ppoint_9\cons\ppoint_{10}\}\dots
 \]
 The result of linking $\Abs\ctx$ to the abstract shadow in Example 2
 is equivalent to the result of Example 1. This means that the
