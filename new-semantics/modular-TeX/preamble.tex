@@ -1,4 +1,5 @@
 \usepackage{setspace}
+\usepackage{stmaryrd}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{csquotes}
@@ -22,11 +23,6 @@
 
 %%% Custom commands
 \newcommand*{\vbar}{|}
-\newcommand*{\lBrack}{⟦}
-\newcommand*{\rBrack}{⟧}
-\newcommand*{\finto}{\xrightarrow{\textnormal{\textrm{fin}}}}
-\newcommand*{\istype}{\mathrel{⩴}}
-\newcommand*{\ortype}{\mathrel{|}}
 \newcommand*{\cons}{::}
 \newcommand*{\pset}[1]{\mathcal{P}({#1})}
 \newcommand*{\closeloc}[2]{\prescript{\backslash{#1}}{}{#2}}
@@ -40,9 +36,6 @@
 \newcommand{\pushleft}[1]{\ifmeasuring@#1\else\omit$\displaystyle#1$\hfill\fi\ignorespaces}
 \makeatother
 
-\newcommand*{\ctxofevent}[1]{[{#1}]_{\textnormal{env}}}
-\newcommand*{\memofevent}[1]{[{#1}]_{\textnormal{mem}}}
-
 \def\ovbarw{1.2mu}
 \def\ovbarh{1}
 \newcommand*{\ovbar}[1]{\mkern \ovbarw\overline{\mkern-\ovbarw{\smash{#1}\scalebox{1}[\ovbarh]{\vphantom{i}}}\mkern-\ovbarw}\mkern \ovbarw}
@@ -50,11 +43,6 @@
 \newcommand*{\Abs}[1]{{#1}^{\#}}
 \newcommand*{\Expr}{\textnormal{Expr}}
 \newcommand*{\ExprVar}{\textnormal{Var}}
-\newcommand*{\Module}{\textnormal{Module}}
-\newcommand*{\ModVar}{\textnormal{ModVar}}
-\newcommand*{\modid}{d}
-\newcommand*{\Time}{\mathbb{T}}
-\newcommand*{\ATime}{\A{\Time}}
 \newcommand*{\Ctx}{\textnormal{Env}}
 \newcommand*{\Mtx}{\textnormal{MEnv}}
 \newcommand*{\ctx}{\sigma}
@@ -65,52 +53,26 @@
 \newcommand*{\Heap}{\textnormal{Heap}}
 \newcommand*{\Loc}{\textnormal{Loc}}
 \newcommand*{\FLoc}{\textnormal{FLoc}}
-\newcommand*{\Left}{\textnormal{Left}}
-\newcommand*{\Right}{\textnormal{Right}}
-\newcommand*{\Sig}{\textnormal{Sig}}
+\newcommand*{\Addr}{\textnormal{Addr}}
 \newcommand*{\mem}{m}
 \newcommand*{\heap}{H}
 \newcommand*{\dom}{\textnormal{dom}}
 \newcommand*{\AMem}{\A{\textnormal{Heap}}}
-\newcommand*{\State}{\textnormal{State}}
-\newcommand*{\AState}{\A{\textnormal{State}}}
-\newcommand*{\Result}{\textnormal{Result}}
-\newcommand*{\AResult}{\A{\textnormal{Result}}}
 \newcommand*{\Tick}{\textnormal{Tick}}
 \newcommand*{\lfp}{\textnormal{lfp}}
 \newcommand*{\Step}{\textnormal{Step}}
 \newcommand*{\step}{\textnormal{step}}
 \newcommand*{\semarrow}{\Downarrow}
-\newcommand*{\asemarrow}{\A{\rightsquigarrow}}
 \newcommand*{\synlink}{\rtimes}
 \newcommand*{\semlink}{\mathbin{\textnormal{\rotatebox[origin=c]{180}{$\propto$}}}}
-\newcommand*{\mt}{\mathsf{empty}}
-\newcommand*{\valid}{\mathsf{valid}}
-\newcommand*{\Path}{\textnormal{Path}}
 \newcommand*{\equivalent}{\sim}
 \newcommand*{\tystate}{t}
 
 \newcommand*{\doubleplus}{\ensuremath{\mathbin{+\mkern-3mu+}}}
-\newcommand*{\project}{\textnormal{\texttt{:>} }}
-\newcommand*{\Exp}{\mathsf{Exp}}
-\newcommand*{\Imp}{\mathsf{Imp}}
-\newcommand*{\Fin}{\mathsf{Fin}}
 \newcommand*{\Link}{\textnormal{Link}}
 \newcommand*{\link}{\textnormal{link}}
-\newcommand*{\sembracket}[1]{\lBrack{#1}\rBrack}
+\newcommand*{\sembracket}[1]{\llbracket{#1}\rrbracket}
 \newcommand*{\fin}[2]{{#1}\xrightarrow{\mbox{\tiny{fin}}}{#2}}
-\newcommand*{\addr}{\mathsf{addr}}
-\newcommand*{\tick}{\mathsf{tick}}
-\newcommand*{\modctx}{\mathsf{ctx}}
-\newcommand*{\mapinject}[2]{{#2}[{#1}]}
-\newcommand*{\inject}[2]{{#2}\langle{#1}\rangle}
-\newcommand*{\deletepre}[2]{{#2}\overline{\doubleplus}{#1}}
-\newcommand*{\deletemap}[2]{{#1}\overline{[{#2}]}}
-\newcommand*{\delete}[2]{{#2}{\langle{#1}\rangle}^{-1}}
-\newcommand*{\filter}{\mathsf{filter}}
-\newcommand*{\Lete}{\mathtt{val}}
-\newcommand*{\Letm}{\mathtt{mod}}
-\newcommand*{\textand}{\textnormal{ and }}
 \newcommand*{\eval}{\textnormal{eval}}
 
 % symbol standing for partial proof tree
@@ -145,7 +107,6 @@
 \newcommand*{\TyVar}{\textnormal{TyVar}}
 \newcommand*{\Type}{\textnormal{Type}}
 \newcommand*{\Subst}{\textnormal{Subst}}
-\newcommand*{\external}{\Gamma_0}
 \newcommand*{\Safe}{S}
 \newcommand*{\unsafe}{\textnormal{unsafe}}
 
@@ -157,9 +118,5 @@
 \newcommand*{\InitE}{\mathsf{Init}}
 \newcommand*{\ReadE}{\mathsf{Read}}
 \newcommand*{\CallE}{\mathsf{Call}}
-\newcommand*{\DerefSE}{\mathsf{DerefShadow}}
-\newcommand*{\DerefAE}{\mathsf{DerefAddr}}
-\newcommand*{\resolve}{\downarrow_{\ctx_0}}
-\newcommand*{\cstr}{c}
-\newcommand*{\Cstr}{C}
-\newcommand*{\constraints}{\mathbb{C}}
+\newcommand*{\DerefSE}{\mathsf{Deref}}
+\newcommand*{\DerefAE}{\mathsf{Deref}}

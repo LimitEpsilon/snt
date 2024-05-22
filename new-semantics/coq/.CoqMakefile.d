@@ -22,9 +22,6 @@ sim/SubstFacts.vos sim/SubstFacts.vok sim/SubstFacts.required_vos: sim/SubstFact
 sim/Syntax.vo sim/Syntax.glob sim/Syntax.v.beautified sim/Syntax.required_vo: sim/Syntax.v 
 sim/Syntax.vio: sim/Syntax.v 
 sim/Syntax.vos sim/Syntax.vok sim/Syntax.required_vos: sim/Syntax.v 
-sim/Typing.vo sim/Typing.glob sim/Typing.v.beautified sim/Typing.required_vo: sim/Typing.v basics/Basics.vo sim/Defs.vo sim/Syntax.vo sim/SubstFacts.vo sim/EnvSemantics.vo
-sim/Typing.vio: sim/Typing.v basics/Basics.vio sim/Defs.vio sim/Syntax.vio sim/SubstFacts.vio sim/EnvSemantics.vio
-sim/Typing.vos sim/Typing.vok sim/Typing.required_vos: sim/Typing.v basics/Basics.vos sim/Defs.vos sim/Syntax.vos sim/SubstFacts.vos sim/EnvSemantics.vos
 events/Advance.vo events/Advance.glob events/Advance.v.beautified events/Advance.required_vo: events/Advance.v basics/Basics.vo events/Defs.vo events/Syntax.vo events/SubstFacts.vo events/EnvSemantics.vo events/EquivSemantics.vo events/LinkDefs.vo events/LinkFacts.vo events/EquivLink.vo
 events/Advance.vio: events/Advance.v basics/Basics.vio events/Defs.vio events/Syntax.vio events/SubstFacts.vio events/EnvSemantics.vio events/EquivSemantics.vio events/LinkDefs.vio events/LinkFacts.vio events/EquivLink.vio
 events/Advance.vos events/Advance.vok events/Advance.required_vos: events/Advance.v basics/Basics.vos events/Defs.vos events/Syntax.vos events/SubstFacts.vos events/EnvSemantics.vos events/EquivSemantics.vos events/LinkDefs.vos events/LinkFacts.vos events/EquivLink.vos

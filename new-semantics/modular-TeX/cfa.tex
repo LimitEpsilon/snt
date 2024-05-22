@@ -129,23 +129,23 @@ where $\preceq$ is the concretization relation inductively defined in Figure \re
 
 Now the abstract semantic function can be given.
 \begin{align*}
-                                     & \pushright{\fbox{$\Abs\Step:\Abs{\mathbb{T}}\rightarrow\Abs{\mathbb{T}}$}}                                                                             \\
-  \Abs\Step(\Abs\ptree)   \triangleq & \bigsqcup_{p\in\mathbb{P}}\Abs\step(\Abs\ptree,p)                                                                                                      \\
-                                     & \pushright{\fbox{$\Abs\step:(\Abs{\mathbb{T}}\times\mathbb{P})\rightarrow\Abs{\mathbb{T}}$}}                                                           \\
-  \Abs\step(\Abs\ptree,p) \triangleq & \specialcell{\:[p\mapsto\bigsqcup_{p'\in\Abs\ptree(p).1.1(x)}(\bot,\Abs\ptree(p').2)]\hfill\textnormal{when }\plabel{p}{x}}                            \\
-  \sqcup                             & \: [p\mapsto(\bot,(([],\{\Abs\ReadE(p,x)\}),\varnothing))]\hfill\textnormal{if }\Abs\ptree(p).1.2\neq\varnothing                                       \\
-  \Abs\step(\Abs\ptree,p) \triangleq & \specialcell{\:[p\mapsto(\bot,(\bot,\{\langle\lambda x.p',p\rangle\}))]\hfill\textnormal{when }\plabel{p}{\lambda x.p'}}                               \\
-  \Abs\step(\Abs\ptree,p) \triangleq & \: [p_1\mapsto(\Abs\ptree(p).1,\bot)]\hfill\textnormal{when }\plabel{p}{p_1\:p_2}                                                                      \\
-  \sqcup                             & \: [p_2\mapsto(\Abs\ptree(p).1,\bot)]                                                                                                                  \\
-  \sqcup                             & \: \bigsqcup_{\langle\lambda x.p',p''\rangle\in\Abs\ptree(p_1).2.2}[p'\mapsto(\Abs\ptree(p'').1\sqcup([x\mapsto\{p_2\}],\varnothing),\bot)]            \\
-  \sqcup                             & \: [p\mapsto\bigsqcup_{\langle\lambda x.p',\_\rangle\in\Abs\ptree(p_1).2.2}(\bot,\Abs\ptree(p').2)]                                                    \\
-  \sqcup                             & \specialcell{\:[p\mapsto(\bot,(([],\{\Abs\CallE(p_1,p_2)\}),\varnothing))]\hfill\textnormal{if }\Abs\ptree(p_1).2.1.2\neq\varnothing}                  \\
-  \Abs\step(\Abs\ptree,p) \triangleq & \specialcell{\:[p_1\mapsto(\Abs\ptree(p).1,\bot)]\hfill\textnormal{when }\plabel{p}{{p_1}\synlink{p_2}}}                                               \\
-  \sqcup                             & \: [p_2\mapsto(\Abs\ptree(p_1).2.1,\bot)]                                                                                                              \\
-  \sqcup                             & \: [p\mapsto(\bot,\Abs\ptree(p_2).2)]                                                                                                                  \\
-  \Abs\step(\Abs\ptree,p) \triangleq & \specialcell{\:\bot\hfill\textnormal{when }\plabel{p}{\varepsilon}}                                                                                    \\
-  \Abs\step(\Abs\ptree,p) \triangleq & \specialcell{\:[p_1\mapsto(\Abs\ptree(p).1\sqcup([x\mapsto\{p_1\}],\varnothing),\bot)]\hfill\quad\textnormal{when }\plabel{p}{x\:\texttt{=}\:p_1;p_2}} \\
-  \sqcup                             & \: [p_2\mapsto(\Abs\ptree(p).1\sqcup([x\mapsto\{p_1\}],\varnothing),\bot)]                                                                             \\
+                                     & \pushright{\fbox{$\Abs\Step:\Abs{\mathbb{T}}\rightarrow\Abs{\mathbb{T}}$}}                                                                         \\
+  \Abs\Step(\Abs\ptree)   \triangleq & \bigsqcup_{p\in\mathbb{P}}\Abs\step(\Abs\ptree,p)                                                                                                  \\
+                                     & \pushright{\fbox{$\Abs\step:(\Abs{\mathbb{T}}\times\mathbb{P})\rightarrow\Abs{\mathbb{T}}$}}                                                       \\
+  \Abs\step(\Abs\ptree,p) \triangleq & \specialcell{\:[p\mapsto\bigsqcup_{p'\in\Abs\ptree(p).1.1(x)}(\bot,\Abs\ptree(p').2)]\hfill\textnormal{when }\plabel{p}{x}}                        \\
+  \sqcup                             & \: [p\mapsto(\bot,(([],\{\Abs\ReadE(p,x)\}),\varnothing))]\hfill\textnormal{if }\Abs\ptree(p).1.2\neq\varnothing                                   \\
+  \Abs\step(\Abs\ptree,p) \triangleq & \specialcell{\:[p\mapsto(\bot,(\bot,\{\langle\lambda x.p',p\rangle\}))]\hfill\textnormal{when }\plabel{p}{\lambda x.p'}}                           \\
+  \Abs\step(\Abs\ptree,p) \triangleq & \specialcell{\:[p_1\mapsto(\Abs\ptree(p).1,\bot)]\hfill\textnormal{when }\plabel{p}{p_1\:p_2}}                                                     \\
+  \sqcup                             & \: [p_2\mapsto(\Abs\ptree(p).1,\bot)]                                                                                                              \\
+  \sqcup                             & \: \bigsqcup_{\langle\lambda x.p',p''\rangle\in\Abs\ptree(p_1).2.2}[p'\mapsto(\Abs\ptree(p'').1\sqcup([x\mapsto\{p_2\}],\varnothing),\bot)]        \\
+  \sqcup                             & \: [p\mapsto\bigsqcup_{\langle\lambda x.p',\_\rangle\in\Abs\ptree(p_1).2.2}(\bot,\Abs\ptree(p').2)]                                                \\
+  \sqcup                             & \specialcell{\:[p\mapsto(\bot,(([],\{\Abs\CallE(p_1,p_2)\}),\varnothing))]\hfill\textnormal{if }\Abs\ptree(p_1).2.1.2\neq\varnothing}              \\
+  \Abs\step(\Abs\ptree,p) \triangleq & \specialcell{\:[p_1\mapsto(\Abs\ptree(p).1,\bot)]\hfill\textnormal{when }\plabel{p}{{p_1}\synlink{p_2}}}                                           \\
+  \sqcup                             & \: [p_2\mapsto(\Abs\ptree(p_1).2.1,\bot)]                                                                                                          \\
+  \sqcup                             & \: [p\mapsto(\bot,\Abs\ptree(p_2).2)]                                                                                                              \\
+  \Abs\step(\Abs\ptree,p) \triangleq & \specialcell{\:\bot\hfill\textnormal{when }\plabel{p}{\varepsilon}}                                                                                \\
+  \Abs\step(\Abs\ptree,p) \triangleq & \specialcell{\:[p_1\mapsto(\Abs\ptree(p).1\sqcup([x\mapsto\{p_1\}],\varnothing),\bot)]\hfill\textnormal{ when }\plabel{p}{x\:\texttt{=}\:p_1;p_2}} \\
+  \sqcup                             & \: [p_2\mapsto(\Abs\ptree(p).1\sqcup([x\mapsto\{p_1\}],\varnothing),\bot)]                                                                         \\
   \sqcup                             & \: [p\mapsto(\bot,(\Abs\ptree(p_2).2.1\sqcup([x\mapsto\{p_1\}],\varnothing),\varnothing))]
 \end{align*}
 The abstract semantics $\Abs{\ptree}$ computed by

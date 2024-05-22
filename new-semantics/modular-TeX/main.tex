@@ -20,7 +20,7 @@
   and be completed later at link-time. A modular
   static analysis is abstractions of this shadow semantics and of the
   linking operation. The safety of the framework is proven in Coq.
-  Two instances of the framwork are presented: value analyses for an
+  Two instances of the framework are presented: value analyses for an
   applicative language(control-flow, closure analysis) and for
   an imperative language.
   %  The framework is intended to be a guide in
@@ -83,8 +83,8 @@ Shadows such as $\CallE$, $\ReadE$ correspond to semantic operations,
 like function application and reading from the environment.
 The $\InitE$ shadow is the unknown initial environment that the fragment will execute under.
 
-Computing a sound and finite approximation of the shadow
-semantics of program fragments corresponds to building a sound partial
+Computing sound and finite approximations of the shadow
+semantics of program fragments corresponds to building sound partial
 semantic summaries in advance. For the above example,
 we may use an abstraction that stores summaries of each input \emph{environment}
 and output \emph{value} per program point.
@@ -141,25 +141,86 @@ but with different shadows for each program point.
   \ppoint_2.\abbrtext{out} :\{ & [],\ppoint_1\cons \ppoint_2\}                     &  &  & \ppoint_6.\abbrtext{in} :\{ & \Abs\InitE,\texttt{map}\mapsto\{\langle\lambda\texttt{f}.\texttt{...}\rangle\}\}
 \end{align*}
 
-\paragraph{Example 3: An Imperative Swap}
+\paragraph{Example 3: Unknown Function Modifying the Memory}
 \begin{center}
   \begin{BVerbatim}[commandchars=\\\{\}]
-let t = !x in\textsuperscript{1} x := !y;\textsuperscript{2} y := t\textsuperscript{3}
+let x = \textsuperscript{1}ref 1 in \textsuperscript{2}(\textsuperscript{4}g \textsuperscript{5}x); \textsuperscript{3}!x
   \end{BVerbatim}
 \end{center}
-The shadow semantics can be extended to support imperative features.
-We simply have to add shadows that correspond to \emph{dereferencing}, a semantic
-operation central to imperative programs.
 
-For this example, the environment and memory at each program point is
+The shadow semantics can be extended to support imperative features.
+\[\texttt{ref }e\text{ (allocation)}\quad x\texttt{ := }e\text{ (update)}\quad\texttt{!}x\text{ (dereference)}\]
+We only have to add a memory component, and a shadow for \emph{dereferencing}.
+
+In the above program, the environment and memory at $\ppoint_1$, $\ppoint_2$, and $\ppoint_3$ are
 \[
   \setlength{\arraycolsep}{2pt}
   \begin{array}{c|c|c}
-              & \text{Environment}                                      & \text{Memory}                                                                                                                                                                           \\
+              & \text{Environment}                                     & \text{Memory}                                                                                                       \\
+    \hline
+    \ppoint_1 & \langle\varnothing,\InitE\rangle                       & \langle\varnothing,\InitE\rangle                                                                                    \\
+    \ppoint_2 & \langle\{\texttt{x}\mapsto\abbrtext{a}\},\InitE\rangle & \langle\{\abbrtext{a}\mapsto 1\},\InitE\rangle\text{ where }\abbrtext{a}\in\Addr                                    \\
+    \ppoint_3 & \langle\{\texttt{x}\mapsto\abbrtext{a}\},\InitE\rangle & \langle\{\abbrtext{a}\mapsto \DerefAE(C,\abbrtext{a})\},C\rangle\text{ where }C=\CallE(\abbrtext{G},\abbrtext{a}|m)
+  \end{array}
+\]
+where
+\[\abbrtext{G}=\ReadE(\InitE,\texttt{g})\text{ and }m=\langle\{\abbrtext{a}\mapsto 1\},\InitE\rangle\]
+The notation $\CallE(\abbrtext{G},\abbrtext{a}|m)$ is inspired from conditional probability,
+and means that the shadow $\abbrtext{G}$ is called with argument $\abbrtext{a}$ \emph{given}
+memory $m$.
+
+The memory is a pair of (1) the set of bindings from addresses to values,
+and (2) the shadow that keeps track of unknown modifications to the memory.
+Here, the unknown function call $\CallE(\abbrtext{G},\abbrtext{a}|m)$
+modifies what was stored in $\abbrtext{a}$.
+
+\vspace{\topsep}
+\noindent\textbf{Notation.}
+We write $\Abs{\abbrtext{a}}_i$ to abstract the concrete location
+allocated at $\ppoint_i$.
+$\ppoint_i.\abbrtext{in}.\Abs\ctx$ denotes the input environment
+at $\ppoint_i$,
+and $\ppoint_i.\abbrtext{in}.\Abs\mem$ denotes the input memory.
+Likewise, $\ppoint_i.\abbrtext{out}.\Abs{v}$ denotes
+the output value at $\ppoint_i$,
+and $\ppoint_i.\abbrtext{out}.\Abs\mem$ denotes
+the output memory.
+The selectors $.\abbrtext{out}$, $.\Abs\ctx$, $.\Abs{v}$, and $.\Abs\mem$
+are omitted.
+
+\vspace{\topsep}
+Using the same na\"ive abstraction as before, the abstract result is
+\[\{\Abs{\DerefAE}(\ppoint_2,\ppoint_1)\}\quad(\text{abbreviated form of }\Abs\DerefAE(\ppoint_2.\abbrtext{out}.\Abs{m},\ppoint_1.\abbrtext{out}.\Abs{v}))\]
+where
+\begin{align*}
+  \ppoint_2.\abbrtext{out}.\Abs{v} :\{  & \Abs\CallE(\ppoint_4,\ppoint_5|\ppoint_5)\}                        &  &  & \ppoint_4.\abbrtext{out}.\Abs{v}:\{  & \Abs\ReadE(\ppoint_4.\abbrtext{in},\texttt{g})\}                      \\
+  \ppoint_2.\abbrtext{out}.\Abs\mem :\{ & \Abs\CallE(\ppoint_4,\ppoint_5|\ppoint_5),                         &  &  & \ppoint_5.\abbrtext{in}.\Abs\ctx :\{ & \Abs\InitE,\texttt{x}\mapsto\{\Abs{\abbrtext{a}}_1\}\}                \\
+                                        & \Abs{\abbrtext{a}}_1\mapsto\{\Abs\DerefAE(\ppoint_2,\ppoint_1)\}\} &  &  & \ppoint_5.\abbrtext{out}.\Abs{v}:\{  & \Abs{\abbrtext{a}}_1,\Abs\ReadE(\ppoint_5.\abbrtext{in},\texttt{x})\} \\
+  \ppoint_4.\abbrtext{in}.\Abs\ctx :\{  & \Abs\InitE,\texttt{x}\mapsto\{\Abs{\abbrtext{a}}_1\}\}             &  &  & \ppoint_5.\abbrtext{out}.\Abs\mem:\{ & \Abs\InitE,\Abs{\abbrtext{a}}_1\mapsto[1,1]_{\abbrtext{itv}}\}
+\end{align*}
+
+\paragraph{Example 4: Reading and Writing to Shadow Addresses}
+\begin{center}
+  \begin{BVerbatim}[commandchars=\\\{\}]
+let t = (!x)\textsuperscript{1} in (x := (!y)\textsuperscript{2})\textsuperscript{3}; (y := t)\textsuperscript{4}
+  \end{BVerbatim}
+\end{center}
+
+The addresses that are dereferenced and updated may also be shadows.
+Thus, the memory must store bindings from \emph{shadow addresses} to values.
+A shadow address is a \emph{set} consisting of one or less actual address and zero
+or more shadows that are aliases of the actual address.
+
+Upon exit at each program point marked above,
+\[
+  \setlength{\arraycolsep}{2pt}
+  \begin{array}{c|c|c}
+              & \text{Environment}                                      & \text{Possible Memories}                                                                                                                                                                \\
     \hline
     \ppoint_1 & \langle\{\texttt{t}\mapsto*\abbrtext{X}\},\InitE\rangle & \langle\{\{\abbrtext{X}\}\mapsto*\abbrtext{X}\},\InitE\rangle                                                                                                                           \\
-    \ppoint_2 & \langle\{\texttt{t}\mapsto*\abbrtext{X}\},\InitE\rangle & \langle\{\{\abbrtext{X},\abbrtext{Y}\}\mapsto*\abbrtext{X}\},\InitE\rangle\text{ or }\langle\{\{\abbrtext{X}\}\mapsto*\abbrtext{Y},\{\abbrtext{Y}\}\mapsto*\abbrtext{Y}\},\InitE\rangle \\
-    \ppoint_3 & \langle\{\texttt{t}\mapsto*\abbrtext{X}\},\InitE\rangle & \langle\{\{\abbrtext{X},\abbrtext{Y}\}\mapsto*\abbrtext{X}\},\InitE\rangle\text{ or }\langle\{\{\abbrtext{X}\}\mapsto*\abbrtext{Y},\{\abbrtext{Y}\}\mapsto*\abbrtext{X}\},\InitE\rangle
+    \ppoint_2 & \langle\{\texttt{t}\mapsto*\abbrtext{X}\},\InitE\rangle & \langle\{\{\abbrtext{X},\abbrtext{Y}\}\mapsto*\abbrtext{X}\},\InitE\rangle\text{ or }\langle\{\{\abbrtext{X}\}\mapsto*\abbrtext{X},\{\abbrtext{Y}\}\mapsto*\abbrtext{Y}\},\InitE\rangle \\
+    \ppoint_3 & \langle\{\texttt{t}\mapsto*\abbrtext{X}\},\InitE\rangle & \langle\{\{\abbrtext{X},\abbrtext{Y}\}\mapsto*\abbrtext{X}\},\InitE\rangle\text{ or }\langle\{\{\abbrtext{X}\}\mapsto*\abbrtext{Y},\{\abbrtext{Y}\}\mapsto*\abbrtext{Y}\},\InitE\rangle \\
+    \ppoint_4 & \langle\{\texttt{t}\mapsto*\abbrtext{X}\},\InitE\rangle & \langle\{\{\abbrtext{X},\abbrtext{Y}\}\mapsto*\abbrtext{X}\},\InitE\rangle\text{ or }\langle\{\{\abbrtext{X}\}\mapsto*\abbrtext{Y},\{\abbrtext{Y}\}\mapsto*\abbrtext{X}\},\InitE\rangle
   \end{array}
 \]
 where
@@ -167,26 +228,50 @@ where
   \abbrtext{X}=\ReadE(\InitE,\texttt{x})\quad\abbrtext{Y}=\ReadE(\InitE,\texttt{y})\quad*\!S=\DerefSE(\InitE,S)\text{ for shadow }S
 \end{align*}
 
-The memory is represented by a tuple holding the bindings for each concrete address
-and the most recent shadow that affected the memory.
-The concrete address consists of addresses that are allocated during the execution
-of the program, and the \emph{alias set} of shadows.
-The alias set is updated each time there is a read or a write to a shadow address,
-and the memory retains the invariant that the alias sets must be mutually disjoint.
-In the above example, the alias set is updated when the memory is dereferenced with
-$\abbrtext{X}$ and $\abbrtext{Y}$. The resulting memory depends on aliasing, as expected.
+Unlike the previous example, there are multiple memories possible after
+execution. Each memory represents different aliasing assumptions.
+For example, $\langle\{\{\abbrtext{X},\abbrtext{Y}\}\mapsto\_\},\_\rangle$
+encodes the assumption that \texttt{x} and \texttt{y} are aliases.
 
-The ``most recent shadow'' must be recorded due to unresolved function calls.
-For example, if there is a call to a \emph{shadow} $\abbrtext{G}$ with argument $v$ under memory
-\[m=\langle\{(a_1,\{S_1,S_2\})\mapsto v_1,\{S_3\}\mapsto v_2\},S_4\rangle\]
-the memory will be updated to
-\[\langle\{(a_1,\{S_1,S_2\})\mapsto\DerefAE(\abbrtext{C},a_1),\{S_3\}\mapsto\DerefSE(\abbrtext{C},S_3)\},\abbrtext{C}\rangle\]
+Computing an abstraction of the shadow memory is an interesting
+problem. One must retain some information about the aliasing
+\emph{invariant} that is maintained throughout the execution of the
+program to avoid degenerating to a meaningless analysis.
+
+One traditional way is by assuming a partition of variables that
+distinguishes variables that must-not-alias.
+For the above program, we may assume the invariant that \texttt{x} and
+\texttt{y} must not alias.
+
+\vspace{\topsep}
+\noindent\textbf{Notation.}
+The memory is abstracted by a set of abstract shadows and
+abstract bindings of the form $*x\mapsto(\text{set of abstract values})$.
+The abstract shadow $\Abs\DerefAE(\ppoint_i,x)$ concretizes to
+$\DerefAE(S,\ctx(x))$, where $S$ is abstracted by $\ppoint_i.\abbrtext{in}.\Abs\mem$
+and $\ctx$ is abstracted by $\ppoint_i.\abbrtext{in}.\Abs\ctx$.
+
+\vspace{\topsep}
+Assuming a flow-sensitive analysis
+that allows strong updates when the updated variable can have only
+one concrete address,
+\[
+  \setlength{\arraycolsep}{2pt}
+  \begin{array}{c|c|c}
+                             & .\Abs\ctx                                               & .\Abs\mem                                                                                          \\
+    \hline
+    \ppoint_2.\abbrtext{in}  & \{\texttt{t}\mapsto\{*\Abs{\abbrtext{X}}\},\Abs\InitE\} & \{*\texttt{x}\mapsto\{*\Abs{\abbrtext{X}}\},\Abs\InitE\}                                           \\
+    \ppoint_3.\abbrtext{in}  & \{\texttt{t}\mapsto\{*\Abs{\abbrtext{X}}\},\Abs\InitE\} & \{*\texttt{x}\mapsto\{*\Abs{\abbrtext{X}}\},*\texttt{y}\mapsto\{*\Abs{\abbrtext{Y}}\},\Abs\InitE\} \\
+    \ppoint_4.\abbrtext{in}  & \{\texttt{t}\mapsto\{*\Abs{\abbrtext{X}}\},\Abs\InitE\} & \{*\texttt{x}\mapsto\{*\Abs{\abbrtext{Y}}\},*\texttt{y}\mapsto\{*\Abs{\abbrtext{Y}}\},\Abs\InitE\} \\
+    \ppoint_4.\abbrtext{out} & -                                                       & \{*\texttt{x}\mapsto\{*\Abs{\abbrtext{Y}}\},*\texttt{y}\mapsto\{*\Abs{\abbrtext{X}}\},\Abs\InitE\}
+  \end{array}
+\]
 where
-\[\abbrtext{C}=\CallE(\abbrtext{G},v|m)\quad(m\text{ records that the call happened under memory }m)\]
-
-For efficient abstraction of the shadow semantics, one may employ widening.
-For instance, each shadow in the alias sets may be kept in its concrete form
-up until some threshold. After that, the memory may be collapsed to prevent blowup.
+\[*\Abs{\abbrtext{X}}=\Abs\DerefAE(\ppoint_1,\texttt{x})\quad *\Abs{\abbrtext{Y}}=\Abs\DerefAE(\ppoint_2,\texttt{y})\]
+The aliasing assumption is used at $\ppoint_2$, where dereferencing \texttt{y}
+doesn't include the value pointed by $\texttt{x}$.
+Strong updates are possible, since \texttt{x} concretizes only to $\ReadE(\InitE,\texttt{x})$,
+and \texttt{y} concretizes only to $\ReadE(\InitE,\texttt{y})$ throughout the analysis.
 
 \subsection{Examples of Linking and its Abstraction}
 The shadow semantics become actual when the involved free variables
@@ -194,7 +279,7 @@ are known at link time. The linking semantics, the semantics of the link
 operation, defines this actualization operation. For the above fragments, let's
 consider that a closing fragment is available.
 
-\paragraph{Example 4: Module Exporting a Known Function}
+\paragraph{Example 5: Module Exporting a User-Defined Function}
 \begin{center}
   \begin{BVerbatim}[commandchars=\\\{\}]
 let g = \textsuperscript{7}fun x -> x + 1
@@ -222,7 +307,7 @@ Applying a sound abstract version of the linking operator will result in
   \ppoint_3.\abbrtext{out} & :\{\langle\lambda\texttt{x}.\texttt{x + 1},\ppoint_7.\abbrtext{in}\rangle\} &  &  &
 \end{align*}
 
-\paragraph{Example 5: Module Exporting a Foreign Function}
+\paragraph{Example 6: Module Exporting a Foreign Function}
 \begin{center}
   \begin{BVerbatim}
 external g : int -> int = "incr"
@@ -246,7 +331,7 @@ Applying a sound abstract version of the linking operator will result in
   \ppoint_3.\abbrtext{out} & :\{\textsf{Prim}(\texttt{incr})\}
 \end{align*}
 
-\paragraph{Example 6: Partial Resolution}
+\paragraph{Example 7: Partial Resolution of Shadows}
 \begin{center}
   \begin{BVerbatim}[commandchars=\\\{\}]
 let lst = \textsuperscript{7}1 :: \textsuperscript{8}(\textsuperscript{9}2 :: \textsuperscript{10}(\textsuperscript{11}3 :: \textsuperscript{12}[]))
@@ -264,7 +349,7 @@ where
   \abbrtext{G}=\ReadE(\InitE,\texttt{g})
 \]
 
-The reason for this imprecision is because the concrete shadows dropped some constraints.
+The reason for this imprecision is because some information is forgotten.
 For example, the output of Example 2 can be $[]$ if and only if
 $\abbrtext{Lst}$ is matched with $[]$. To prevent this, shadows may be augmented with
 constraints, such as $\textsf{Matched}(\abbrtext{Lst},[])$, but we elide this detail
@@ -281,6 +366,45 @@ The sound abstraction for $\ctx$ is
 The result of linking $\Abs\ctx$ to the abstract shadow in Example 2
 is equivalent to the result of Example 1. This means that the
 shadows can be filled in \emph{incrementally}.
+
+\paragraph{Example 8: Linking into Memory}
+\begin{center}
+  \begin{BVerbatim}[commandchars=\\\{\}]
+let x = \textsuperscript{5}ref 1
+let y = \textsuperscript{6}ref 2
+  \end{BVerbatim}
+\end{center}
+
+Assume we want to link this module with Example 4.
+The environment and memory exported by this module are
+\[\ctx=\{\texttt{x}\mapsto a_5,\texttt{y}\mapsto a_6\}\quad\mem=\{\{a_5\}\mapsto 1,\{a_6\}\mapsto 2\}\quad\text{where }a_5\neq a_6\]
+Linking is extended, where linking an input environment and memory
+with a shadow results in an output value and memory.
+
+Since the result of linking into $\abbrtext{X}=\ReadE(\InitE,\texttt{x})$ and
+$\abbrtext{Y}=\ReadE(\InitE,\texttt{y})$ are different,
+only the memories where $\abbrtext{X}$ and $\abbrtext{Y}$ are kept
+separate are resolved.
+The result of concrete linking is thus:
+\[
+  \setlength{\arraycolsep}{2pt}
+  \begin{array}{c|c|c}
+              & \text{Environment}                                      & \text{Possible Memories}                                                                                                                                                                \\
+    \hline
+    \ppoint_4 & \{\texttt{t}\mapsto 1\} & \{\{a_5\}\mapsto 2,\{a_6\}\mapsto 1\}
+  \end{array}
+\]
+
+To link with the abstract memory in Example 4, the module
+must be analyzed under the same assumptions.
+Namely, \texttt{x} and \texttt{y} should be always assumed
+to be not aliasing.
+Under this assumption,
+\[
+  \Abs\ctx=\{\texttt{x}\mapsto\{\Abs{a}_5\},\texttt{y}\mapsto\{\Abs{a}_6\}\}\quad
+  \Abs\mem=\{*\texttt{x}\mapsto[1,1]_{\abbrtext{itv}},*\texttt{y}\mapsto[2,2]_{\abbrtext{itv}}\}
+\]
+and linking results in the expected behavior.
 
 \subsection{Paper Overview}
 We present our framework for a call-by-value lambda calculus extended
