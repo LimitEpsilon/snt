@@ -14,8 +14,8 @@ Class ExpSYM repr :=
     add : repr -> repr -> repr
   }.
 
-Definition tf1 := fun {repr : Type} `{ExpSYM repr} =>
-  add (lit 8) (neg (add (lit 1) (lit 2))).
+Definition tf1 := fun {repr : Type} `{inst : ExpSYM repr} =>
+  inst.(add) (lit 8) (neg (add (lit 1) (lit 2))).
 
 Class MulSYM repr :=
   {
@@ -146,15 +146,17 @@ Fixpoint step (e : tm) (σ : string -> option val) (k : val -> dom) : dom :=
   | var x => match σ x with None => Halt None | Some v => k v end
   | lam x e => k (clos x e σ)
   | app e1 e2 =>
-    step e1 σ (fun v1 =>
-      match v1 with
-      | clos x e σ1 =>
-        step e2 σ (fun v2 =>
-        Continue e (fun x' => if String.eqb x x' then Some v2 else σ1 x') k)
-      end)
+    let k1 v1 := match v1 with
+    | clos x e σ1 =>
+      let k2 v2 :=
+        let σ' x' := if x =? x' then Some v2 else σ1 x'
+        in Continue e σ' k
+      in step e2 σ k2
+    end in step e1 σ k1
   end.
 
 Definition id_tm := lam "x" (var "x").
+Definition omega_tm := lam "x" (app (var "x") (var "x")).
 
 Fixpoint eval_cont e σ k (n : nat) :=
   match step e σ k with
@@ -168,5 +170,6 @@ Fixpoint eval_cont e σ k (n : nat) :=
 
 Definition eval e n := eval_cont e (fun _ => None) (fun v => Halt (Some v)) n.
 
-Compute eval (app (app id_tm id_tm) id_tm) 2.
+Compute eval (app id_tm id_tm) 3.
+Compute eval (app omega_tm omega_tm) 3.
 

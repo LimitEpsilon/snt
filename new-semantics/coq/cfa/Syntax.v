@@ -1,30 +1,18 @@
+From Basics Require Import Basics.
+From With_events Require Import Syntax.
 Set Primitive Projections.
 
 Section syntax.
-  Context {var lbl : Type}.
-
-  (* labelled term *)
-  Variant ltm :=
-  | ltm_var (x : var)
-  | ltm_lam (x : var) (p' : lbl)
-  | ltm_app (p1 p2 : lbl)
-  | ltm_link (p1 p2 : lbl)
-  | ltm_mt
-  | ltm_bind (x : var) (p1 p2 : lbl)
-  .
-
-  Variant lval :=
-  | lv_fn (x : var) (p : lbl)
-  .
+  Context {var lbl : Type} `{EqVar : Eq var} `{EqLbl : Eq lbl}.
 
   Variant avnt :=
   | AInit
-  | ARead (p : lbl) (x : var)
-  | ACall (p1 p2 : lbl)
+  | ARead (p : @ltm var lbl) (x : var)
+  | ACall (p1 p2 : @ltm var lbl)
   .
 
   Record abs_env := mkEnv {
-    _β : var -> list lbl;
+    _β : var -> list (@ltm var lbl);
     _E : list avnt;
   }.
 
@@ -32,7 +20,7 @@ Section syntax.
 
   Record abs_val := mkVal {
     _σ : abs_env;
-    _λ : list (lval * lbl);
+    _λ : list (@val var lbl * lbl);
   }.
 
   Definition aval_bot := {| _σ := aenv_bot; _λ := nil |}.
@@ -42,7 +30,7 @@ Section syntax.
     _o : option abs_val;
   }.
 
-  Definition abs_sem : Type := lbl -> io.
+  Definition abs_sem : Type := @ltm var lbl -> io.
 
   Definition asem_bot : abs_sem := fun _ => {| _i := None; _o := None |}.
 End syntax.

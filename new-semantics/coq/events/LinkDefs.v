@@ -18,8 +18,8 @@ Section LinkDefs.
 
   (* local coercions were for this definition *)
   (* definition of linking *)
-  Inductive link `{Eq loc} `{Eq lbl} `{Eq var} (σ0 : nv var lbl loc val) :
-    wvl var lbl loc (@val var lbl) -> wvl var lbl loc (@val var lbl) -> Prop :=
+  Inductive link `{Eq loc} `{Eq lbl} `{Eq var} (σ0 : nv var (@ltm var lbl) loc val) :
+    wvl var (@ltm var lbl) loc (@val var lbl) -> wvl var (@ltm var lbl) loc (@val var lbl) -> Prop :=
   | link_Init
   : link σ0 Init σ0
   | link_Read E x (σ : nv _ _ _ _) w

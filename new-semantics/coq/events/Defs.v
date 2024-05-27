@@ -1,4 +1,5 @@
 From Basics Require Import Basics.
+From With_events Require Import Syntax.
 
 Section PreDefs.
   Context {var lbl loc lang : Type}.
@@ -340,6 +341,62 @@ Section LCDefs.
 
   Combined Scheme val_ind from wvalue_ind_mut, env_ind_mut, value_ind_mut, event_ind_mut.
 End LCDefs.
+
+Section eqb.
+  Context {var lbl} `{EqVar : Eq var} `{EqLbl : Eq lbl}.
+
+  Fixpoint eqb_tm (t1 t2 : @tm var lbl) :=
+    match t1, t2 with
+    | tm_var x1, tm_var x2 => eqb x1 x2
+    | tm_lam x1 t1, tm_lam x2 t2 => eqb x1 x2 && eqb_ltm t1 t2
+    | tm_app t11 t12, tm_app t21 t22 =>
+      eqb_ltm t11 t21 && eqb_ltm t12 t22
+    | tm_link t11 t12, tm_link t21 t22 =>
+      eqb_ltm t11 t21 && eqb_ltm t12 t22
+    | tm_mt, tm_mt => true
+    | tm_bind x1 t11 t12, tm_bind x2 t21 t22 =>
+      eqb x1 x2 && eqb_ltm t11 t21 && eqb_ltm t12 t22
+    | _, _ => false
+    end
+
+  with eqb_ltm (t1 t2 : @ltm var lbl) :=
+    match t1, t2 with
+    | lblled p1 t1, lblled p2 t2 =>
+      eqb p1 p2 && eqb_tm t1 t2
+    end.
+
+  Lemma eqb_term :
+    (forall t1 t2, eqb_tm t1 t2 = true <-> t1 = t2) /\
+    (forall t1 t2, eqb_ltm t1 t2 = true <-> t1 = t2).
+  Proof.
+    apply term_ind; ii; split; ii;
+    match goal with
+    | |- _ = true =>
+      repeat rrw; s; try rewrite eqb_refl; s;
+      repeat rw; try reflexivity;
+      rewrite andb_true_iff; split; rw; reflexivity
+    | RR : _ _ ?t = true |- _ =>
+      destruct t; ss; repeat des_hyp;
+      f_equal;
+      first [eqb2eq var | eqb2eq loc | eqb2eq lbl | rrw]; auto;
+      rrw; auto
+    end.
+  Qed.
+End eqb.
+
+#[export, refine] Instance EqTm {var lbl} `{EqVar : Eq var} `{EqLbl : Eq lbl} : Eq (@tm var lbl) :=
+{
+  eqb := @eqb_tm var lbl EqVar EqLbl;
+}.
+  apply eqb_term.
+Defined.
+
+#[export, refine] Instance EqLtm {var lbl} `{EqVar : Eq var} `{EqLbl : Eq lbl} : Eq (@ltm var lbl) :=
+{
+  eqb := @eqb_ltm var lbl EqVar EqLbl;
+}.
+  apply eqb_term.
+Defined.
 
 Definition update {loc T} `{Eq loc} (f : loc -> option T) ℓ ℓ' ℓ_param :=
   if eqb ℓ ℓ_param then Some ℓ' else f ℓ_param.

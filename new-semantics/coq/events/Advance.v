@@ -16,8 +16,8 @@ Section Advance.
   #[local] Coercion wvl_v : vl >-> wvl.
 
   Lemma advance_Eval `{Eq var} `{Eq lbl} `{Name loc} 
-    (σ0 σ' : nv var lbl loc _) (Σ0 : env σ0) v' t (EVAL : σ' ⊢ t ⇓ v') :
-    forall (σ : nv var lbl loc _) (LINK : σ0 ⋊ σ ∋ σ'),
+    (σ0 σ' : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) v' t (EVAL : σ' ⊢ t ⇓ v') :
+    forall (σ : nv var (@ltm var lbl) loc _) (LINK : σ0 ⋊ σ ∋ σ'),
       exists v, (σ ⊢ t ⇓ v) /\ (σ0 ⋊ v ∋ v').
   Proof.
     induction EVAL; ii; ss.
@@ -87,21 +87,23 @@ Section Advance.
       eapply link_lc' in LINK as Σ1. inv Σ1. inv VAL.
       eapply eval_lc' in EVAL1 as V1; try solve [econstructor; eauto].
       assert (forall ℓ p' (FREE : ~ In ℓ (floc_nv σ1)),
-        open_loc_vl 0 (ℓ, p') (close_vl 0 (ν, get_lbl t1) v1') = subst_loc_vl (ℓ, p') (ν, get_lbl t1) v1') as RR.
+        open_loc_vl 0 (ℓ, p') (close_vl 0 (ν, t1) v1') = subst_loc_vl (ℓ, p') (ν, t1) v1') as RR.
       { intros.
         assert (close_open_loc_eq_vl v1') by eapply close_open_loc_eq. rw.
         assert (open_loc_lc_vl v1' V1) by (eapply open_loc_lc; eauto). rw.
         reflexivity. }
       assert (forall ℓ p' (FREE : ~ In ℓ (floc_nv σ1)),
-        (nv_floc x (ℓ, p') σ1 ⊢ t1 ⇓ open_loc_vl 0 (ℓ, p') (close_vl 0 (ν, get_lbl t1) v1'))).
-      { intros. apply eval_subst_loc' with (ν := (ℓ, p')) (ℓ' := (ν, get_lbl t1)) in EVAL1.
-        ss. repeat rewrite eqb_refl in EVAL1. ss.
+        (nv_floc x (ℓ, p') σ1 ⊢ t1 ⇓ open_loc_vl 0 (ℓ, p') (close_vl 0 (ν, t1) v1'))).
+      { intros. apply eval_subst_loc' with (ν := (ℓ, p')) (ℓ' := (ν, t1)) in EVAL1.
+        ss. assert (@eqb_ltm var lbl _ _ = eqb) as HINT by reflexivity.
+        rewrite HINT in *.
+        repeat rewrite eqb_refl in EVAL1. ss.
         assert (RR' : subst_loc_fresh_nv σ1) by eapply subst_loc_fresh.
         rewrite RR' in EVAL1; eauto.
         rewrite RR; eauto. }
       assert (forall ℓ p' (FREE : ~ In ℓ (floc_nv σ1)),
-        σ0 ⋊ open_loc_vl 0 (ℓ, p') (close_vl 0 (ν, get_lbl t1) v1') ∋ open_loc_vl 0 (ℓ, p') v1).
-      { intros. apply link_subst_loc' with (ν := (ℓ, p')) (ℓ' := (ν, get_lbl t1)) in LINK1; eauto.
+        σ0 ⋊ open_loc_vl 0 (ℓ, p') (close_vl 0 (ν, t1) v1') ∋ open_loc_vl 0 (ℓ, p') v1).
+      { intros. apply link_subst_loc' with (ν := (ℓ, p')) (ℓ' := (ν, t1)) in LINK1; eauto.
         assert (open_loc_subst_loc_vl v1) as RR' by eapply open_loc_subst_loc.
         simpl in LINK1. rewrite RR' in LINK1. clear RR'.
         repeat rewrite eqb_refl in LINK1. ss.
@@ -110,17 +112,17 @@ Section Advance.
         rewrite RR' in LINK1; eauto. clear RR'.
         assert (subst_loc_fresh_vl v1) as RR' by eapply subst_loc_fresh.
         rewrite RR' in LINK1; eauto. }
-      assert (σ0 ⋊ wvl_recv (get_lbl t1) (close_vl 0 (ν, get_lbl t1) v1') ∋ wvl_recv (get_lbl t1) v1).
+      assert (σ0 ⋊ wvl_recv t1 (close_vl 0 (ν, t1) v1') ∋ wvl_recv t1 v1).
       { econstructor; eauto. }
-      exploit (IHEVAL (nv_bval x (wvl_recv (get_lbl t1) (close_vl 0 (ν, get_lbl t1) v1')) σ1)).
+      exploit (IHEVAL (nv_bval x (wvl_recv t1 (close_vl 0 (ν, t1) v1')) σ1)).
       + econstructor; eauto.
       + intros (v2' & EVAL2 & LINK2).
         destruct v2'; try solve [inv LINK2].
-        * exists (nv_bval x (wvl_recv (get_lbl t1) (close_vl 0 (ν, get_lbl t1) v1')) (nv_ev E)).
+        * exists (nv_bval x (wvl_recv t1 (close_vl 0 (ν, t1) v1')) (nv_ev E)).
           split. eapply ev_bindevent'; eauto.
           econstructor; eauto.
           econstructor; eauto.
-        * exists (nv_bval x (wvl_recv (get_lbl t1) (close_vl 0 (ν, get_lbl t1) v1')) σ3).
+        * exists (nv_bval x (wvl_recv t1 (close_vl 0 (ν, t1) v1')) σ3).
           split. econstructor; eauto.
           econstructor; eauto.
     - gensym_tac (L ++ floc_nv σ0 ++ floc_nv σ1 ++ floc_vl v1) ν.
@@ -133,21 +135,23 @@ Section Advance.
       eapply link_lc' in LINK as Σ1. inv Σ1. inv VAL.
       eapply eval_lc' in EVAL1 as V1; try solve [econstructor; eauto].
       assert (forall ℓ p' (FREE : ~ In ℓ (floc_nv σ1)),
-        open_loc_vl 0 (ℓ, p') (close_vl 0 (ν, get_lbl t1) v1') = subst_loc_vl (ℓ, p') (ν, get_lbl t1) v1') as RR.
+        open_loc_vl 0 (ℓ, p') (close_vl 0 (ν, t1) v1') = subst_loc_vl (ℓ, p') (ν, t1) v1') as RR.
       { intros.
         assert (close_open_loc_eq_vl v1') by eapply close_open_loc_eq. rw.
         assert (open_loc_lc_vl v1' V1) by (eapply open_loc_lc; eauto). rw.
         reflexivity. }
       assert (forall ℓ p' (FREE : ~ In ℓ (floc_nv σ1)),
-        (nv_floc x (ℓ, p') σ1 ⊢ t1 ⇓ open_loc_vl 0 (ℓ, p') (close_vl 0 (ν, get_lbl t1) v1'))).
-      { intros. apply eval_subst_loc' with (ν := (ℓ, p')) (ℓ' := (ν, get_lbl t1)) in EVAL1.
-        ss. repeat rewrite eqb_refl in EVAL1. ss.
+        (nv_floc x (ℓ, p') σ1 ⊢ t1 ⇓ open_loc_vl 0 (ℓ, p') (close_vl 0 (ν, t1) v1'))).
+      { intros. apply eval_subst_loc' with (ν := (ℓ, p')) (ℓ' := (ν, t1)) in EVAL1.
+        ss. assert (@eqb_ltm var lbl _ _ = eqb) as HINT by reflexivity.
+        rewrite HINT in *.
+        repeat rewrite eqb_refl in EVAL1. ss.
         assert (RR' : subst_loc_fresh_nv σ1) by eapply subst_loc_fresh.
         rewrite RR' in EVAL1; eauto.
         rewrite RR; eauto. }
       assert (forall ℓ p' (FREE : ~ In ℓ (floc_nv σ1)),
-        σ0 ⋊ open_loc_vl 0 (ℓ, p') (close_vl 0 (ν, get_lbl t1) v1') ∋ open_loc_vl 0 (ℓ, p') v1).
-      { intros. apply link_subst_loc' with (ν := (ℓ, p')) (ℓ' := (ν, get_lbl t1)) in LINK1; eauto.
+        σ0 ⋊ open_loc_vl 0 (ℓ, p') (close_vl 0 (ν, t1) v1') ∋ open_loc_vl 0 (ℓ, p') v1).
+      { intros. apply link_subst_loc' with (ν := (ℓ, p')) (ℓ' := (ν, t1)) in LINK1; eauto.
         assert (open_loc_subst_loc_vl v1) as RR' by eapply open_loc_subst_loc.
         simpl in LINK1. rewrite RR' in LINK1. clear RR'.
         repeat rewrite eqb_refl in LINK1. ss.
@@ -156,13 +160,13 @@ Section Advance.
         rewrite RR' in LINK1; eauto. clear RR'.
         assert (subst_loc_fresh_vl v1) as RR' by eapply subst_loc_fresh.
         rewrite RR' in LINK1; eauto. }
-      assert (σ0 ⋊ wvl_recv (get_lbl t1) (close_vl 0 (ν, get_lbl t1) v1') ∋ wvl_recv (get_lbl t1) v1).
+      assert (σ0 ⋊ wvl_recv t1 (close_vl 0 (ν, t1) v1') ∋ wvl_recv t1 v1).
       { econstructor; eauto. }
-      exploit (IHEVAL (nv_bval x (wvl_recv (get_lbl t1) (close_vl 0 (ν, get_lbl t1) v1')) σ1)).
+      exploit (IHEVAL (nv_bval x (wvl_recv t1 (close_vl 0 (ν, t1) v1')) σ1)).
       + econstructor; eauto.
       + intros (v2' & EVAL2 & LINK2).
         destruct v2'; try solve [inv LINK2].
-        exists (nv_bval x (wvl_recv (get_lbl t1) (close_vl 0 (ν, get_lbl t1) v1')) (nv_ev E)).
+        exists (nv_bval x (wvl_recv t1 (close_vl 0 (ν, t1) v1')) (nv_ev E)).
         split. eapply ev_bindevent'; eauto.
         econstructor; eauto.
         eapply link_holeEvent'.
@@ -170,8 +174,8 @@ Section Advance.
   Qed.
 
   Theorem advance `{Eq var} `{Eq lbl} `{Name loc}
-    (σ0 σ' : nv var lbl loc _) (Σ0 : env σ0) v' t (EVAL : eval σ' t v') :
-    forall (σ : nv var lbl loc _) (LINK : link σ0 σ σ'),
+    (σ0 σ' : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) v' t (EVAL : eval σ' t v') :
+    forall (σ : nv var (@ltm var lbl) loc _) (LINK : link σ0 σ σ'),
       exists v, eval σ t v /\ link σ0 v v'.
   Proof.
     intros.

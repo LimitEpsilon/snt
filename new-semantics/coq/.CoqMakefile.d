@@ -25,9 +25,9 @@ sim/Syntax.vos sim/Syntax.vok sim/Syntax.required_vos: sim/Syntax.v
 events/Advance.vo events/Advance.glob events/Advance.v.beautified events/Advance.required_vo: events/Advance.v basics/Basics.vo events/Defs.vo events/Syntax.vo events/SubstFacts.vo events/EnvSemantics.vo events/EquivSemantics.vo events/LinkDefs.vo events/LinkFacts.vo events/EquivLink.vo
 events/Advance.vio: events/Advance.v basics/Basics.vio events/Defs.vio events/Syntax.vio events/SubstFacts.vio events/EnvSemantics.vio events/EquivSemantics.vio events/LinkDefs.vio events/LinkFacts.vio events/EquivLink.vio
 events/Advance.vos events/Advance.vok events/Advance.required_vos: events/Advance.v basics/Basics.vos events/Defs.vos events/Syntax.vos events/SubstFacts.vos events/EnvSemantics.vos events/EquivSemantics.vos events/LinkDefs.vos events/LinkFacts.vos events/EquivLink.vos
-events/Defs.vo events/Defs.glob events/Defs.v.beautified events/Defs.required_vo: events/Defs.v basics/Basics.vo
-events/Defs.vio: events/Defs.v basics/Basics.vio
-events/Defs.vos events/Defs.vok events/Defs.required_vos: events/Defs.v basics/Basics.vos
+events/Defs.vo events/Defs.glob events/Defs.v.beautified events/Defs.required_vo: events/Defs.v basics/Basics.vo events/Syntax.vo
+events/Defs.vio: events/Defs.v basics/Basics.vio events/Syntax.vio
+events/Defs.vos events/Defs.vok events/Defs.required_vos: events/Defs.v basics/Basics.vos events/Syntax.vos
 events/EnvSemantics.vo events/EnvSemantics.glob events/EnvSemantics.v.beautified events/EnvSemantics.required_vo: events/EnvSemantics.v basics/Basics.vo events/Defs.vo events/Syntax.vo events/SubstFacts.vo
 events/EnvSemantics.vio: events/EnvSemantics.v basics/Basics.vio events/Defs.vio events/Syntax.vio events/SubstFacts.vio
 events/EnvSemantics.vos events/EnvSemantics.vok events/EnvSemantics.required_vos: events/EnvSemantics.v basics/Basics.vos events/Defs.vos events/Syntax.vos events/SubstFacts.vos
@@ -52,6 +52,6 @@ events/Syntax.vos events/Syntax.vok events/Syntax.required_vos: events/Syntax.v
 cfa/Defs.vo cfa/Defs.glob cfa/Defs.v.beautified cfa/Defs.required_vo: cfa/Defs.v basics/Basics.vo events/Syntax.vo events/Defs.vo events/EnvSemantics.vo cfa/Syntax.vo
 cfa/Defs.vio: cfa/Defs.v basics/Basics.vio events/Syntax.vio events/Defs.vio events/EnvSemantics.vio cfa/Syntax.vio
 cfa/Defs.vos cfa/Defs.vok cfa/Defs.required_vos: cfa/Defs.v basics/Basics.vos events/Syntax.vos events/Defs.vos events/EnvSemantics.vos cfa/Syntax.vos
-cfa/Syntax.vo cfa/Syntax.glob cfa/Syntax.v.beautified cfa/Syntax.required_vo: cfa/Syntax.v 
-cfa/Syntax.vio: cfa/Syntax.v 
-cfa/Syntax.vos cfa/Syntax.vok cfa/Syntax.required_vos: cfa/Syntax.v 
+cfa/Syntax.vo cfa/Syntax.glob cfa/Syntax.v.beautified cfa/Syntax.required_vo: cfa/Syntax.v basics/Basics.vo events/Syntax.vo
+cfa/Syntax.vio: cfa/Syntax.v basics/Basics.vio events/Syntax.vio
+cfa/Syntax.vos cfa/Syntax.vok cfa/Syntax.required_vos: cfa/Syntax.v basics/Basics.vos events/Syntax.vos

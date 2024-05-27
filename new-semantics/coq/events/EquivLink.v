@@ -16,8 +16,8 @@ Section EquivLink.
 
   (* local coercions were for this definition *)
   (* definition of Linking *)
-  Inductive link' `{Eq var} `{Eq lbl} `{Eq loc} (σ0 : nv var lbl loc val) :
-    wvl var lbl loc (@val var lbl) -> wvl var lbl loc (@val var lbl) -> Prop :=
+  Inductive link' `{Eq var} `{Eq lbl} `{Eq loc} (σ0 : nv var (@ltm var lbl) loc val) :
+    wvl var (@ltm var lbl) loc (@val var lbl) -> wvl var (@ltm var lbl) loc (@val var lbl) -> Prop :=
   | link_Init'
   : link' σ0 Init σ0
   | link_Read' E x (σ : nv _ _ _ _) w
@@ -58,7 +58,7 @@ Section EquivLink.
   .
 
   #[local] Lemma equiv_link_l `{Eq var} `{Eq lbl} `{Name loc}
-    (σ0 : nv var lbl loc val) (Σ0 : env σ0) w w' (LINK : link σ0 w w') :
+    (σ0 : nv var (@ltm var lbl) loc val) (Σ0 : env σ0) w w' (LINK : link σ0 w w') :
     forall φ (INJ : oto φ),
       link' (map_nv φ σ0) (map_wvl φ w) (map_wvl φ w').
   Proof.
@@ -136,7 +136,7 @@ Section EquivLink.
   Qed.
 
   #[local] Lemma equiv_link_r `{Eq var} `{Eq lbl} `{Name loc}
-    (σ0 : nv var lbl loc _) (Σ0 : env σ0) w w' (LINK : link' σ0 w w') :
+    (σ0 : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) w w' (LINK : link' σ0 w w') :
     link σ0 w w'.
   Proof.
     induction LINK; ii; ss;
@@ -156,7 +156,7 @@ Section EquivLink.
   Qed.
 
   Lemma equiv_link `{Eq var} `{Eq lbl} `{Name loc}
-    (σ0 : nv var lbl loc _) (Σ0 : env σ0) w w' :
+    (σ0 : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) w w' :
     link σ0 w w' <-> link' σ0 w w'.
   Proof.
     split; intro LINK.
@@ -178,7 +178,7 @@ Section EquivLink.
     | L : list _ |- _ => instantiate (1 := L)
     end.
   
-  Lemma link_lc' `{Eq var} `{Eq lbl} `{Eq loc} (σ0 : nv var lbl loc _) (w : wvl var lbl loc _) :
+  Lemma link_lc' `{Eq var} `{Eq lbl} `{Eq loc} (σ0 : nv var (@ltm var lbl) loc _) (w : wvl var _ loc _) :
     forall w' (LINK : link' σ0 w w'), wvalue w.
   Proof.
     ii. induction LINK;
@@ -201,7 +201,7 @@ Section EquivLink.
     end.
   
   Lemma linked_lc' `{Eq var} `{Eq lbl} `{Name loc}
-    (σ0 : nv var lbl loc _) (Σ0 : env σ0) (w : wvl var lbl loc _) :
+    (σ0 : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) (w : wvl var _ loc _) :
     forall w' (LINK : link' σ0 w w'), wvalue w'.
   Proof.
     ii. induction LINK;
@@ -223,7 +223,7 @@ Section EquivLink.
   Qed.
   
   Lemma link_subst_loc' `{Eq var} `{Eq lbl} `{Name loc}
-    (σ0 : nv var lbl loc _) (w w' : wvl var lbl loc _) (LINK : link' σ0 w w') :
+    (σ0 : nv var (@ltm var lbl) loc _) (w w' : wvl var _ loc _) (LINK : link' σ0 w w') :
     forall ν ℓ',
       link' (subst_loc_nv ν ℓ' σ0) (subst_loc_wvl ν ℓ' w) (subst_loc_wvl ν ℓ' w').
   Proof.
@@ -251,7 +251,7 @@ Section EquivLink.
   Qed.
  
   Lemma link_subst_wvl' `{Eq var} `{Eq lbl} `{Name loc}
-    (σ0 : nv var lbl loc _) (Σ0 : env σ0) (w w' : wvl var lbl loc _) (LINK : link' σ0 w w') :
+    (σ0 : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) (w w' : wvl var _ loc _) (LINK : link' σ0 w w') :
     forall u u' (LINKu : link' σ0 u u') ℓ' p' (nIN : ~ In ℓ' (floc_nv σ0)),
       link' σ0 (subst_wvl_wvl u (ℓ', p') w) (subst_wvl_wvl u' (ℓ', p') w').
   Proof.
@@ -284,7 +284,7 @@ Section EquivLink.
   Qed.
     
   Lemma link_vl' `{Eq var} `{Eq lbl} `{Eq loc}
-    (σ0 : nv var lbl loc _) (v : vl var lbl loc _) w (LINK : link' σ0 v w) :
+    (σ0 : nv var (@ltm var lbl) loc _) (v : vl var _ loc _) w (LINK : link' σ0 v w) :
     match w with
     | wvl_v _ => True
     | _ => False
@@ -293,8 +293,8 @@ Section EquivLink.
     inv LINK; clarify.
   Qed.
   
-  Lemma link_read' `{Eq var} `{Eq lbl} `{Name loc} (σ0 : nv var lbl loc _) (Σ0 : env σ0) :
-    forall (σ : nv var lbl loc _) (σ' : wvl var lbl loc _) (LINK : link' σ0 σ σ'),
+  Lemma link_read' `{Eq var} `{Eq lbl} `{Name loc} (σ0 : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) :
+    forall (σ : nv var _ loc _) (σ' : wvl var _ loc _) (LINK : link' σ0 σ σ'),
     match σ' with
     | wvl_v (vl_exp σ') =>
       forall x w' (READ : read_env σ' x = Env_wvl w'),

@@ -22,7 +22,7 @@ Section LinkFacts.
     | _ => instantiate (1 := [])
     end.
 
-  Lemma link_lc `{Eq var} `{Eq lbl} `{Eq loc} (σ0 : nv var lbl loc _) (w : wvl var lbl loc _) :
+  Lemma link_lc `{Eq var} `{Eq lbl} `{Eq loc} (σ0 : nv var (@ltm var lbl) loc _) (w : wvl var _ loc _) :
     forall w' (LINK : link σ0 w w'), wvalue w.
   Proof.
     ii. induction LINK;
@@ -53,8 +53,8 @@ Section LinkFacts.
     | _ => instantiate (1 := [])
     end.
 
-  Lemma linked_lc `{Eq var} `{Eq lbl} `{Name loc} 
-    (σ0 : nv var lbl loc _) (Σ0 : env σ0) (w : wvl var lbl loc _) :
+  Lemma linked_lc `{Eq var} `{Eq lbl} `{Name loc}
+    (σ0 : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) (w : wvl var _ loc _) :
     forall w' (LINK : link σ0 w w'), wvalue w'.
   Proof.
     ii. induction LINK;
@@ -76,7 +76,7 @@ Section LinkFacts.
       eapply subst_loc_lc; auto.
   Qed.
 
-  Lemma map_unroll {lang} `{Eq lbl} `{Eq loc} φ (w : wvl var lbl loc lang) :
+  Lemma map_unroll {lang} `{Eq var} `{Eq lbl} `{Eq loc} φ (w : wvl var (@ltm var lbl) loc lang) :
     unroll (map_wvl φ w) = map_vl φ (unroll w).
   Proof.
     destruct w; ss.
@@ -84,8 +84,8 @@ Section LinkFacts.
     rw; ss.
   Qed.
 
-  Lemma subst_loc_unroll {lang} `{Eq lbl} `{Eq loc}
-    ℓ ν (w : wvl var lbl loc lang) :
+  Lemma subst_loc_unroll {lang} `{Eq var} `{Eq lbl} `{Eq loc}
+    ℓ ν (w : wvl var (@ltm var lbl) loc lang) :
     unroll (subst_loc_wvl ν ℓ w) = subst_loc_vl ν ℓ (unroll w).
   Proof.
     destruct w; ss.
@@ -97,8 +97,8 @@ Section LinkFacts.
     end.
   Qed.
 
-  Lemma subst_wvl_unroll {lang} `{Eq lbl} `{Name loc}
-    ℓ (u w : wvl var lbl loc lang) (U : wvalue u) :
+  Lemma subst_wvl_unroll {lang} `{Eq var} `{Eq lbl} `{Name loc}
+    ℓ (u w : wvl var (@ltm var lbl) loc lang) (U : wvalue u) :
     unroll (subst_wvl_wvl u ℓ w) = subst_wvl_vl u ℓ (unroll w).
   Proof.
     destruct w; ss.
@@ -110,7 +110,7 @@ Section LinkFacts.
     end.
   Qed.
 
-  Lemma unroll_flloc {lang} ℓ (w : wvl var lbl loc lang) :
+  Lemma unroll_flloc {lang} ℓ (w : wvl var (@ltm var lbl) loc lang) :
     In ℓ (flloc_wvl w) <-> In ℓ (flloc_vl (unroll w)).
   Proof.
     split; intro IN; destruct w; ss.
@@ -119,7 +119,7 @@ Section LinkFacts.
   Qed.
 
   Lemma link_flloc_dec `{Eq var} `{Eq lbl} `{Eq loc}
-    (σ0 : nv var lbl loc _) (w w' : wvl var lbl loc _) (LINK : link σ0 w w') :
+    (σ0 : nv var (@ltm var lbl) loc _) (w w' : wvl var _ loc _) (LINK : link σ0 w w') :
     forall ℓ (IN : In ℓ (flloc_wvl w')), In ℓ (flloc_nv σ0) \/ In ℓ (flloc_wvl w).
   Proof.
     induction LINK; ii; ss;
@@ -148,7 +148,7 @@ Section LinkFacts.
   Qed.
 
   Lemma link_map `{Eq var} `{Eq lbl} `{Name loc}
-    (σ0 : nv var lbl loc _) (w w' : wvl var lbl loc _) (LINK : link σ0 w w') :
+    (σ0 : nv var (@ltm var lbl) loc _) (w w' : wvl var _ loc _) (LINK : link σ0 w w') :
     forall φ (INJ : oto φ),
       link (map_nv φ σ0) (map_wvl φ w) (map_wvl φ w').
   Proof.

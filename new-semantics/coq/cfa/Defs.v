@@ -1,28 +1,10 @@
 From Basics Require Import Basics.
 From With_events Require Import Syntax.
 From With_events Require Import Defs.
-From With_events Require Import EnvSemantics.
 From CFA Require Import Syntax.
 
 Section defs.
   Context {var lbl : Type}.
-
-  Fixpoint is_repr (t : @tm var lbl) (g : lbl -> ltm) :=
-    match t with
-    | tm_var p x =>
-      g p = ltm_var x
-    | tm_lam p x t =>
-      g p = ltm_lam x (get_lbl t) /\ is_repr t g
-    | tm_app p t1 t2 =>
-      g p = ltm_app (get_lbl t1) (get_lbl t2) /\ is_repr t1 g /\ is_repr t2 g
-    | tm_link p t1 t2 =>
-      g p = ltm_link (get_lbl t1) (get_lbl t2) /\ is_repr t1 g /\ is_repr t2 g
-    | tm_mt p =>
-      g p = ltm_mt
-    | tm_bind p x t1 t2 =>
-      g p = ltm_bind x (get_lbl t1) (get_lbl t2) /\ is_repr t1 g /\ is_repr t2 g
-    end
-  .
 
   Definition geq_env (σ1 σ2 : @abs_env var lbl) :=
     (forall x p, In p (σ2.(_β) x) -> In p (σ1.(_β) x)) /\
@@ -64,7 +46,8 @@ Section defs.
   #[local] Coercion vl_exp : nv >-> vl.
   #[local] Coercion wvl_v : vl >-> wvl.
 
-  Inductive conc {loc} (t : @abs_sem var lbl) (v : abs_val) : wvl var lbl loc _ -> Prop :=
+  Inductive conc {loc} (t : @abs_sem var lbl)
+    (v : @abs_val var lbl) : wvl var (@ltm var lbl) loc val -> Prop :=
   | conc_nil
   : conc t v nv_mt
   | conc_enil (E : vnt _ _ _ _)
@@ -81,8 +64,8 @@ Section defs.
     (ENV : conc t v σ)
   : conc t v (nv_bval x w σ)
   | conc_clos x e p i (σ : nv _ _ _ _)
-    (LAM : In (lv_fn x (get_lbl e), p) v.(_λ))
-    (SOME : (t p).(_i) = Some i)
+    (LAM : In (v_fn x e, p) v.(_λ))
+    (SOME : (t (lblled p (tm_lam x e))).(_i) = Some i)
     (ENV : conc t i σ)
   : conc t v (vl_clos (v_fn x e) σ)
   | conc_rec L p o v'

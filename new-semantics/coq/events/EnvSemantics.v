@@ -19,48 +19,43 @@ Fixpoint read_env {var lbl loc lang} `{Eq var} (σ : nv var lbl loc lang) (x : v
     if eqb x x' then Env_wvl w else read_env σ' x
   end.
 
-Definition get_lbl {var lbl} (t : @tm var lbl) :=
-  match t with
-  | tm_var p _ | tm_lam p _ _ | tm_app p _ _ | tm_link p _ _ | tm_mt p | tm_bind p _ _ _ => p
-  end.
-
 Inductive eval {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc}
-  (σ : nv var lbl loc (@val var lbl)): tm -> (vl var lbl loc val) -> Prop :=
+  (σ : nv var (@ltm var lbl) loc (@val var lbl)): ltm -> (vl var (@ltm var lbl) loc val) -> Prop :=
 | ev_id p x v (READ : read_env σ x = Env_wvl (wvl_v v))
-: eval σ (tm_var p x) v
+: eval σ (lblled p (tm_var x)) v
 | ev_rec p x p' v (READ : read_env σ x = Env_wvl (wvl_recv p' v))
-: eval σ (tm_var p x) (open_wvl_vl 0 (wvl_recv p' v) v)
+: eval σ (lblled p (tm_var x)) (open_wvl_vl 0 (wvl_recv p' v) v)
 | ev_fn p x t
-: eval σ (tm_lam p x t) (vl_clos (v_fn x t) σ)
+: eval σ (lblled p (tm_lam x t)) (vl_clos (v_fn x t) σ)
 | ev_app p t1 t2 x e σ1 v2 v
   (FN : eval σ t1 (vl_clos (v_fn x e) σ1))
   (ARG : eval σ t2 v2)
   (BODY : eval (nv_bval x (wvl_v v2) σ1) e v)
-: eval σ (tm_app p t1 t2) v
+: eval σ (lblled p (tm_app t1 t2)) v
 | ev_appevent p t1 t2 E1 v2
   (FN : eval σ t1 (vl_ev E1))
   (ARG : eval σ t2 v2)
-: eval σ (tm_app p t1 t2) (vl_ev (Call E1 v2))
+: eval σ (lblled p (tm_app t1 t2)) (vl_ev (Call E1 v2))
 | ev_link p t1 t2 σ1 v
   (MOD : eval σ t1 (vl_exp σ1))
   (IMP : eval σ1 t2 v)
-: eval σ (tm_link p t1 t2) v
+: eval σ (lblled p (tm_link t1 t2)) v
 | ev_linkevent p t1 t2 E1 v
   (MOD : eval σ t1 (vl_ev E1))
   (IMP : eval (nv_ev E1) t2 v)
-: eval σ (tm_link p t1 t2) v
+: eval σ (lblled p (tm_link t1 t2)) v
 | ev_mt p
-: eval σ (tm_mt p) (vl_exp nv_mt)
+: eval σ (lblled p tm_mt) (vl_exp nv_mt)
 | ev_bind p x t1 t2 ℓ v1 σ2
   (FRESH : ~ In ℓ (floc_nv σ))
-  (BIND : eval (nv_floc x (ℓ, get_lbl t1) σ) t1 v1)
-  (MOD : eval (nv_bval x (wvl_recv (get_lbl t1) (close_vl 0 (ℓ, get_lbl t1) v1)) σ) t2 (vl_exp σ2))
-: eval σ (tm_bind p x t1 t2) (vl_exp (nv_bval x (wvl_recv (get_lbl t1) (close_vl 0 (ℓ, get_lbl t1) v1)) σ2))
+  (BIND : eval (nv_floc x (ℓ, t1) σ) t1 v1)
+  (MOD : eval (nv_bval x (wvl_recv t1 (close_vl 0 (ℓ, t1) v1)) σ) t2 (vl_exp σ2))
+: eval σ (lblled p (tm_bind x t1 t2)) (vl_exp (nv_bval x (wvl_recv t1 (close_vl 0 (ℓ, t1) v1)) σ2))
 | ev_bindevent p x t1 t2 ℓ v1 E2
   (FRESH : ~ In ℓ (floc_nv σ))
-  (BIND : eval (nv_floc x (ℓ, get_lbl t1) σ) t1 v1)
-  (MOD : eval (nv_bval x (wvl_recv (get_lbl t1) (close_vl 0 (ℓ, get_lbl t1) v1)) σ) t2 (vl_ev E2))
-: eval σ (tm_bind p x t1 t2) (vl_exp (nv_bval x (wvl_recv (get_lbl t1) (close_vl 0 (ℓ, get_lbl t1) v1)) (nv_ev E2)))
+  (BIND : eval (nv_floc x (ℓ, t1) σ) t1 v1)
+  (MOD : eval (nv_bval x (wvl_recv t1 (close_vl 0 (ℓ, t1) v1)) σ) t2 (vl_ev E2))
+: eval σ (lblled p (tm_bind x t1 t2)) (vl_exp (nv_bval x (wvl_recv t1 (close_vl 0 (ℓ, t1) v1)) (nv_ev E2)))
 .
 
 Lemma read_env_lc {var lbl loc lang} `{Eq var} (σ : nv var lbl loc lang) (Σ : env σ) :
@@ -71,7 +66,7 @@ Proof.
   eqb2eq var; clarify; eauto.
 Qed.
 
-Lemma eval_lc {var lbl loc} `{Eq var} `{Eq lbl} `{Name loc} t (σ : nv var lbl loc (@val var lbl)) v (EVAL : eval σ t v) :
+Lemma eval_lc {var lbl loc} `{Eq var} `{Eq lbl} `{Name loc} t (σ : nv var _ loc (@val var lbl)) v (EVAL : eval σ t v) :
   forall (LC : env σ), value v.
 Proof.
   induction EVAL; ii; ss; eauto.
@@ -94,7 +89,7 @@ Proof.
   - apply IHEVAL2. exploit IHEVAL1; eauto.
     intros LC'. inv LC'. econstructor; eauto.
   - repeat constructor.
-  - assert (wvalue (wvl_recv (get_lbl t1) (close_vl 0 (ℓ, get_lbl t1) v1))).
+  - assert (wvalue (wvl_recv t1 (close_vl 0 (ℓ, t1) v1))).
     econstructor. instantiate (1 := []). ii.
     assert (close_open_loc_eq_vl v1) by eapply close_open_loc_eq; rw.
     exploit IHEVAL1; eauto. constructor; auto. intros VAL1.
@@ -105,7 +100,7 @@ Proof.
     exploit IHEVAL2.
     constructor; auto.
     intros VAL. inv VAL. auto.
-  - assert (wvalue (wvl_recv (get_lbl t1) (close_vl 0 (ℓ, get_lbl t1) v1))).
+  - assert (wvalue (wvl_recv t1 (close_vl 0 (ℓ, t1) v1))).
     econstructor. instantiate (1 := []). ii.
     assert (close_open_loc_eq_vl v1) by eapply close_open_loc_eq; rw.
     exploit IHEVAL1; eauto. constructor; auto. intros VAL1.
@@ -186,7 +181,7 @@ Proof.
   rewrite in_app_iff; eauto.
 Qed.
 
-Lemma eval_flloc_dec {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc} t (σ : nv var lbl loc (@val var lbl)) v (EVAL : eval σ t v) :
+Lemma eval_flloc_dec {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc} t (σ : nv var _ loc (@val var lbl)) v (EVAL : eval σ t v) :
   forall ℓ (IN : In ℓ (flloc_vl v)), In ℓ (flloc_nv σ).
 Proof.
   induction EVAL; ii; ss; eauto.
@@ -217,7 +212,7 @@ Proof.
     exploit IHEVAL1; eauto. ii; des; clarify.
 Qed.
 
-Lemma eval_floc_dec {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc} t (σ : nv var lbl loc (@val var lbl)) v (EVAL : eval σ t v) :
+Lemma eval_floc_dec {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc} t (σ : nv var _ loc (@val var lbl)) v (EVAL : eval σ t v) :
   forall ℓ (IN : In ℓ (floc_vl v)), In ℓ (floc_nv σ).
 Proof.
   intros.
@@ -233,7 +228,7 @@ Proof.
   eapply eval_flloc_dec; eauto.
 Qed.
 
-Lemma eval_map {var lbl loc} `{Eq var} `{Eq lbl} `{Name loc} t (σ : nv var lbl loc (@val var lbl)) v (EVAL : eval σ t v) :
+Lemma eval_map {var lbl loc} `{Eq var} `{Eq lbl} `{Name loc} t (σ : nv var _ loc (@val var lbl)) v (EVAL : eval σ t v) :
   forall φ (INJ : oto φ),
     eval (map_nv φ σ) t (map_vl φ v).
 Proof.
