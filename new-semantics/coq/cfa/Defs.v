@@ -46,8 +46,7 @@ Section defs.
   #[local] Coercion vl_exp : nv >-> vl.
   #[local] Coercion wvl_v : vl >-> wvl.
 
-  Inductive conc {loc} (t : @abs_sem var lbl)
-    (v : @abs_val var lbl) : wvl var (@ltm var lbl) loc val -> Prop :=
+  Inductive conc {loc} (t : @abs_sem var lbl) (v : abs_val) : wvl var (@ltm var lbl) loc val -> Prop :=
   | conc_nil
   : conc t v nv_mt
   | conc_enil (E : vnt _ _ _ _)
@@ -100,7 +99,7 @@ Section defs.
     | L : list _ |- _ => instantiate (1 := L)
     end.
 
-  Lemma conc_lc {loc} t v w (CONC : @conc loc t v w) : wvalue w.
+  Lemma conc_lc {loc} t (v : abs_val) w (CONC : @conc loc t v w) : wvalue w.
   Proof.
     induction CONC;
     repeat econstructor; des;

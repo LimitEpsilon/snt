@@ -275,18 +275,18 @@ Qed.
 Definition remove {loc T} `{Eq loc} (f : loc -> option T) ℓ ℓ_param :=
   if eqb ℓ ℓ_param then None else f ℓ_param.
 
-Notation "f '!!' ℓ" := (remove f ℓ)
+Notation "f '--' ℓ" := (remove f ℓ)
   (at level 100, ℓ at next level, right associativity).
 
 Lemma remove_assoc {loc T} `{Eq loc} (f : loc -> option T) ℓ ℓ' x :
-  ((f !! ℓ) !! ℓ') x = ((f !! ℓ') !! ℓ) x.
+  ((f -- ℓ) -- ℓ') x = ((f -- ℓ') -- ℓ) x.
 Proof.
   ii. unfold remove. des_ifs.
 Qed.
 
 Lemma remove_update_assoc {loc T} `{Eq loc} (f : loc -> option T) ℓ ν ℓ' x :
   ℓ <> ν ->
-  ((ℓ !-> ℓ' ; f) !! ν) x = (ℓ !-> ℓ' ; f !! ν) x.
+  ((ℓ !-> ℓ' ; f) -- ν) x = (ℓ !-> ℓ' ; f -- ν) x.
 Proof.
   ii. unfold remove, update.
   des_ifs. eqb2eq loc. clarify.

@@ -147,8 +147,8 @@ Section SimFacts.
     forall ℓ ℓ' u u'
       (BOUNDf : f ℓ = Some ℓ')
       (BOUNDm : m ℓ' = Some u')
-      (SIMu : sim u (f !! ℓ) u' m),
-    sim (subst_wvl_wvl u ℓ w) (f !! ℓ) v' m.
+      (SIMu : sim u (f -- ℓ) u' m),
+    sim (subst_wvl_wvl u ℓ w) (f -- ℓ) v' m.
   Proof.
     induction SIM; ii; ss.
     - econstructor.

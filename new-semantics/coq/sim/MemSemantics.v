@@ -322,7 +322,7 @@ Proof.
     assert (subst_intro_vl _ _ _ (map_vl φ v)) by apply subst_intro.
     gensym_tac (L0 ++ floc_vl (map_vl φ v)) ν.
     rw; eauto. eapply sim_f_ext.
-    instantiate (1 := ((ν !-> ℓ' ; bot) !! ν)).
+    instantiate (1 := ((ν !-> ℓ' ; bot) -- ν)).
     eapply (reduce_f_bloc _ _ _ (open_loc_vl 0 ν (map_vl φ v))); eauto.
     unfold update. rewrite eqb_refl. auto.
     eapply sim_f_ext; eauto.
@@ -557,7 +557,7 @@ Proof.
       assert (subst_intro_vl _ _ _ v') by apply subst_intro.
       rw; eauto.
       eapply sim_f_ext.
-      instantiate (1 := (ν !-> ℓ' ; bot) !! ν).
+      instantiate (1 := (ν !-> ℓ' ; bot) -- ν).
       exploit SIM0; eauto. ii.
       exploit reduce_f_bloc; eauto.
       unfold update. rewrite eqb_refl. auto.
