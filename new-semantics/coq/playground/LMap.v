@@ -125,26 +125,19 @@ Inductive tmF : nat -> Type :=
 
 Scheme tmF_ind := Induction for tmF Sort Prop.
 
-Inductive tmK {V : Type} : nat -> Type :=
-  | TmHalt (v : V) : tmK O
-  | TmCont n (f : tm -> tmK n) : tmK (S n)
-.
-
-Fixpoint tm_to_tmF' (t : tm) n (k : tmF n) : tmF (S n) :=
-  match t with
-  | Var x => VarF x k
-  | Lam x e =>
-    LamF x (tm_to_tmF' e k)
-  | App e1 e2 =>
-    AppF (tm_to_tmF' e1 (tm_to_tmF' e2 k))
-  end.
-
-Definition tm_to_tmF t := tm_to_tmF' t TmF.
-
 Inductive tmList : nat -> Type :=
   | TmNil : tmList O
   | TmCons n (hd : tm) (tl : tmList n) : tmList (S n)
 .
+
+Fixpoint tmCons (t : tm) n (k : tmF n) : tmF (S n) :=
+  match t with
+  | Var x => VarF x k
+  | Lam x e =>
+    LamF x (tmCons e k)
+  | App e1 e2 =>
+    AppF (tmCons e1 (tmCons e2 k))
+  end.
 
 Definition tmList_inv (n : nat) (l : tmList n) :=
   match l in tmList n' return match n' with O => unit | S n'' => tm * tmList n'' end with
@@ -152,15 +145,22 @@ Definition tmList_inv (n : nat) (l : tmList n) :=
   | TmCons hd tl => (hd, tl)
   end.
 
-Fixpoint tmF_to_tm' n (t : tmF n) : tmList n.
+Definition tmList_des n (l : tmList n) :
+  match n return tmList n -> Prop with
+  | O => fun l => l = TmNil
+  | S n' => fun l => l = TmCons (fst (tmList_inv l)) (snd (tmList_inv l))
+  end l.
+Proof. destruct l; auto. Qed.
+
+Fixpoint tmF_to_tmList n (t : tmF n) : tmList n.
 Proof.
   destruct t.
   - exact TmNil.
-  - exact (TmCons (Var x) (tmF_to_tm' _ t)).
-  - apply tmF_to_tm' in t. apply tmList_inv in t.
+  - exact (TmCons (Var x) (tmF_to_tmList _ t)).
+  - apply tmF_to_tmList in t. apply tmList_inv in t.
     destruct t as (e & tl).
     exact (TmCons (Lam x e) tl).
-  - apply tmF_to_tm' in t. apply tmList_inv in t.
+  - apply tmF_to_tmList in t. apply tmList_inv in t.
     destruct t as (e1 & tl). apply tmList_inv in tl.
     destruct tl as (e2 & tl).
     exact (TmCons (App e1 e2) tl).
@@ -170,55 +170,57 @@ Fixpoint tmList_to_tmF n (l : tmList n) : tmF n.
 Proof.
   destruct l.
   - exact TmF.
-  - exact (tm_to_tmF' hd (tmList_to_tmF _ l)).
+  - exact (tmCons hd (tmList_to_tmF _ l)).
 Defined.
 
-Definition tmF_to_tm (t' : tmF 1%nat) := fst (tmList_inv (tmF_to_tm' t')).
+Definition tm_to_tmF t := tmCons t TmF.
+Definition tmF_to_tm (t' : tmF 1%nat) := fst (tmList_inv (tmF_to_tmList t')).
 
-Lemma tmF_to_tm'_tm_to_tmF' (t : tm) :
+Lemma tmCons_TmCons (t : tm) :
   forall n (t' : tmF n),
-    tmF_to_tm' (tm_to_tmF' t t') = TmCons t (tmF_to_tm' t').
+    tmF_to_tmList (tmCons t t') = TmCons t (tmF_to_tmList t').
 Proof.
   induction t; intros; cbn; auto.
   - rewrite IHt. auto.
   - rewrite IHt1, IHt2. auto.
 Qed.
 
+Lemma tmF_to_tmList_tmList_to_tmF n (l : tmList n) :
+  tmF_to_tmList (tmList_to_tmF l) = l.
+Proof.
+  induction n; pose proof (tmList_des l) as RR; simpl in RR; rewrite RR.
+  - auto.
+  - simpl. rewrite tmCons_TmCons. rewrite IHn. auto.
+Qed.
+
+Lemma tmList_to_tmF_tmF_to_tmList n (t : tmF n) :
+  tmList_to_tmF (tmF_to_tmList t) = t.
+Proof.
+  induction t; simpl; auto.
+  - rewrite IHt. auto.
+  - pose proof (tmList_des (tmF_to_tmList t)) as RR. simpl in RR.
+    rewrite RR in *. simpl in *. f_equal. auto.
+  - pose proof (tmList_des (tmF_to_tmList t)) as RR. simpl in RR.
+    rewrite RR in *. simpl in *.
+    pose proof (tmList_des (snd (tmList_inv (tmF_to_tmList t)))) as RR'. simpl in RR'.
+    rewrite RR' in *. simpl in *. f_equal. auto.
+Qed.
+
 Lemma tmF_to_tm_tm_to_tmF (t : tm) :
   tmF_to_tm (tm_to_tmF t) = t.
 Proof.
   unfold tmF_to_tm, tm_to_tmF.
-  rewrite tmF_to_tm'_tm_to_tmF'. auto.
-Qed.
-
-Definition tmList_des n (l : tmList n) :
-  match n return tmList n -> Prop with
-  | O => fun l => l = TmNil
-  | S n' => fun l => l = TmCons (fst (tmList_inv l)) (snd (tmList_inv l))
-  end l.
-Proof. destruct l; auto. Qed.
-
-Lemma tm_to_tmF'_tmF_to_tm' n (t : tmF n) :
-  tmList_to_tmF (tmF_to_tm' t) = t.
-Proof.
-  induction t; simpl; auto.
-  - rewrite IHt. auto.
-  - pose proof (tmList_des (tmF_to_tm' t)) as RR. simpl in RR.
-    rewrite RR in *. simpl in *. f_equal. auto.
-  - pose proof (tmList_des (tmF_to_tm' t)) as RR. simpl in RR.
-    rewrite RR in *. simpl in *.
-    pose proof (tmList_des (snd (tmList_inv (tmF_to_tm' t)))) as RR'. simpl in RR'.
-    rewrite RR' in *. simpl in *. f_equal. auto.
+  rewrite tmCons_TmCons. auto.
 Qed.
 
 Lemma tm_to_tmF_tmF_to_tm (t : tmF 1%nat) :
   tm_to_tmF (tmF_to_tm t) = t.
 Proof.
   unfold tm_to_tmF, tmF_to_tm.
-  pose proof (tm_to_tmF'_tmF_to_tm' t).
-  pose proof (tmList_des (tmF_to_tm' t)) as RR.
+  pose proof (tmList_to_tmF_tmF_to_tmList t).
+  pose proof (tmList_des (tmF_to_tmList t)) as RR.
   simpl in *. rewrite RR in *. simpl in *.
-  pose proof (tmList_des (snd (tmList_inv (tmF_to_tm' t)))) as RR'.
+  pose proof (tmList_des (snd (tmList_inv (tmF_to_tmList t)))) as RR'.
   simpl in *. rewrite RR' in *. simpl in *. auto.
 Qed.
 
