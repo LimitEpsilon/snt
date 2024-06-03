@@ -7,14 +7,8 @@ Copyright: Andrew W. Appel and Inria.
 
 From Coq Require Import PArith.
 
-(* To avoid useless definitions of inductors in extracted code. *)
-Local Unset Elimination Schemes.
-Local Unset Case Analysis Schemes.
-
-Set Implicit Arguments.
-
 Class map {K V} := mkMap {
-rep : Type;
+  rep : Type;
 
 (* fundamental operation, all others are axiomatized in terms of this one *)
   get: rep -> K -> option V;
@@ -50,6 +44,12 @@ Class ok {K V : Type} {map : map K V}: Prop := {
       forall a0 b0, R a0 b0 -> forall m, R (fold fa a0 m) (fold fb b0 m);
 }.
 Arguments ok {_ _} _.
+
+(* To avoid useless definitions of inductors in extracted code. *)
+Local Unset Elimination Schemes.
+Local Unset Case Analysis Schemes.
+
+Set Implicit Arguments.
 
 Module PTree.
 
@@ -212,10 +212,6 @@ Local Close Scope positive_scope.
 
 (** ** Good variable properties for the basic operations *)
 
-Theorem get_empty :
-  forall (V : Type) (i : positive), get i (empty V) = None.
-Proof. reflexivity. Qed.
-
 Lemma gss0: forall {V} p (x : V), get' p (set0 p x) = Some x.
 Proof. induction p; simpl; auto. Qed.
 
@@ -249,6 +245,13 @@ Lemma gNode :
   get i (Node l x r) = match i with xH => x | xO j => get j l | xI j => get j r end.
 Proof.
   intros. destruct l, x, r; simpl; auto; destruct i; auto.
+Qed.
+
+Lemma pNode :
+  forall {V} (v : V) (a b : tree V),
+  put 1 v (Node a None b) = NodeM v a b.
+Proof.
+  destruct a, b; auto.
 Qed.
 
 Local Opaque Node.
@@ -290,10 +293,10 @@ Proof.
   match goal with
   | |- _ (Some (?N (set' ?i _ ?l) ?r)) (_ _ (_ (?x ?i)) _) =>
     apply PNodes with (m := Some (N l r)) (i := x i); auto
-  | |- _ (Some (?N (set0 ?i _) ?r)) (_ _ (_ (?x ?i)) _) =>
-    apply PNodes with (m := r) (i := x i); auto
   | |- _ (Some (?N (set' _ _ ?l))) (_ _ (_ (?x ?i)) _) =>
     apply PNodes with (m := Some (N l)) (i := x i); auto
+  | |- _ (Some (?N (set0 ?i _) ?r)) (_ _ (_ (?x ?i)) _) =>
+    apply PNodes with (m := r) (i := x i); auto
   | |- _ (Some (?N (set0 _ _))) (_ _ (_ (?x ?i)) _) =>
     apply PNodes with (m := None) (i := x i); auto
   | |- _ (Some _) (_ _ (_ xH) _) =>
@@ -301,15 +304,12 @@ Proof.
   | |- _ (Some (?N ?v ?l (Some (_ _ _ ?r)))) (_ _ (_ (?x ?i)) _) =>
     apply PNodes with (m := Some (N v l r)) (i := (x i)); auto
   | |- _ (Some (?N ?l (Some (_ _ _ ?r)))) (_ _ (_ (?x ?i)) _) =>
-    apply PNodes with (m := Some (N l r)) (i := (x i)); auto
+     apply PNodes with (m := Some (N l r)) (i := (x i)); auto
   end.
-  - assert (forall (v : V) (a b : tree V),
-      NodeM v a b = put 1 v (Node a None b)) as RR by (destruct a, b; auto).
-    rewrite RR.
-    destruct r; try apply H0;
+  - destruct r; try apply H0;
     solve [
-      intros; rewrite <- RR in *; appnodes PNodes |
-      destruct l; apply PNodes; auto;
+      intros; appnodes PNodes |
+      destruct l; rewrite <- pNode; apply PNodes; auto;
       apply H with (P := P0); auto;
       intros ? ? [? |] ? ? ?; subst P0; simpl; appnodes PNodes
     ].
@@ -319,8 +319,8 @@ Proof.
       apply IHm with (P := P0); auto;
       intros ? ? [? |] ? ? ?; subst P0; simpl; appnodes PNodes
     ].
-  - apply IHm with (P := P1); auto.
-    intros ? ? [t' |] ? ? ?; simpl; appnodes PNodes.
+  - apply IHm with (P := P1); auto;
+    intros ? ? [? |] ? ? ?; subst P1; simpl; appnodes PNodes.
 Qed.
 
 Lemma fold''_parametricity {A B V : Type} :
@@ -359,7 +359,7 @@ Proof.
   exfalso. eapply tree'_contradiction; eauto.
 Qed.
 
-Lemma map_ext {V} (m1 : tree' V) :
+Lemma tree'_ext {V} (m1 : tree' V) :
   forall m2 (EQ : forall k, get' k m1 = get' k m2),
     m1 = m2.
 Proof.
@@ -398,6 +398,41 @@ Proof.
   end.
 Qed.
 End PTree.
+
+#[export] Instance PMap V : map positive V :=
+{
+  rep := PTree.tree V;
+  get m k := PTree.get k m;
+  empty := None;
+  put m k v := Some (PTree.put k v m);
+  remove m k :=
+    match m with
+    | None => None
+    | Some m' => PTree.remove' k m'
+    end;
+  fold R f init m :=
+    match m with
+    | None => init
+    | Some m' => PTree.fold'' f init id m'
+    end;
+}.
+
+#[export, refine] Instance PMapOk V : ok (PMap V) := {}.
+Proof.
+  - intros. destruct m1, m2; auto.
+    + f_equal. eapply PTree.tree'_ext; eauto.
+    + simpl in *. exfalso. eapply PTree.tree'_contradiction. eauto.
+    + simpl in *. exfalso. eapply PTree.tree'_contradiction. eauto.
+  - auto.
+  - intros. destruct m; simpl; auto using PTree.gss, PTree.gss0.
+  - intros. destruct m; simpl; auto using PTree.gso, PTree.gso0.
+  - intros. destruct m; simpl; auto using PTree.grs.
+  - intros. destruct m; simpl; auto using PTree.gro.
+  - intros. destruct m; simpl in *; auto.
+    eapply PTree.fold''_spec; auto.
+  - intros. destruct m; simpl in *; auto.
+    eapply PTree.fold''_parametricity; auto.
+Qed.
 
 (* from stdpp/strings.v *)
 From Coq Require Import Ascii.
