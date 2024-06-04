@@ -154,6 +154,10 @@ Definition tmList_des {n} (l : tmList n) :
   end l.
 Proof. destruct l; auto. Qed.
 
+Tactic Notation "unfold_tmlist" constr(l) := rewrite (tmList_des l).
+Tactic Notation "unfold_tmlist" constr(l) "in" constr(H) := rewrite (tmList_des l) in H.
+Tactic Notation "unfold_tmlist" constr(l) "in" "*" := rewrite (tmList_des l) in *.
+
 Fixpoint tmF_to_tmList n (t : tmF n) : tmList n.
 Proof.
   destruct t.
@@ -190,7 +194,7 @@ Qed.
 Lemma tmF_to_tmList_to_tmF n (l : tmList n) :
   tmF_to_tmList (tmList_to_tmF l) = l.
 Proof.
-  induction n; pose proof (tmList_des l) as RR; simpl in RR; rewrite RR.
+  induction n; unfold_tmlist l.
   - auto.
   - simpl. rewrite tmCons_TmCons. rewrite IHn. auto.
 Qed.
@@ -200,10 +204,10 @@ Lemma tmList_to_tmF_to_tmList n (t : tmF n) :
 Proof.
   induction t; simpl; auto.
   - rewrite IHt. auto.
-  - rewrite (tmList_des (tmF_to_tmList t)) in IHt.
+  - unfold_tmlist (tmF_to_tmList t) in IHt.
     f_equal. auto.
-  - rewrite (tmList_des (tmF_to_tmList t)) in IHt.
-    rewrite (tmList_des (tmTl (tmF_to_tmList t))) in IHt.
+  - unfold_tmlist (tmF_to_tmList t) in IHt.
+    unfold_tmlist (tmTl (tmF_to_tmList t)) in IHt.
     f_equal. auto.
 Qed.
 
@@ -219,8 +223,8 @@ Lemma tm_to_tmF_to_tm (t : tmF 1) :
 Proof.
   unfold tm_to_tmF, tmF_to_tm.
   pose proof (tmList_to_tmF_to_tmList t) as PF.
-  rewrite (tmList_des (tmF_to_tmList t)) in PF.
-  rewrite (tmList_des (tmTl (tmF_to_tmList t))) in PF.
+  unfold_tmlist (tmF_to_tmList t) in PF.
+  unfold_tmlist (tmTl (tmF_to_tmList t)) in PF.
   assumption.
 Qed.
 
