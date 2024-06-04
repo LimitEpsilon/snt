@@ -5,8 +5,6 @@ Local Unset Case Analysis Schemes.
 
 Set Implicit Arguments.
 
-Local Open Scope positive_scope.
-
 Inductive ptree' {V} :=
   | PNodeM (l : option ptree') (v : V) (r : option ptree')
   | PNode0 (l : ptree') (r : option ptree')
@@ -46,7 +44,7 @@ Definition palter {V : Type} (f : option V -> option V) :=
     | Some (PNode0 l r) => pnode (Some l) None (alter p r)
     | Some (PNode1 r) => pnode None None (alter p (Some r))
     end
-  end.
+  end%positive.
 
 Definition pfind' {A B : Type} (f : A -> B) :=
   fix find' (i : positive) (m' : ptree' A) :=
@@ -68,7 +66,7 @@ Definition pfind' {A B : Type} (f : A -> B) :=
     | PNodeM _ _ r | PNode0 _ r=> find p r
     | PNode1 r => find' p r
     end
-  end.
+  end%positive.
 
 Definition pfmap' {A B} (f : A -> B) :=
   fix fmap' (m' : ptree' A) :=
@@ -90,8 +88,8 @@ Definition pomap' {A B} (f : A -> option B) :=
 
 Definition pfold' {R K V : Type} (f : R -> K -> V -> R) :=
   fix fold' (acc' : R) k' (m' : ptree' V) : R :=
-  let foldl acc k l := fold' acc (fun x => k (x~0)) l in
-  let foldr acc k r := fold' acc (fun x => k (x~1)) r in
+  let foldl acc k l := fold' acc (fun x => k (x~0))%positive l in
+  let foldr acc k r := fold' acc (fun x => k (x~1))%positive r in
   match m' with
   | PNodeM l v r =>
     let accl := match l with None => acc' | Some l' => foldl acc' k' l' end in
@@ -105,7 +103,7 @@ Definition pfold' {R K V : Type} (f : R -> K -> V -> R) :=
   | PNode1 r =>
     let accr := foldr acc' k' r in
     accr
-  end.
+  end%positive.
 
 Inductive tm :=
   | Var (x : positive)
@@ -133,22 +131,26 @@ Inductive tmList : nat -> Type :=
 Fixpoint tmCons (t : tm) n (k : tmF n) : tmF (S n) :=
   match t with
   | Var x => VarF x k
-  | Lam x e =>
-    LamF x (tmCons e k)
-  | App e1 e2 =>
-    AppF (tmCons e1 (tmCons e2 k))
+  | Lam x e => LamF x (tmCons e k)
+  | App e1 e2 => AppF (tmCons e1 (tmCons e2 k))
   end.
 
-Definition tmList_inv (n : nat) (l : tmList n) :=
-  match l in tmList n' return match n' with O => unit | S n'' => tm * tmList n'' end with
+Definition tmHd {n} (l : tmList (S n)) : tm :=
+  match l in tmList m return match m with O => unit | S _ => tm end with
   | TmNil => tt
-  | TmCons hd tl => (hd, tl)
+  | TmCons hd _ => hd
   end.
 
-Definition tmList_des n (l : tmList n) :
+Definition tmTl {n} (l : tmList (S n)) : tmList n :=
+  match l in tmList m return match m with O => unit | S m' => tmList m' end with
+  | TmNil => tt
+  | TmCons _ tl => tl
+  end.
+
+Definition tmList_des {n} (l : tmList n) :
   match n return tmList n -> Prop with
   | O => fun l => l = TmNil
-  | S n' => fun l => l = TmCons (fst (tmList_inv l)) (snd (tmList_inv l))
+  | S n' => fun l => l = TmCons (tmHd l) (tmTl l)
   end l.
 Proof. destruct l; auto. Qed.
 
@@ -157,13 +159,13 @@ Proof.
   destruct t.
   - exact TmNil.
   - exact (TmCons (Var x) (tmF_to_tmList _ t)).
-  - apply tmF_to_tmList in t. apply tmList_inv in t.
-    destruct t as (e & tl).
-    exact (TmCons (Lam x e) tl).
-  - apply tmF_to_tmList in t. apply tmList_inv in t.
-    destruct t as (e1 & tl). apply tmList_inv in tl.
-    destruct tl as (e2 & tl).
-    exact (TmCons (App e1 e2) tl).
+  - apply tmF_to_tmList in t.
+    set (e := tmHd t).
+    exact (TmCons (Lam x e) (tmTl t)).
+  - apply tmF_to_tmList in t.
+    set (e1 := tmHd t).
+    set (e2 := tmHd (tmTl t)).
+    exact (TmCons (App e1 e2) (tmTl (tmTl t))).
 Defined.
 
 Fixpoint tmList_to_tmF n (l : tmList n) : tmF n.
@@ -174,7 +176,7 @@ Proof.
 Defined.
 
 Definition tm_to_tmF t := tmCons t TmF.
-Definition tmF_to_tm (t' : tmF 1%nat) := fst (tmList_inv (tmF_to_tmList t')).
+Definition tmF_to_tm (t' : tmF 1) := tmHd (tmF_to_tmList t').
 
 Lemma tmCons_TmCons (t : tm) :
   forall n (t' : tmF n),
@@ -185,7 +187,7 @@ Proof.
   - rewrite IHt1, IHt2. auto.
 Qed.
 
-Lemma tmF_to_tmList_tmList_to_tmF n (l : tmList n) :
+Lemma tmF_to_tmList_to_tmF n (l : tmList n) :
   tmF_to_tmList (tmList_to_tmF l) = l.
 Proof.
   induction n; pose proof (tmList_des l) as RR; simpl in RR; rewrite RR.
@@ -193,35 +195,33 @@ Proof.
   - simpl. rewrite tmCons_TmCons. rewrite IHn. auto.
 Qed.
 
-Lemma tmList_to_tmF_tmF_to_tmList n (t : tmF n) :
+Lemma tmList_to_tmF_to_tmList n (t : tmF n) :
   tmList_to_tmF (tmF_to_tmList t) = t.
 Proof.
   induction t; simpl; auto.
   - rewrite IHt. auto.
-  - pose proof (tmList_des (tmF_to_tmList t)) as RR. simpl in RR.
-    rewrite RR in *. simpl in *. f_equal. auto.
-  - pose proof (tmList_des (tmF_to_tmList t)) as RR. simpl in RR.
-    rewrite RR in *. simpl in *.
-    pose proof (tmList_des (snd (tmList_inv (tmF_to_tmList t)))) as RR'. simpl in RR'.
-    rewrite RR' in *. simpl in *. f_equal. auto.
+  - rewrite (tmList_des (tmF_to_tmList t)) in IHt.
+    f_equal. auto.
+  - rewrite (tmList_des (tmF_to_tmList t)) in IHt.
+    rewrite (tmList_des (tmTl (tmF_to_tmList t))) in IHt.
+    f_equal. auto.
 Qed.
 
-Lemma tmF_to_tm_tm_to_tmF (t : tm) :
+Lemma tmF_to_tm_to_tmF (t : tm) :
   tmF_to_tm (tm_to_tmF t) = t.
 Proof.
   unfold tmF_to_tm, tm_to_tmF.
   rewrite tmCons_TmCons. auto.
 Qed.
 
-Lemma tm_to_tmF_tmF_to_tm (t : tmF 1%nat) :
+Lemma tm_to_tmF_to_tm (t : tmF 1) :
   tm_to_tmF (tmF_to_tm t) = t.
 Proof.
   unfold tm_to_tmF, tmF_to_tm.
-  pose proof (tmList_to_tmF_tmF_to_tmList t).
-  pose proof (tmList_des (tmF_to_tmList t)) as RR.
-  simpl in *. rewrite RR in *. simpl in *.
-  pose proof (tmList_des (snd (tmList_inv (tmF_to_tmList t)))) as RR'.
-  simpl in *. rewrite RR' in *. simpl in *. auto.
+  pose proof (tmList_to_tmF_to_tmList t) as PF.
+  rewrite (tmList_des (tmF_to_tmList t)) in PF.
+  rewrite (tmList_des (tmTl (tmF_to_tmList t))) in PF.
+  assumption.
 Qed.
 
 Inductive tmtree' {V : Type} : nat -> Type :=
