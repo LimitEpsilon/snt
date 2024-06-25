@@ -5,7 +5,7 @@ From With_events Require Import SubstFacts.
 
 Variant read_env_res {var lbl loc lang} :=
   | Env_err
-  | Env_loc (ℓ : loc * lbl)
+| Env_loc (ℓ : loc * lbl)
   | Env_wvl (w : wvl var lbl loc lang)
 .
 
@@ -56,6 +56,30 @@ Inductive eval {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc}
   (BIND : eval (nv_floc x (ℓ, t1) σ) t1 v1)
   (MOD : eval (nv_bval x (wvl_recv t1 (close_vl 0 (ℓ, t1) v1)) σ) t2 (vl_ev E2))
 : eval σ (lblled p (tm_bind x t1 t2)) (vl_exp (nv_bval x (wvl_recv t1 (close_vl 0 (ℓ, t1) v1)) (nv_ev E2)))
+| ev_zero p
+: eval σ (lblled p tm_zero) (vl_nat 0)
+| ev_succ p t n
+  (PRED : eval σ t (vl_nat n))
+: eval σ (lblled p (tm_succ t)) (vl_nat (S n))
+| ev_succevent p t E
+  (PRED : eval σ t (vl_ev E))
+: eval σ (lblled p (tm_succ t)) (vl_ev (SuccE E))
+| ev_casezero p t z n s v
+  (MATCH : eval σ t (vl_nat 0))
+  (ZERO : eval σ z v)
+: eval σ (lblled p (tm_case t z n s)) v
+| ev_casesucc p t z n s m v
+  (MATCH : eval σ t (vl_nat (S m)))
+  (SUCC : eval (nv_bval n (wvl_v (vl_nat m)) σ) s v)
+: eval σ (lblled p (tm_case t z n s)) v
+| ev_casezeroevent p t z n s E v
+  (MATCH : eval σ t (vl_ev E))
+  (ZERO : eval σ z v)
+: eval σ (lblled p (tm_case t z n s)) v
+| ev_casesuccevent p t z n s E v
+  (MATCH : eval σ t (vl_ev E))
+  (SUCC : eval (nv_bval n (wvl_v (vl_ev (PredE E))) σ) s v)
+: eval σ (lblled p (tm_case t z n s)) v
 .
 
 Lemma read_env_lc {var lbl loc lang} `{Eq var} (σ : nv var lbl loc lang) (Σ : env σ) :
@@ -111,6 +135,13 @@ Proof.
     exploit IHEVAL2.
     constructor; auto.
     intros VAL. inv VAL. auto.
+  - econstructor.
+  - econstructor.
+  - specialize (IHEVAL LC). inversion IHEVAL.
+    repeat econstructor; auto.
+  - apply IHEVAL2. repeat econstructor; auto.
+  - apply IHEVAL2. repeat econstructor; auto.
+    specialize (IHEVAL1 LC). inversion IHEVAL1; auto.
 Qed.
 
 Lemma read_env_map {var lbl loc lang} `{Eq var} `{Eq lbl} `{Eq loc} (σ : nv var lbl loc lang) :
@@ -210,6 +241,8 @@ Proof.
     des; eauto.
     eapply close_flloc in IN'. des.
     exploit IHEVAL1; eauto. ii; des; clarify.
+  - apply IHEVAL2 in IN. rewrite in_app_iff in *.
+    des; auto.
 Qed.
 
 Lemma eval_floc_dec {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc} t (σ : nv var _ loc (@val var lbl)) v (EVAL : eval σ t v) :

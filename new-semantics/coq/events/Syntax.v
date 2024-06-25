@@ -5,6 +5,9 @@ Inductive tm {var lbl} :=
 | tm_link (t1 t2 : ltm)
 | tm_mt
 | tm_bind (x : var) (t1 t2 : ltm)
+| tm_zero
+| tm_succ (t : ltm)
+| tm_case (t : ltm) (z : ltm) (n : var) (s : ltm)
 
 with ltm {var lbl} :=
 | lblled (p : lbl) (t : tm)

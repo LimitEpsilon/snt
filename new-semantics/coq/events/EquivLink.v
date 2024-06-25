@@ -55,6 +55,20 @@ Section EquivLink.
     (LINKv : forall ℓ (nIN : ~ In ℓ L),
       link' σ0 (open_loc_vl 0 (ℓ, p) v) (open_loc_vl 0 (ℓ, p) v'))
   : link' σ0 (wvl_recv p v) (wvl_recv p v')
+  | link_nat' n
+  : link' σ0 (vl_nat n) (vl_nat n)
+  | link_succNat' (E : vnt _ _ _ _) n
+    (LINKE : link' σ0 E (vl_nat n))
+  : link' σ0 (SuccE E) (vl_nat (S n))
+  | link_succEvent' (E E' : vnt _ _ _ _)
+    (LINKE : link' σ0 E E')
+  : link' σ0 (SuccE E) (SuccE E')
+  | link_predNat' (E : vnt _ _ _ _) n
+    (LINKE : link' σ0 E (vl_nat (S n)))
+  : link' σ0 (PredE E) (vl_nat n)
+  | link_predEvent' (E E' : vnt _ _ _ _)
+    (LINKE : link' σ0 E E')
+  : link' σ0 (PredE E) (PredE E')
   .
 
   #[local] Lemma equiv_link_l `{Eq var} `{Eq lbl} `{Name loc}
@@ -249,7 +263,7 @@ Section EquivLink.
       assert (open_loc_subst_loc_vl v') by eapply open_loc_subst_loc. rw.
       des_goal; ss; repeat des_hyp; eqb2eq loc; clarify.
   Qed.
- 
+
   Lemma link_subst_wvl' `{Eq var} `{Eq lbl} `{Name loc}
     (σ0 : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) (w w' : wvl var _ loc _) (LINK : link' σ0 w w') :
     forall u u' (LINKu : link' σ0 u u') ℓ' p' (nIN : ~ In ℓ' (floc_nv σ0)),
@@ -282,7 +296,7 @@ Section EquivLink.
       eapply linked_lc' in LINKu; eauto.
       eapply link_lc' in LINKu; eauto.
   Qed.
-    
+
   Lemma link_vl' `{Eq var} `{Eq lbl} `{Eq loc}
     (σ0 : nv var (@ltm var lbl) loc _) (v : vl var _ loc _) w (LINK : link' σ0 v w) :
     match w with
@@ -292,7 +306,7 @@ Section EquivLink.
   Proof.
     inv LINK; clarify.
   Qed.
-  
+
   Lemma link_read' `{Eq var} `{Eq lbl} `{Name loc} (σ0 : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) :
     forall (σ : nv var _ loc _) (σ' : wvl var _ loc _) (LINK : link' σ0 σ σ'),
     match σ' with

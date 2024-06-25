@@ -60,8 +60,7 @@ That is, $(\ctx,v)$ is contained in $\sembracket{p_0}\Sigma_0(p)$ if and only if
     \infer[Conc-ENil]
     {\event\preceq(\Abs\ctx,\varnothing)}
     {[\event]\preceq\Abs\ctx}
-    \quad
-    \infer[Conc-ConsLoc]
+    \quad \infer[Conc-ConsLoc]
     {
     {p\in\Abs\ctx.1(x)}\\
     {\ctx\preceq\Abs\ctx}
@@ -167,6 +166,44 @@ for each $w_+\in\ctx_0\semlink w$ and $p\in\mathbb{P}$,
 when $[\Abs{v},\Abs{v}_+] = [(\Abs\ptree(p).1,\varnothing),(\Abs\ptree_+(p).1,\varnothing)]$ or $[\Abs\ptree(p).2,\Abs\ptree_+(p).2]$.
 
 The condition for $\Abs\ptree_+$ can be deduced by attempting the proof of the above in advance.
+
+\begin{align*}
+  \Abs\ptree_+\sqsupseteq                              & \:\Abs\ptree_0                            \\
+  \Abs\ptree_+(E).\abbrtext{in}.\beta\sqsupseteq       & \:\Abs\ptree(E).\abbrtext{in}.\beta       \\
+  \Abs\ptree_+(E).\abbrtext{out}.\ctx.\beta\sqsupseteq & \:\Abs\ptree(E).\abbrtext{out}.\ctx.\beta \\
+  \Abs\ptree_+(E).\abbrtext{out}.\lambda\sqsupseteq    & \:\Abs\ptree(E).\abbrtext{out}.\lambda
+\end{align*}
+\begin{align*}
+  \Abs\InitE\in{}          & \Abs\ptree(E).\abbrtext{in}.\event\Rightarrow\Abs\ptree_+(E).\abbrtext{in}\sqsupseteq\Abs\ctx_0                                         \\
+  \Abs\ReadE(E_1,x)\in{}   & \Abs\ptree(E).\abbrtext{in}.\event\Rightarrow                                                                                           \\
+                           & \Abs\ptree_+(E_1).\abbrtext{in}.\event\neq\varnothing\Rightarrow\Abs\ptree_+(E).\abbrtext{in}.\event\sqsupseteq\{\Abs\ReadE(E_1,x)\}    \\
+                           & E'\in\Abs\ptree_+(E_1).\abbrtext{in}.\beta(x)\Rightarrow\Abs\ptree_+(E).\abbrtext{in}\sqsupseteq\Abs\ptree_+(E').\abbrtext{out}.\ctx    \\
+  \Abs\CallE(E_1,E_2)\in{} & \Abs\ptree(E).\abbrtext{in}.\event\Rightarrow                                                                                           \\
+                           & \Abs\ptree_+(E_1).\abbrtext{out}.\event\neq\varnothing\Rightarrow\Abs\ptree_+(E).\abbrtext{in}.\event\sqsupseteq\{\Abs\CallE(E_1,E_2)\} \\
+                           & {\setlength{\arraycolsep}{2pt}\setstretch{1.5}
+      \begin{array}{rl}
+        \{p:\lambda x.B\}=E'\in & \Abs\ptree_+(E_1).\abbrtext{out}.\lambda\Rightarrow                                           \\
+                                & \Abs\ptree_+(E).\abbrtext{in}\sqsupseteq\Abs\ptree_+(B).\abbrtext{out}.\ctx                   \\
+                                & \Abs\ptree_+(B).\abbrtext{in}\sqsupseteq\Abs\ptree_+(E').\abbrtext{in}\sqcup[x\mapsto\{E_2\}] \\
+                                & \Abs\ptree_+\sqsupseteq\Abs\Step(\Abs\ptree_+)
+      \end{array}}
+\end{align*}
+\begin{align*}
+  \Abs\InitE\in{}          & \Abs\ptree(E).\abbrtext{out}.\event\Rightarrow\Abs\ptree_+(E).\abbrtext{out}.\ctx\sqsupseteq\Abs\ctx_0                                   \\
+  \Abs\ReadE(E_1,x)\in{}   & \Abs\ptree(E).\abbrtext{out}.\event\Rightarrow                                                                                           \\
+                           & \Abs\ptree_+(E_1).\abbrtext{in}.\event\neq\varnothing\Rightarrow\Abs\ptree_+(E).\abbrtext{out}.\event\sqsupseteq\{\Abs\ReadE(E_1,x)\}    \\
+                           & E'\in\Abs\ptree_+(E_1).\abbrtext{in}.\beta(x)\Rightarrow\Abs\ptree_+(E).\abbrtext{out}\sqsupseteq\Abs\ptree_+(E').\abbrtext{out}         \\
+  \Abs\CallE(E_1,E_2)\in{} & \Abs\ptree(E).\abbrtext{out}.\event\Rightarrow                                                                                           \\
+                           & \Abs\ptree_+(E_1).\abbrtext{out}.\event\neq\varnothing\Rightarrow\Abs\ptree_+(E).\abbrtext{out}.\event\sqsupseteq\{\Abs\CallE(E_1,E_2)\} \\
+                           & {\setlength{\arraycolsep}{2pt}\setstretch{1.5}
+      \begin{array}{rl}
+        \{p:\lambda x.B\}=E'\in & \Abs\ptree_+(E_1).\abbrtext{out}.\lambda\Rightarrow                                           \\
+                                & \Abs\ptree_+(E).\abbrtext{out}\sqsupseteq\Abs\ptree_+(B).\abbrtext{out}                       \\
+                                & \Abs\ptree_+(B).\abbrtext{in}\sqsupseteq\Abs\ptree_+(E').\abbrtext{in}\sqcup[x\mapsto\{E_2\}] \\
+                                & \Abs\ptree_+\sqsupseteq\Abs\Step(\Abs\ptree_+)
+      \end{array}}
+  \\
+\end{align*}
 
 We proceed by induction on the derivation for
 \[w_+\in\ctx_0\semlink w\]

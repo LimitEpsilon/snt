@@ -217,7 +217,7 @@ Section LCDefs.
   Variable var : Type.
   Variable loc : Type.
   Variable lang : Type.
-  
+
   (* locally closed predicates *)
   Inductive wvalue : wvl var loc lang -> Prop :=
   | wvalue_v v (VAL : value v) : wvalue (wvl_v v)

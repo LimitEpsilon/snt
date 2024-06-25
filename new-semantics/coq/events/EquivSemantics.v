@@ -41,6 +41,30 @@ Inductive eval' {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc}
     eval' (nv_floc x (ℓ, t1) σ) t1 (open_loc_vl 0 (ℓ, t1) v1))
   (MOD : eval' (nv_bval x (wvl_recv t1 v1) σ) t2 (vl_ev E2))
 : eval' σ (lblled p (tm_bind x t1 t2)) (vl_exp (nv_bval x (wvl_recv t1 v1) (nv_ev E2)))
+| ev_zero' p
+: eval' σ (lblled p tm_zero) (vl_nat 0)
+| ev_succ' p t n
+  (PRED : eval' σ t (vl_nat n))
+: eval' σ (lblled p (tm_succ t)) (vl_nat (S n))
+| ev_succevent' p t E
+  (PRED : eval' σ t (vl_ev E))
+: eval' σ (lblled p (tm_succ t)) (vl_ev (SuccE E))
+| ev_casezero' p t z n s v
+  (MATCH : eval' σ t (vl_nat 0))
+  (ZERO : eval' σ z v)
+: eval' σ (lblled p (tm_case t z n s)) v
+| ev_casesucc' p t z n s m v
+  (MATCH' : eval' σ t (vl_nat (S m)))
+  (SUCC' : eval' (nv_bval n (wvl_v (vl_nat m)) σ) s v)
+: eval' σ (lblled p (tm_case t z n s)) v
+| ev_casezeroevent' p t z n s E v
+  (MATCH : eval' σ t (vl_ev E))
+  (ZERO : eval' σ z v)
+: eval' σ (lblled p (tm_case t z n s)) v
+| ev_casesuccevent' p t z n s E v
+  (MATCH : eval' σ t (vl_ev E))
+  (SUCC : eval' (nv_bval n (wvl_v (vl_ev (PredE E))) σ) s v)
+: eval' σ (lblled p (tm_case t z n s)) v
 .
 
 Lemma equiv_l {var lbl loc} `{Eq var} `{Eq lbl} `{Name loc}
@@ -175,6 +199,12 @@ Proof.
       des_ifs; eqb2eq loc; clarify.
       eapply floc_map in DOM; eauto. contradict.
       exploit INJ; eauto. ii; clarify.
+  - apply eval_lc in EVAL1 as Σ1; eauto. inv Σ1.
+    exploit IHEVAL2; eauto. repeat constructor; auto.
+    eapply ev_casesucc'; eauto.
+  - apply eval_lc in EVAL1 as Σ1; eauto. inv Σ1.
+    exploit IHEVAL2; eauto. repeat constructor; auto.
+    eapply ev_casesuccevent'; eauto.
 Qed.
 
 Lemma equiv_r {var lbl loc} `{Eq var} `{Eq lbl} `{Name loc}
@@ -256,6 +286,14 @@ Proof.
       repeat (constructor; auto).
       intro LC'.
       inv LC'. auto.
+  - repeat constructor.
+  - repeat constructor.
+  - exploit IHEVAL; eauto. intro LC'.
+    inversion LC'; repeat constructor; auto.
+  - apply IHEVAL2. repeat constructor; auto.
+  - apply IHEVAL2. repeat constructor; auto.
+    exploit IHEVAL1; eauto. intro LC'.
+    inversion LC'; auto.
 Qed.
 
 Lemma eval_subst_loc' {var lbl loc} `{Eq var} `{Eq lbl} `{Name loc} t (σ : nv var (@ltm var lbl) loc val) v (EVAL : eval' σ t v) :

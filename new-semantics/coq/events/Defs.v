@@ -20,11 +20,14 @@ Section PreDefs.
   | vl_ev (E : vnt)
   | vl_exp (σ : nv)
   | vl_clos (e : lang) (σ : nv)
+  | vl_nat (n : nat)
 
   with vnt :=
   | Init
   | Read (E : vnt) (x : var)
   | Call (E : vnt) (v : vl)
+  | SuccE (s : vnt)
+  | PredE (s : vnt)
   .
 
   Scheme wvl_ind_mut := Induction for wvl Sort Prop
@@ -69,6 +72,7 @@ with open_loc_vl {var lbl loc lang} (i : nat) (ℓ : loc * lbl) (v : vl var lbl 
   | vl_ev E => vl_ev (open_loc_vnt i ℓ E)
   | vl_exp σ => vl_exp (open_loc_nv i ℓ σ)
   | vl_clos e σ => vl_clos e (open_loc_nv i ℓ σ)
+  | vl_nat n => vl_nat n
   end
 
 with open_loc_vnt {var lbl loc lang} (i : nat) (ℓ : loc * lbl) (E : vnt var lbl loc lang) :=
@@ -76,6 +80,8 @@ with open_loc_vnt {var lbl loc lang} (i : nat) (ℓ : loc * lbl) (E : vnt var lb
   | Init => Init
   | Read E x => Read (open_loc_vnt i ℓ E) x
   | Call E v => Call (open_loc_vnt i ℓ E) (open_loc_vl i ℓ v)
+  | SuccE s => SuccE (open_loc_vnt i ℓ s)
+  | PredE s => PredE (open_loc_vnt i ℓ s)
   end.
 
 (* close the free location ℓ with the binding depth i *)
@@ -104,6 +110,7 @@ with close_vl {var lbl loc lang} `{Eq lbl} `{Eq loc} (i : nat) (ℓ : loc * lbl)
   | vl_ev E => vl_ev (close_vnt i ℓ E)
   | vl_exp σ => vl_exp (close_nv i ℓ σ)
   | vl_clos e σ => vl_clos e (close_nv i ℓ σ)
+  | vl_nat n => vl_nat n
   end
 
 with close_vnt {var lbl loc lang} `{Eq lbl} `{Eq loc} (i : nat) (ℓ : loc * lbl) (E : vnt var lbl loc lang) :=
@@ -111,6 +118,8 @@ with close_vnt {var lbl loc lang} `{Eq lbl} `{Eq loc} (i : nat) (ℓ : loc * lbl
   | Init => Init
   | Read E x => Read (close_vnt i ℓ E) x
   | Call E v => Call (close_vnt i ℓ E) (close_vl i ℓ v)
+  | SuccE s => SuccE (close_vnt i ℓ s)
+  | PredE s => PredE (close_vnt i ℓ s)
   end.
 
 (* open the bound location i with u *)
@@ -139,6 +148,7 @@ with open_wvl_vl {var lbl loc lang} (i : nat) (u : wvl var lbl loc lang) (v : vl
   | vl_ev E => vl_ev (open_wvl_vnt i u E)
   | vl_exp σ => vl_exp (open_wvl_nv i u σ)
   | vl_clos e σ => vl_clos e (open_wvl_nv i u σ)
+  | vl_nat n => vl_nat n
   end
 
 with open_wvl_vnt {var lbl loc lang} (i : nat) (u : wvl var lbl loc lang) (E : vnt var lbl loc lang) :=
@@ -146,6 +156,8 @@ with open_wvl_vnt {var lbl loc lang} (i : nat) (u : wvl var lbl loc lang) (E : v
   | Init => Init
   | Read E x => Read (open_wvl_vnt i u E) x
   | Call E v => Call (open_wvl_vnt i u E) (open_wvl_vl i u v)
+  | SuccE s => SuccE (open_wvl_vnt i u s)
+  | PredE s => PredE (open_wvl_vnt i u s)
   end.
 
 (* substitute the free location ℓ for ℓ' *)
@@ -174,6 +186,7 @@ with subst_loc_vl {var lbl loc lang} `{Eq lbl} `{Eq loc} (ν ℓ : loc * lbl) (v
   | vl_ev E => vl_ev (subst_loc_vnt ν ℓ E)
   | vl_exp σ => vl_exp (subst_loc_nv ν ℓ σ)
   | vl_clos e σ => vl_clos e (subst_loc_nv ν ℓ σ)
+  | vl_nat n => vl_nat n
   end
 
 with subst_loc_vnt {var lbl loc lang} `{Eq lbl} `{Eq loc} (ν ℓ : loc * lbl) (E : vnt var lbl loc lang) :=
@@ -181,6 +194,8 @@ with subst_loc_vnt {var lbl loc lang} `{Eq lbl} `{Eq loc} (ν ℓ : loc * lbl) (
   | Init => Init
   | Read E x => Read (subst_loc_vnt ν ℓ E) x
   | Call E v => Call (subst_loc_vnt ν ℓ E) (subst_loc_vl ν ℓ v)
+  | SuccE s => SuccE (subst_loc_vnt ν ℓ s)
+  | PredE s => PredE (subst_loc_vnt ν ℓ s)
   end.
 
 (* multiple substitutions *)
@@ -207,6 +222,7 @@ with map_vl {var lbl loc lang} (φ : loc -> loc) (v : vl var lbl loc lang) :=
   | vl_ev E => vl_ev (map_vnt φ E)
   | vl_exp σ => vl_exp (map_nv φ σ)
   | vl_clos e σ => vl_clos e (map_nv φ σ)
+  | vl_nat n => vl_nat n
   end
 
 with map_vnt {var lbl loc lang} (φ : loc -> loc) (E : vnt var lbl loc lang) :=
@@ -214,6 +230,8 @@ with map_vnt {var lbl loc lang} (φ : loc -> loc) (E : vnt var lbl loc lang) :=
   | Init => Init
   | Read E x => Read (map_vnt φ E) x
   | Call E v => Call (map_vnt φ E) (map_vl φ v)
+  | SuccE s => SuccE (map_vnt φ s)
+  | PredE s => PredE (map_vnt φ s)
   end.
 
 (* substitute the free location ℓ for u *)
@@ -242,6 +260,7 @@ with subst_wvl_vl {var lbl loc lang} `{Eq lbl} `{Eq loc} (u : wvl var lbl loc la
   | vl_ev E => vl_ev (subst_wvl_vnt u ℓ E)
   | vl_exp σ => vl_exp (subst_wvl_nv u ℓ σ)
   | vl_clos e σ => vl_clos e (subst_wvl_nv u ℓ σ)
+  | vl_nat n => vl_nat n
   end
 
 with subst_wvl_vnt {var lbl loc lang} `{Eq lbl} `{Eq loc} (u : wvl var lbl loc lang) (ℓ : loc * lbl) (E : vnt var lbl loc lang) :=
@@ -249,6 +268,8 @@ with subst_wvl_vnt {var lbl loc lang} `{Eq lbl} `{Eq loc} (u : wvl var lbl loc l
   | Init => Init
   | Read E x => Read (subst_wvl_vnt u ℓ E) x
   | Call E v => Call (subst_wvl_vnt u ℓ E) (subst_wvl_vl u ℓ v)
+  | SuccE s => SuccE (subst_wvl_vnt u ℓ s)
+  | PredE s => PredE (subst_wvl_vnt u ℓ s)
   end.
 
 (* free locations *)
@@ -270,6 +291,7 @@ with floc_vl {var lbl loc lang} (v : vl var lbl loc lang) :=
   match v with
   | vl_ev E => floc_vnt E
   | vl_exp σ | vl_clos _ σ => floc_nv σ
+  | vl_nat _ => []
   end
 
 with floc_vnt {var lbl loc lang} (E : vnt var lbl loc lang) :=
@@ -277,6 +299,7 @@ with floc_vnt {var lbl loc lang} (E : vnt var lbl loc lang) :=
   | Init => []
   | Read E x => floc_vnt E
   | Call E v => floc_vnt E ++ floc_vl v
+  | SuccE s | PredE s => floc_vnt s
   end.
 
 (* free labelled locations *)
@@ -298,6 +321,7 @@ with flloc_vl {var lbl loc lang} (v : vl var lbl loc lang) :=
   match v with
   | vl_ev E => flloc_vnt E
   | vl_exp σ | vl_clos _ σ => flloc_nv σ
+  | vl_nat _ => []
   end
 
 with flloc_vnt {var lbl loc lang} (E : vnt var lbl loc lang) :=
@@ -305,6 +329,7 @@ with flloc_vnt {var lbl loc lang} (E : vnt var lbl loc lang) :=
   | Init => []
   | Read E x => flloc_vnt E
   | Call E v => flloc_vnt E ++ flloc_vl v
+  | SuccE s | PredE s => flloc_vnt s
   end.
 
 Section LCDefs.
@@ -327,11 +352,14 @@ Section LCDefs.
   | value_ev E (EVENT : event E) : value (vl_ev E)
   | value_exp σ (ENV : env σ) : value (vl_exp σ)
   | value_clos e σ (ENV : env σ) : value (vl_clos e σ)
+  | value_nat n : value (vl_nat n)
 
   with event : vnt var lbl loc lang -> Prop :=
   | event_Init : event Init
   | event_Read E x (EVENT : event E) : event (Read E x)
   | event_Call E v (EVENT : event E) (VAL : value v) : event (Call E v)
+  | event_Succ E (EVENT : event E) : event (SuccE E)
+  | event_Pred E (EVENT : event E) : event (PredE E)
   .
 
   Scheme wvalue_ind_mut := Induction for wvalue Sort Prop
@@ -356,6 +384,10 @@ Section eqb.
     | tm_mt, tm_mt => true
     | tm_bind x1 t11 t12, tm_bind x2 t21 t22 =>
       eqb x1 x2 && eqb_ltm t11 t21 && eqb_ltm t12 t22
+    | tm_zero, tm_zero => true
+    | tm_succ t1, tm_succ t2 => eqb_ltm t1 t2
+    | tm_case t1 z1 n1 s1, tm_case t2 z2 n2 s2 =>
+      eqb_ltm t1 t2 && eqb_ltm z1 z2 && eqb n1 n2 && eqb_ltm s1 s2
     | _, _ => false
     end
 
@@ -370,11 +402,12 @@ Section eqb.
     (forall t1 t2, eqb_ltm t1 t2 = true <-> t1 = t2).
   Proof.
     apply term_ind; ii; split; ii;
-    match goal with
+    try match goal with
     | |- _ = true =>
       repeat rrw; s; try rewrite eqb_refl; s;
       repeat rw; try reflexivity;
-      rewrite andb_true_iff; split; rw; reflexivity
+      repeat rewrite andb_true_iff; repeat split;
+      rw; reflexivity
     | RR : _ _ ?t = true |- _ =>
       destruct t; ss; repeat des_hyp;
       f_equal;

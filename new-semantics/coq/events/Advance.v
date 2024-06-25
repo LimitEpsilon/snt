@@ -36,7 +36,7 @@ Section Advance.
       + econstructor 1; auto.
       + econstructor 2; auto.
     - eexists; split; econstructor; eauto.
-    - exploit IHEVAL1; eauto.
+  - exploit IHEVAL1; eauto.
       exploit IHEVAL2; eauto.
       intros (v2' & EVAL2' & LINK2).
       intros (v1' & EVAL1' & LINK1).
@@ -171,6 +171,63 @@ Section Advance.
         econstructor; eauto.
         eapply link_holeEvent'.
         assumption.
+    - eexists. split; econstructor.
+    - exploit IHEVAL; eauto.
+      intros (v' & EVAL' & LINK').
+      destruct v'; try solve [inv LINK'].
+      + eexists. split.
+        eapply ev_succevent'; eauto.
+        econstructor; eauto.
+      + eexists. split.
+        eapply ev_succ'; eauto.
+        inversion LINK'; subst.
+        constructor.
+    - exploit IHEVAL; eauto.
+      intros (v' & EVAL' & LINK').
+      destruct v'; try solve [inv LINK'].
+      eexists. split.
+      eapply ev_succevent'; eauto.
+      econstructor; eauto.
+    - exploit IHEVAL1; eauto.
+      exploit IHEVAL2; eauto.
+      intros (v2' & EVAL2' & LINK2').
+      intros (v1' & EVAL1' & LINK1').
+      destruct v1'; try solve [inv LINK1'].
+      + eexists. split.
+        eapply ev_casezeroevent'; eauto. auto.
+      + inv LINK1'. eexists. split.
+        eapply ev_casezero'; eauto. auto.
+    - exploit IHEVAL1; eauto.
+      intros (v1' & EVAL1' & LINK1').
+      destruct v1'; try solve [inv LINK1'].
+      + exploit IHEVAL2; eauto.
+        eapply link_bval'; eauto.
+        eapply link_predNat'; eauto.
+        intros (v2' & EVAL2' & LINK2').
+        eexists. split; eauto.
+        eapply ev_casesuccevent'; eauto.
+      + inv LINK1'. exploit IHEVAL2; eauto.
+        eapply link_bval'; eauto.
+        eapply link_nat'.
+        intros (v2' & EVAL2' & LINK2').
+        eexists. split.
+        eapply ev_casesucc'; eauto. auto.
+    - exploit IHEVAL1; eauto.
+      exploit IHEVAL2; eauto.
+      intros (v2' & EVAL2' & LINK2').
+      intros (v1' & EVAL1' & LINK1').
+      destruct v1'; try solve [inv LINK1'].
+      eexists. split.
+      eapply ev_casezeroevent'; eauto. auto.
+    - exploit IHEVAL1; eauto.
+      intros (v1' & EVAL1' & LINK1').
+      destruct v1'; try solve [inv LINK1'].
+      exploit IHEVAL2; eauto.
+      eapply link_bval'; eauto.
+      eapply link_predEvent'; eauto.
+      intros (v2' & EVAL2' & LINK2').
+      eexists. split.
+      eapply ev_casesuccevent'; eauto. auto.
   Qed.
 
   Theorem advance `{Eq var} `{Eq lbl} `{Name loc}
