@@ -145,6 +145,7 @@ Section LinkFacts.
         eapply open_loc_flloc in H; des; clarify
       end.
       eauto.
+    - destruct E'; simpl in *; auto.
   Qed.
 
   Lemma link_map `{Eq var} `{Eq lbl} `{Name loc}
@@ -173,6 +174,7 @@ Section LinkFacts.
         assert (map_open_loc_vl v) as RR by (eapply map_open_loc; eauto);
         rewrite RR in *; auto
       end.
+    - rewrite predE_map. econstructor; auto.
   Qed.
 End LinkFacts.
 

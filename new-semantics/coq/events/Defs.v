@@ -26,8 +26,8 @@ Section PreDefs.
   | Init
   | Read (E : vnt) (x : var)
   | Call (E : vnt) (v : vl)
-  | SuccE (s : vnt)
-  | PredE (s : vnt)
+  | SuccE (E : vnt)
+  | PredE (E : vnt)
   .
 
   Scheme wvl_ind_mut := Induction for wvl Sort Prop
@@ -42,6 +42,12 @@ Arguments wvl : clear implicits.
 Arguments nv : clear implicits.
 Arguments vl : clear implicits.
 Arguments vnt : clear implicits.
+
+Definition predE {var lbl loc lang} (E : vnt var lbl loc lang) :=
+  match E with
+  | Init | Read _ _ | Call _ _ | PredE _ => PredE E
+  | SuccE E => E
+  end.
 
 (* mutual fixpoints must be defined outside of Section to be simpl'd *)
 (* https://github.com/coq/coq/issues/3488 *)
@@ -464,3 +470,23 @@ Qed.
 
 (* one-to-one, or injective, function *)
 Definition oto {A B} (φ : A -> B) := forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ = ν.
+
+(* about predE *)
+Lemma predE_map {var lbl loc lang} φ (E : vnt var lbl loc lang) :
+  map_vnt φ (predE E) = predE (map_vnt φ E).
+Proof. destruct E; simpl; auto. Qed.
+
+Lemma predE_subst_loc {var lbl loc lang} `{Eq lbl, Eq loc, Eq lbl} ν ℓ (E : vnt var lbl loc lang) :
+  subst_loc_vnt ν ℓ (predE E) = predE (subst_loc_vnt ν ℓ E).
+Proof. destruct E; simpl; auto. Qed.
+
+Lemma predE_subst_wvl {var lbl loc lang} `{Eq lbl, Eq loc, Eq lbl} u ℓ (E : vnt var lbl loc lang) :
+  subst_wvl_vnt u ℓ (predE E) = predE (subst_wvl_vnt u ℓ E).
+Proof. destruct E; simpl; auto. Qed.
+
+Lemma predE_lc {var lbl loc lang} (E : vnt var lbl loc lang) :
+  event E -> event (predE E).
+Proof. destruct E; ss; intro LC; try constructor; auto. inv LC. auto. Qed.
+
+Hint Resolve predE_lc : core.
+

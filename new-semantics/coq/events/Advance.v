@@ -202,7 +202,7 @@ Section Advance.
       destruct v1'; try solve [inv LINK1'].
       + exploit IHEVAL2; eauto.
         eapply link_bval'; eauto.
-        eapply link_predNat'; eauto.
+        eapply link_predENat'; eauto.
         intros (v2' & EVAL2' & LINK2').
         eexists. split; eauto.
         eapply ev_casesuccevent'; eauto.
@@ -224,7 +224,7 @@ Section Advance.
       destruct v1'; try solve [inv LINK1'].
       exploit IHEVAL2; eauto.
       eapply link_bval'; eauto.
-      eapply link_predEvent'; eauto.
+      eapply link_predEEvent'; eauto.
       intros (v2' & EVAL2' & LINK2').
       eexists. split.
       eapply ev_casesuccevent'; eauto. auto.

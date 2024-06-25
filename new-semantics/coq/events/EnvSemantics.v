@@ -78,7 +78,7 @@ Inductive eval {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc}
 : eval σ (lblled p (tm_case t z n s)) v
 | ev_casesuccevent p t z n s E v
   (MATCH : eval σ t (vl_ev E))
-  (SUCC : eval (nv_bval n (wvl_v (vl_ev (PredE E))) σ) s v)
+  (SUCC : eval (nv_bval n (wvl_v (vl_ev (predE E))) σ) s v)
 : eval σ (lblled p (tm_case t z n s)) v
 .
 
@@ -141,7 +141,7 @@ Proof.
     repeat econstructor; auto.
   - apply IHEVAL2. repeat econstructor; auto.
   - apply IHEVAL2. repeat econstructor; auto.
-    specialize (IHEVAL1 LC). inversion IHEVAL1; auto.
+    specialize (IHEVAL1 LC). inv IHEVAL1. auto.
 Qed.
 
 Lemma read_env_map {var lbl loc lang} `{Eq var} `{Eq lbl} `{Eq loc} (σ : nv var lbl loc lang) :
@@ -243,6 +243,7 @@ Proof.
     exploit IHEVAL1; eauto. ii; des; clarify.
   - apply IHEVAL2 in IN. rewrite in_app_iff in *.
     des; auto.
+    destruct E; simpl in *; eauto.
 Qed.
 
 Lemma eval_floc_dec {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc} t (σ : nv var _ loc (@val var lbl)) v (EVAL : eval σ t v) :
@@ -280,5 +281,8 @@ Proof.
     eapply ev_bindevent; eauto.
     red. intros IN. eapply map_floc in IN; eauto.
     rrw; eauto.
+  - eapply ev_casesuccevent; eauto.
+    exploit IHEVAL2; eauto.
+    rewrite predE_map in *. auto.
 Qed.
 

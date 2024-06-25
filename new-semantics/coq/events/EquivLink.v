@@ -68,7 +68,7 @@ Section EquivLink.
   : link' σ0 (PredE E) (vl_nat n)
   | link_predEvent' (E E' : vnt _ _ _ _)
     (LINKE : link' σ0 E E')
-  : link' σ0 (PredE E) (PredE E')
+  : link' σ0 (PredE E) (predE E')
   .
 
   #[local] Lemma equiv_link_l `{Eq var} `{Eq lbl} `{Name loc}
@@ -147,6 +147,7 @@ Section EquivLink.
         des_ifs; eqb2eq loc; clarify.
         eapply floc_map in DOM; eauto. contradict.
         exploit INJ; eauto. ii; clarify.
+    - rewrite predE_map. econstructor; auto.
   Qed.
 
   #[local] Lemma equiv_link_r `{Eq var} `{Eq lbl} `{Name loc}
@@ -213,7 +214,7 @@ Section EquivLink.
     | H : event (_ _) |- _ => inv H
     | L : list _ |- _ => instantiate (1 := L)
     end.
-  
+
   Lemma linked_lc' `{Eq var} `{Eq lbl} `{Name loc}
     (σ0 : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) (w : wvl var _ loc _) :
     forall w' (LINK : link' σ0 w w'), wvalue w'.
@@ -235,7 +236,7 @@ Section EquivLink.
       end.
       intro W. inv W. auto.
   Qed.
-  
+
   Lemma link_subst_loc' `{Eq var} `{Eq lbl} `{Name loc}
     (σ0 : nv var (@ltm var lbl) loc _) (w w' : wvl var _ loc _) (LINK : link' σ0 w w') :
     forall ν ℓ',
@@ -262,6 +263,8 @@ Section EquivLink.
       assert (open_loc_subst_loc_vl v) by eapply open_loc_subst_loc. rw.
       assert (open_loc_subst_loc_vl v') by eapply open_loc_subst_loc. rw.
       des_goal; ss; repeat des_hyp; eqb2eq loc; clarify.
+    - rewrite predE_subst_loc in *.
+      econstructor; eauto.
   Qed.
 
   Lemma link_subst_wvl' `{Eq var} `{Eq lbl} `{Name loc}
@@ -295,6 +298,7 @@ Section EquivLink.
       all: try solve [ii; des_ifs; clarify].
       eapply linked_lc' in LINKu; eauto.
       eapply link_lc' in LINKu; eauto.
+    - rewrite predE_subst_wvl. econstructor; eauto.
   Qed.
 
   Lemma link_vl' `{Eq var} `{Eq lbl} `{Eq loc}
@@ -347,6 +351,22 @@ Section EquivLink.
           eapply link_subst_wvl'; eauto.
           econstructor; eauto.
       + exploit IHσ; eauto.
+  Qed.
+
+  Lemma link_predENat' `{Eq var} `{Eq lbl} `{Name loc} (σ0 : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) :
+    forall (E : vnt _ _ _ _) n,
+      link' σ0 E (vl_nat (S n)) -> link' σ0 (predE E) (vl_nat n).
+  Proof.
+    intros E n LINK; destruct E; simpl in *;
+    try solve [inv LINK; auto | eapply link_predNat'; auto].
+  Qed.
+
+  Lemma link_predEEvent' `{Eq var} `{Eq lbl} `{Name loc} (σ0 : nv var (@ltm var lbl) loc _) (Σ0 : env σ0) :
+    forall (E E' : vnt _ _ _ _),
+      link' σ0 E E' -> link' σ0 (predE E) (predE E').
+  Proof.
+    intros E n LINK; destruct E; simpl in *;
+    try solve [inv LINK; auto | eapply link_predEvent'; auto].
   Qed.
 End EquivLink.
 

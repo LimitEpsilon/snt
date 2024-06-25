@@ -63,7 +63,7 @@ Inductive eval' {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc}
 : eval' σ (lblled p (tm_case t z n s)) v
 | ev_casesuccevent' p t z n s E v
   (MATCH : eval' σ t (vl_ev E))
-  (SUCC : eval' (nv_bval n (wvl_v (vl_ev (PredE E))) σ) s v)
+  (SUCC : eval' (nv_bval n (wvl_v (vl_ev (predE E))) σ) s v)
 : eval' σ (lblled p (tm_case t z n s)) v
 .
 
@@ -203,8 +203,9 @@ Proof.
     exploit IHEVAL2; eauto. repeat constructor; auto.
     eapply ev_casesucc'; eauto.
   - apply eval_lc in EVAL1 as Σ1; eauto. inv Σ1.
-    exploit IHEVAL2; eauto. repeat constructor; auto.
+    exploit IHEVAL2; eauto. repeat constructor; auto. i.
     eapply ev_casesuccevent'; eauto.
+    rewrite predE_map in *; auto.
 Qed.
 
 Lemma equiv_r {var lbl loc} `{Eq var} `{Eq lbl} `{Name loc}
@@ -333,6 +334,9 @@ Proof.
     destruct ℓ'; ss; rw.
     assert (open_loc_subst_loc_vl v1) by eapply open_loc_subst_loc.
     rw. s. rw. auto.
+  - eapply ev_casesuccevent'; auto.
+    specialize (IHEVAL2 ν ℓ').
+    rewrite predE_subst_loc in *. auto.
 Qed.
 
 Lemma eval_subst_wvl' {var lbl loc} `{Eq var} `{Eq lbl} `{Name loc} t (σ : nv var (@ltm var lbl) loc val) v (EVAL : eval' σ t v) :
@@ -372,6 +376,9 @@ Proof.
     destruct ℓ'; ss; rw.
     assert (open_loc_subst_wvl_vl v1) by (eapply open_loc_subst_wvl; eauto).
     rw; ii; ss; eqb2eq loc; clarify.
+  - eapply ev_casesuccevent'; auto.
+    exploit IHEVAL2; eauto. instantiate (1 := ℓ').
+    rewrite predE_subst_wvl. auto.
 Qed.
 
 Notation " σ '⊢' t '⇓' v " := (eval' σ t v)

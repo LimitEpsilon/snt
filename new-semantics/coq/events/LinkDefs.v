@@ -71,7 +71,7 @@ Section LinkDefs.
   : link σ0 (PredE E) (vl_nat n)
   | link_predEvent (E E' : vnt _ _ _ _)
     (LINKE : link σ0 E E')
-  : link σ0 (PredE E) (PredE E')
+  : link σ0 (PredE E) (predE E')
   .
 End LinkDefs.
 
