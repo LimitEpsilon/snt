@@ -63,7 +63,7 @@ Inductive eval {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc}
 : eval σ (lblled p (tm_succ t)) (vl_nat (S n))
 | ev_succevent p t E
   (PRED : eval σ t (vl_ev E))
-: eval σ (lblled p (tm_succ t)) (vl_ev (SuccE E))
+: eval σ (lblled p (tm_succ t)) (vl_ev (Succ E))
 | ev_casezero p t z n s v
   (MATCH : eval σ t (vl_nat 0))
   (ZERO : eval σ z v)
@@ -155,7 +155,7 @@ Proof.
 Qed.
 
 Lemma read_env_subst_loc {var lbl loc lang} `{Eq var} `{Eq lbl} `{Eq loc} (σ : nv var lbl loc lang) x :
- forall r ν ℓ (READ : read_env σ x = r),
+  forall r ν ℓ (READ : read_env σ x = r),
     read_env (subst_loc_nv ν ℓ σ) x =
     match r with
     | Env_err => Env_err
@@ -243,7 +243,7 @@ Proof.
     exploit IHEVAL1; eauto. ii; des; clarify.
   - apply IHEVAL2 in IN. rewrite in_app_iff in *.
     des; auto.
-    destruct E; simpl in *; eauto.
+    rewrite predE_flloc in *. auto.
 Qed.
 
 Lemma eval_floc_dec {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc} t (σ : nv var _ loc (@val var lbl)) v (EVAL : eval σ t v) :

@@ -26,8 +26,8 @@ Section PreDefs.
   | Init
   | Read (E : vnt) (x : var)
   | Call (E : vnt) (v : vl)
-  | SuccE (E : vnt)
-  | PredE (E : vnt)
+  | Succ (E : vnt)
+  | Pred (E : vnt)
   .
 
   Scheme wvl_ind_mut := Induction for wvl Sort Prop
@@ -45,8 +45,8 @@ Arguments vnt : clear implicits.
 
 Definition predE {var lbl loc lang} (E : vnt var lbl loc lang) :=
   match E with
-  | Init | Read _ _ | Call _ _ | PredE _ => PredE E
-  | SuccE E => E
+  | Init | Read _ _ | Call _ _ | Pred _ => Pred E
+  | Succ E => E
   end.
 
 (* mutual fixpoints must be defined outside of Section to be simpl'd *)
@@ -86,8 +86,8 @@ with open_loc_vnt {var lbl loc lang} (i : nat) (ℓ : loc * lbl) (E : vnt var lb
   | Init => Init
   | Read E x => Read (open_loc_vnt i ℓ E) x
   | Call E v => Call (open_loc_vnt i ℓ E) (open_loc_vl i ℓ v)
-  | SuccE s => SuccE (open_loc_vnt i ℓ s)
-  | PredE s => PredE (open_loc_vnt i ℓ s)
+  | Succ E => Succ (open_loc_vnt i ℓ E)
+  | Pred E => Pred (open_loc_vnt i ℓ E)
   end.
 
 (* close the free location ℓ with the binding depth i *)
@@ -124,8 +124,8 @@ with close_vnt {var lbl loc lang} `{Eq lbl} `{Eq loc} (i : nat) (ℓ : loc * lbl
   | Init => Init
   | Read E x => Read (close_vnt i ℓ E) x
   | Call E v => Call (close_vnt i ℓ E) (close_vl i ℓ v)
-  | SuccE s => SuccE (close_vnt i ℓ s)
-  | PredE s => PredE (close_vnt i ℓ s)
+  | Succ E => Succ (close_vnt i ℓ E)
+  | Pred E => Pred (close_vnt i ℓ E)
   end.
 
 (* open the bound location i with u *)
@@ -162,8 +162,8 @@ with open_wvl_vnt {var lbl loc lang} (i : nat) (u : wvl var lbl loc lang) (E : v
   | Init => Init
   | Read E x => Read (open_wvl_vnt i u E) x
   | Call E v => Call (open_wvl_vnt i u E) (open_wvl_vl i u v)
-  | SuccE s => SuccE (open_wvl_vnt i u s)
-  | PredE s => PredE (open_wvl_vnt i u s)
+  | Succ E => Succ (open_wvl_vnt i u E)
+  | Pred E => Pred (open_wvl_vnt i u E)
   end.
 
 (* substitute the free location ℓ for ℓ' *)
@@ -200,8 +200,8 @@ with subst_loc_vnt {var lbl loc lang} `{Eq lbl} `{Eq loc} (ν ℓ : loc * lbl) (
   | Init => Init
   | Read E x => Read (subst_loc_vnt ν ℓ E) x
   | Call E v => Call (subst_loc_vnt ν ℓ E) (subst_loc_vl ν ℓ v)
-  | SuccE s => SuccE (subst_loc_vnt ν ℓ s)
-  | PredE s => PredE (subst_loc_vnt ν ℓ s)
+  | Succ E => Succ (subst_loc_vnt ν ℓ E)
+  | Pred E => Pred (subst_loc_vnt ν ℓ E)
   end.
 
 (* multiple substitutions *)
@@ -236,8 +236,8 @@ with map_vnt {var lbl loc lang} (φ : loc -> loc) (E : vnt var lbl loc lang) :=
   | Init => Init
   | Read E x => Read (map_vnt φ E) x
   | Call E v => Call (map_vnt φ E) (map_vl φ v)
-  | SuccE s => SuccE (map_vnt φ s)
-  | PredE s => PredE (map_vnt φ s)
+  | Succ E => Succ (map_vnt φ E)
+  | Pred E => Pred (map_vnt φ E)
   end.
 
 (* substitute the free location ℓ for u *)
@@ -274,8 +274,8 @@ with subst_wvl_vnt {var lbl loc lang} `{Eq lbl} `{Eq loc} (u : wvl var lbl loc l
   | Init => Init
   | Read E x => Read (subst_wvl_vnt u ℓ E) x
   | Call E v => Call (subst_wvl_vnt u ℓ E) (subst_wvl_vl u ℓ v)
-  | SuccE s => SuccE (subst_wvl_vnt u ℓ s)
-  | PredE s => PredE (subst_wvl_vnt u ℓ s)
+  | Succ E => Succ (subst_wvl_vnt u ℓ E)
+  | Pred E => Pred (subst_wvl_vnt u ℓ E)
   end.
 
 (* free locations *)
@@ -305,7 +305,7 @@ with floc_vnt {var lbl loc lang} (E : vnt var lbl loc lang) :=
   | Init => []
   | Read E x => floc_vnt E
   | Call E v => floc_vnt E ++ floc_vl v
-  | SuccE s | PredE s => floc_vnt s
+  | Succ E | Pred E => floc_vnt E
   end.
 
 (* free labelled locations *)
@@ -335,12 +335,12 @@ with flloc_vnt {var lbl loc lang} (E : vnt var lbl loc lang) :=
   | Init => []
   | Read E x => flloc_vnt E
   | Call E v => flloc_vnt E ++ flloc_vl v
-  | SuccE s | PredE s => flloc_vnt s
+  | Succ E | Pred E => flloc_vnt E
   end.
 
 Section LCDefs.
   Context {var lbl loc lang : Type}.
- 
+
   (* locally closed predicates *)
   Inductive wvalue : wvl var lbl loc lang -> Prop :=
   | wvalue_v v (VAL : value v) : wvalue (wvl_v v)
@@ -364,8 +364,8 @@ Section LCDefs.
   | event_Init : event Init
   | event_Read E x (EVENT : event E) : event (Read E x)
   | event_Call E v (EVENT : event E) (VAL : value v) : event (Call E v)
-  | event_Succ E (EVENT : event E) : event (SuccE E)
-  | event_Pred E (EVENT : event E) : event (PredE E)
+  | event_Succ E (EVENT : event E) : event (Succ E)
+  | event_Pred E (EVENT : event E) : event (Pred E)
   .
 
   Scheme wvalue_ind_mut := Induction for wvalue Sort Prop
@@ -474,6 +474,10 @@ Definition oto {A B} (φ : A -> B) := forall ℓ ν (fEQ : φ ℓ = φ ν), ℓ 
 (* about predE *)
 Lemma predE_map {var lbl loc lang} φ (E : vnt var lbl loc lang) :
   map_vnt φ (predE E) = predE (map_vnt φ E).
+Proof. destruct E; simpl; auto. Qed.
+
+Lemma predE_flloc {var lbl loc lang} (E : vnt var lbl loc lang) :
+  flloc_vnt (predE E) = flloc_vnt E.
 Proof. destruct E; simpl; auto. Qed.
 
 Lemma predE_subst_loc {var lbl loc lang} `{Eq lbl, Eq loc, Eq lbl} ν ℓ (E : vnt var lbl loc lang) :

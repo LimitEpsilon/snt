@@ -59,16 +59,16 @@ Section EquivLink.
   : link' σ0 (vl_nat n) (vl_nat n)
   | link_succNat' (E : vnt _ _ _ _) n
     (LINKE : link' σ0 E (vl_nat n))
-  : link' σ0 (SuccE E) (vl_nat (S n))
+  : link' σ0 (Succ E) (vl_nat (S n))
   | link_succEvent' (E E' : vnt _ _ _ _)
     (LINKE : link' σ0 E E')
-  : link' σ0 (SuccE E) (SuccE E')
+  : link' σ0 (Succ E) (Succ E')
   | link_predNat' (E : vnt _ _ _ _) n
     (LINKE : link' σ0 E (vl_nat (S n)))
-  : link' σ0 (PredE E) (vl_nat n)
+  : link' σ0 (Pred E) (vl_nat n)
   | link_predEvent' (E E' : vnt _ _ _ _)
     (LINKE : link' σ0 E E')
-  : link' σ0 (PredE E) (predE E')
+  : link' σ0 (Pred E) (predE E')
   .
 
   #[local] Lemma equiv_link_l `{Eq var} `{Eq lbl} `{Name loc}
@@ -192,7 +192,7 @@ Section EquivLink.
     | H : event (_ _) |- _ => inv H
     | L : list _ |- _ => instantiate (1 := L)
     end.
-  
+
   Lemma link_lc' `{Eq var} `{Eq lbl} `{Eq loc} (σ0 : nv var (@ltm var lbl) loc _) (w : wvl var _ loc _) :
     forall w' (LINK : link' σ0 w w'), wvalue w.
   Proof.

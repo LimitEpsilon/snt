@@ -62,16 +62,16 @@ Section LinkDefs.
   : link σ0 (vl_nat n) (vl_nat n)
   | link_succNat (E : vnt _ _ _ _) n
     (LINKE : link σ0 E (vl_nat n))
-  : link σ0 (SuccE E) (vl_nat (S n))
+  : link σ0 (Succ E) (vl_nat (S n))
   | link_succEvent (E E' : vnt _ _ _ _)
     (LINKE : link σ0 E E')
-  : link σ0 (SuccE E) (SuccE E')
+  : link σ0 (Succ E) (Succ E')
   | link_predNat (E : vnt _ _ _ _) n
     (LINKE : link σ0 E (vl_nat (S n)))
-  : link σ0 (PredE E) (vl_nat n)
+  : link σ0 (Pred E) (vl_nat n)
   | link_predEvent (E E' : vnt _ _ _ _)
     (LINKE : link σ0 E E')
-  : link σ0 (PredE E) (predE E')
+  : link σ0 (Pred E) (predE E')
   .
 End LinkDefs.
 

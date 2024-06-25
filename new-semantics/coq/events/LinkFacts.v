@@ -145,7 +145,7 @@ Section LinkFacts.
         eapply open_loc_flloc in H; des; clarify
       end.
       eauto.
-    - destruct E'; simpl in *; auto.
+    - rewrite predE_flloc in *. auto.
   Qed.
 
   Lemma link_map `{Eq var} `{Eq lbl} `{Name loc}

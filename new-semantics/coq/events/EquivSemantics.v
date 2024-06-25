@@ -48,7 +48,7 @@ Inductive eval' {var lbl loc} `{Eq var} `{Eq lbl} `{Eq loc}
 : eval' σ (lblled p (tm_succ t)) (vl_nat (S n))
 | ev_succevent' p t E
   (PRED : eval' σ t (vl_ev E))
-: eval' σ (lblled p (tm_succ t)) (vl_ev (SuccE E))
+: eval' σ (lblled p (tm_succ t)) (vl_ev (Succ E))
 | ev_casezero' p t z n s v
   (MATCH : eval' σ t (vl_nat 0))
   (ZERO : eval' σ z v)
