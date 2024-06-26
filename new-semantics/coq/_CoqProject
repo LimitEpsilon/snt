@@ -8,5 +8,5 @@ sim
 -R events With_events
 events
 
--R cfa CFA
-cfa
+-R denotational Denotational
+denotational

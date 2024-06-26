@@ -52,9 +52,21 @@ events/SubstFacts.vos events/SubstFacts.vok events/SubstFacts.required_vos: even
 events/Syntax.vo events/Syntax.glob events/Syntax.v.beautified events/Syntax.required_vo: events/Syntax.v 
 events/Syntax.vio: events/Syntax.v 
 events/Syntax.vos events/Syntax.vok events/Syntax.required_vos: events/Syntax.v 
-cfa/Defs.vo cfa/Defs.glob cfa/Defs.v.beautified cfa/Defs.required_vo: cfa/Defs.v basics/Basics.vo events/Syntax.vo events/Defs.vo cfa/Syntax.vo
-cfa/Defs.vio: cfa/Defs.v basics/Basics.vio events/Syntax.vio events/Defs.vio cfa/Syntax.vio
-cfa/Defs.vos cfa/Defs.vok cfa/Defs.required_vos: cfa/Defs.v basics/Basics.vos events/Syntax.vos events/Defs.vos cfa/Syntax.vos
-cfa/Syntax.vo cfa/Syntax.glob cfa/Syntax.v.beautified cfa/Syntax.required_vo: cfa/Syntax.v basics/Basics.vo events/Syntax.vo
-cfa/Syntax.vio: cfa/Syntax.v basics/Basics.vio events/Syntax.vio
-cfa/Syntax.vos cfa/Syntax.vok cfa/Syntax.required_vos: cfa/Syntax.v basics/Basics.vos events/Syntax.vos
+denotational/Domain.vo denotational/Domain.glob denotational/Domain.v.beautified denotational/Domain.required_vo: denotational/Domain.v denotational/Vec.vo denotational/Syntax.vo
+denotational/Domain.vio: denotational/Domain.v denotational/Vec.vio denotational/Syntax.vio
+denotational/Domain.vos denotational/Domain.vok denotational/Domain.required_vos: denotational/Domain.v denotational/Vec.vos denotational/Syntax.vos
+denotational/Examples.vo denotational/Examples.glob denotational/Examples.v.beautified denotational/Examples.required_vo: denotational/Examples.v denotational/Vec.vo denotational/Syntax.vo denotational/Domain.vo denotational/Linking.vo denotational/Interpreter.vo
+denotational/Examples.vio: denotational/Examples.v denotational/Vec.vio denotational/Syntax.vio denotational/Domain.vio denotational/Linking.vio denotational/Interpreter.vio
+denotational/Examples.vos denotational/Examples.vok denotational/Examples.required_vos: denotational/Examples.v denotational/Vec.vos denotational/Syntax.vos denotational/Domain.vos denotational/Linking.vos denotational/Interpreter.vos
+denotational/Interpreter.vo denotational/Interpreter.glob denotational/Interpreter.v.beautified denotational/Interpreter.required_vo: denotational/Interpreter.v denotational/Vec.vo denotational/Syntax.vo denotational/Domain.vo denotational/Linking.vo
+denotational/Interpreter.vio: denotational/Interpreter.v denotational/Vec.vio denotational/Syntax.vio denotational/Domain.vio denotational/Linking.vio
+denotational/Interpreter.vos denotational/Interpreter.vok denotational/Interpreter.required_vos: denotational/Interpreter.v denotational/Vec.vos denotational/Syntax.vos denotational/Domain.vos denotational/Linking.vos
+denotational/Linking.vo denotational/Linking.glob denotational/Linking.v.beautified denotational/Linking.required_vo: denotational/Linking.v denotational/Vec.vo denotational/Syntax.vo denotational/Domain.vo
+denotational/Linking.vio: denotational/Linking.v denotational/Vec.vio denotational/Syntax.vio denotational/Domain.vio
+denotational/Linking.vos denotational/Linking.vok denotational/Linking.required_vos: denotational/Linking.v denotational/Vec.vos denotational/Syntax.vos denotational/Domain.vos
+denotational/Syntax.vo denotational/Syntax.glob denotational/Syntax.v.beautified denotational/Syntax.required_vo: denotational/Syntax.v denotational/Vec.vo
+denotational/Syntax.vio: denotational/Syntax.v denotational/Vec.vio
+denotational/Syntax.vos denotational/Syntax.vok denotational/Syntax.required_vos: denotational/Syntax.v denotational/Vec.vos
+denotational/Vec.vo denotational/Vec.glob denotational/Vec.v.beautified denotational/Vec.required_vo: denotational/Vec.v 
+denotational/Vec.vio: denotational/Vec.v 
+denotational/Vec.vos denotational/Vec.vok denotational/Vec.required_vos: denotational/Vec.v 
