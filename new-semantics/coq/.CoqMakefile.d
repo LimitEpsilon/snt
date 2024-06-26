@@ -22,9 +22,12 @@ sim/SubstFacts.vos sim/SubstFacts.vok sim/SubstFacts.required_vos: sim/SubstFact
 sim/Syntax.vo sim/Syntax.glob sim/Syntax.v.beautified sim/Syntax.required_vo: sim/Syntax.v 
 sim/Syntax.vio: sim/Syntax.v 
 sim/Syntax.vos sim/Syntax.vok sim/Syntax.required_vos: sim/Syntax.v 
-events/Advance.vo events/Advance.glob events/Advance.v.beautified events/Advance.required_vo: events/Advance.v basics/Basics.vo events/Defs.vo events/Syntax.vo events/SubstFacts.vo events/EnvSemantics.vo events/EquivSemantics.vo events/LinkDefs.vo events/LinkFacts.vo events/EquivLink.vo
-events/Advance.vio: events/Advance.v basics/Basics.vio events/Defs.vio events/Syntax.vio events/SubstFacts.vio events/EnvSemantics.vio events/EquivSemantics.vio events/LinkDefs.vio events/LinkFacts.vio events/EquivLink.vio
-events/Advance.vos events/Advance.vok events/Advance.required_vos: events/Advance.v basics/Basics.vos events/Defs.vos events/Syntax.vos events/SubstFacts.vos events/EnvSemantics.vos events/EquivSemantics.vos events/LinkDefs.vos events/LinkFacts.vos events/EquivLink.vos
+events/Advance.vo events/Advance.glob events/Advance.v.beautified events/Advance.required_vo: events/Advance.v basics/Basics.vo events/Defs.vo events/Syntax.vo events/SubstFacts.vo events/EnvSemantics.vo events/EquivSemantics.vo events/LinkDefs.vo events/LinkFacts.vo events/EquivLink.vo events/AdvanceAux.vo
+events/Advance.vio: events/Advance.v basics/Basics.vio events/Defs.vio events/Syntax.vio events/SubstFacts.vio events/EnvSemantics.vio events/EquivSemantics.vio events/LinkDefs.vio events/LinkFacts.vio events/EquivLink.vio events/AdvanceAux.vio
+events/Advance.vos events/Advance.vok events/Advance.required_vos: events/Advance.v basics/Basics.vos events/Defs.vos events/Syntax.vos events/SubstFacts.vos events/EnvSemantics.vos events/EquivSemantics.vos events/LinkDefs.vos events/LinkFacts.vos events/EquivLink.vos events/AdvanceAux.vos
+events/AdvanceAux.vo events/AdvanceAux.glob events/AdvanceAux.v.beautified events/AdvanceAux.required_vo: events/AdvanceAux.v basics/Basics.vo events/Defs.vo events/Syntax.vo events/SubstFacts.vo events/EnvSemantics.vo events/EquivSemantics.vo events/LinkDefs.vo events/LinkFacts.vo events/EquivLink.vo
+events/AdvanceAux.vio: events/AdvanceAux.v basics/Basics.vio events/Defs.vio events/Syntax.vio events/SubstFacts.vio events/EnvSemantics.vio events/EquivSemantics.vio events/LinkDefs.vio events/LinkFacts.vio events/EquivLink.vio
+events/AdvanceAux.vos events/AdvanceAux.vok events/AdvanceAux.required_vos: events/AdvanceAux.v basics/Basics.vos events/Defs.vos events/Syntax.vos events/SubstFacts.vos events/EnvSemantics.vos events/EquivSemantics.vos events/LinkDefs.vos events/LinkFacts.vos events/EquivLink.vos
 events/Defs.vo events/Defs.glob events/Defs.v.beautified events/Defs.required_vo: events/Defs.v basics/Basics.vo events/Syntax.vo
 events/Defs.vio: events/Defs.v basics/Basics.vio events/Syntax.vio
 events/Defs.vos events/Defs.vok events/Defs.required_vos: events/Defs.v basics/Basics.vos events/Syntax.vos

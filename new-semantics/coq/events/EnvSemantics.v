@@ -5,7 +5,7 @@ From With_events Require Import SubstFacts.
 
 Variant read_env_res {var lbl loc lang} :=
   | Env_err
-| Env_loc (ℓ : loc * lbl)
+  | Env_loc (ℓ : loc * lbl)
   | Env_wvl (w : wvl var lbl loc lang)
 .
 

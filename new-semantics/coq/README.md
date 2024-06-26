@@ -9,6 +9,7 @@
 
 ## Proving Advance
 
-- Definition for semantics with events: [eval](./events/EnvSemantics.v#L22)
-- Definition for linking: [link](./events/LinkDefs.v#L21)
-- Advance: [advance](./events/Advance.v#L176)
+- Definition of semantic domains, and the smart constructor `predE`: [Defs](./events/Defs.v)
+- Definition for semantics with events: [eval](./events/EnvSemantics.v)
+- Definition for linking: [link](./events/LinkDefs.v)
+- Advance: [advance](./events/Advance.v)
