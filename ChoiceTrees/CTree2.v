@@ -14,14 +14,31 @@ Ltac clear_sig :=
     apply inj_pair2 in H; subst
   end.
 
-Variant CTreeF {E : Type → Type} {R : Type} {CTree : Type} :=
+Inductive CTreeF {E : Type → Type} {R : Type} {CTree : Type} :=
 | Ret (v : R)
 | Vis {A} (e : E A) (k : A → CTree)
 | Zero
-| Choice (k : nat → CTree)
+| Choice (k : nat → CTreeF)
 .
 
 Arguments CTreeF : clear implicits.
+
+Section IND.
+  Context {E : Type → Type} {R : Type} {CTree : Type}.
+  Context (P : CTreeF E R CTree → Prop).
+  Context (PRet : ∀ v, P (Ret v))
+          (PVis : ∀ {A} (e : E A) k, P (Vis e k))
+          (PZero : P Zero)
+          (PChoice : ∀ k (IHk : ∀ c, P (k c)), P (Choice k)).
+  Fixpoint CTreeF_ind t : P t.
+  Proof.
+    destruct t.
+    - apply PRet.
+    - apply PVis.
+    - apply PZero.
+    - apply PChoice. intros. apply CTreeF_ind.
+  Qed.
+End IND.
 
 CoInductive CTree {E : Type → Type} {R : Type} : Type :=
   mkCTree { obs_ctree : CTreeF E R CTree }
@@ -118,10 +135,10 @@ Inductive RefineF {R1 R2 E r sim}
 | refine_zero p1 p2 t2
 : RefineF p1 p2 Zero t2
 | refine_choiceL p1 p2 p1' t2 k
-  (CHOICE : ∀ c, RefineF p1' p2 (obs_ctree (k c)) t2)
+  (CHOICE : ∀ c, RefineF p1' p2 (k c) t2)
 : RefineF p1 p2 (Choice k) t2
 | refine_choiceR p1 p2 p2' t1 k
-  c (CHOICE : RefineF p1 p2' t1 (obs_ctree (k c)))
+  c (CHOICE : RefineF p1 p2' t1 (k c))
 : RefineF p1 p2 t1 (Choice k)
 .
 
@@ -145,34 +162,6 @@ Section IND.
     - apply Pzero.
     - apply PL. intros. apply RefineF_ind.
     - apply PR. intros. apply RefineF_ind.
-  Qed.
-End IND.
-
-(* branch t t' : t has less choice than t' *)
-Inductive branch {R E} : CTree' E R → CTree' E R → Prop :=
-| branch_refl t
-: branch t t
-| branch_zero t
-: branch Zero t
-| branch_choice k1 k2
-  (CHOICE : ∀ c1, {c2 | branch (obs_ctree (k1 c1)) (obs_ctree (k2 c2))})
-: branch (Choice k1) (Choice k2)
-.
-
-Section IND.
-  Context {R : Type} {E : Type → Type}.
-  Context (P : ∀ (t1 t2 : CTree' E R), branch t1 t2 → Prop).
-  Context (Prefl : ∀ t, P _ _ (branch_refl t))
-          (Pzero : ∀ t, P _ _ (branch_zero t))
-          (Pchoice : ∀ k1 k2 CHOICE
-            (IHk : ∀ c1, P _ _ (proj2_sig (CHOICE c1))),
-            P _ _ (branch_choice k1 k2 CHOICE)).
-  Fixpoint branch_ind t1 t2 pf : P t1 t2 pf.
-  Proof.
-    destruct pf.
-    - apply Prefl.
-    - apply Pzero.
-    - apply Pchoice. intros. apply branch_ind.
   Qed.
 End IND.
 
@@ -281,7 +270,7 @@ Lemma RefineF_contR {R1 R2 E φ sim} (POSTFIX : sim <4= RefineF φ sim) :
     (* if t1 refines t2', *)
     (REFINE : RefineF φ sim p1 p2 t1 t2')
     (* for any t2 that may continue as t2', *)
-    t2 k2 (OBS : t2 = Choice k2) c2 (BR : t2' = obs_ctree (k2 c2))
+    t2 k2 (OBS : t2 = Choice k2) c2 (BR : t2' = k2 c2)
     (* t1 must refine t2 *)
     p1' p2', RefineF φ sim p1' p2' t1 t2.
 Proof.
@@ -460,7 +449,7 @@ Lemma Refine_inv_choiceL E R0 R1 sim (φ : R0 → R1 → Prop)
   ∀ p0 p1 t0 t1 (REFINE : RefineF (E := E) φ sim p0 p1 t0 t1)
     k (OBS0 : t0 = Choice k)
     c,
-    RefineF (E := E) φ sim p0 p1 (obs_ctree (k c)) t1.
+    RefineF (E := E) φ sim p0 p1 (k c) t1.
 Proof.
   do 5 intro.
   apply RefineF_index_insensitive with (p1' := Some 0) (p2' := p1) in REFINE; auto.
@@ -639,9 +628,8 @@ Proof.
     { intros. eapply Refine_inv_retL; eauto.
       cbv [comp2]; eauto. }
     { intros. clear LT1 LT2 p1 p3. apply POSTFIX23 in SIM.
-      apply RefineF_index_insensitive with (p1' := Some 0) (p2' := Some 1) in SIM; auto.
+      apply RefineF_index_insensitive with (p1' := Some 0) (p2' := p2') in SIM; auto.
       remember (Some 0) as o' in SIM. revert Heqo'.
-      remember (Some 1) as o'' in SIM. clear Heqo''.
       remember (Vis e k2) as t1 in SIM. revert Heqt1.
       induction SIM.
       { intros; subst. cbv in LT1. destruct p1'1; lia. }
@@ -666,8 +654,7 @@ Proof.
     { inversion 1. }
     { inversion 1; subst; clear_sig.
       intros; subst.
-      econstructor 3; eauto.
-      cbv [comp4]. eauto. }
+      econstructor 3; cbv [comp4]; eauto. }
     { intros. econstructor 4; eauto. }
     { intros. econstructor 5; eauto. }
     { inversion 1. }
@@ -677,55 +664,35 @@ Proof.
 Qed.
 
 Lemma BisimF_trans {R1 R2 R3 E}
-  (φ12 : R1 → R2 → Prop) (φ23 : R2 → R3 → Prop)
-  sim12 sim23
+  (φ12 : R1 → R2 → Prop) (φ23 : R2 → R3 → Prop) sim12 sim23
   (POSTFIX12 : sim12 <4= RefineF (E := E) φ12 sim12)
   (POSTFIX23 : sim23 <4= RefineF (E := E) φ23 sim23) :
   ∀ p11 p12 t1 t2 (REFINE1 : RefineF (E := E) φ12 sim12 p11 p12 t1 t2)
     p21 p22 t3 (REFINE2 : RefineF (E := E) φ23 sim23 p21 p22 t2 t3),
     RefineF (comp2 φ12 φ23) (comp4 sim12 sim23) p11 p22 t1 t3.
 Proof.
-  do 9 intro. revert p11 p12 t1 REFINE1. induction REFINE2.
-  - do 4 intro. revert t2 SIM. induction REFINE1.
+  do 4 intro. revert p11 p12 t1. induction t2.
+  { intros. eapply BisimF_trans_not_choice; eauto; simpl; auto. }
+  { intros. eapply BisimF_trans_not_choice; eauto; simpl; auto. }
+  { intros. eapply BisimF_trans_not_choice; eauto; simpl; auto. }
+  remember (Choice k) as t2 eqn:CHOICE.
+  intros. revert p11 p12 t1 REFINE1 CHOICE. induction REFINE2.
+  - intros. clear LT1. revert CHOICE t2 p1' SIM. induction REFINE1.
     { intros. econstructor 1; cbv [comp4]; eauto. }
-    { intros. eapply Refine_inv_retL; eauto.
-      cbv [comp2]; eauto. }
-    { intros. clear LT1 LT2 p1 p3. apply POSTFIX23 in SIM.
-      apply RefineF_index_insensitive with (p1' := Some 0) (p2' := p2') in SIM; auto.
-      remember (Some 0) as o' in SIM. revert Heqo'.
-      remember (Vis e k2) as t1 in SIM. revert Heqt1.
-      induction SIM.
-      { intros; subst. cbv in LT1. destruct p1'1; lia. }
-      { inversion 1. }
-      { inversion 1. intros; subst. clear_sig.
-        intros. econstructor 3; eauto.
-        cbv [comp4]; eauto. }
-      { inversion 1. }
-      { inversion 1. }
-      { intros. subst. econstructor 6; eauto. } }
-    { intros. econstructor 4; eauto. }
-    { intros. econstructor 5; eauto. }
-    { admit. }
-  - intros; subst. eapply Refine_inv_retR; eauto. 
-    cbv [comp2]. eauto.
-  - intros.
-    apply RefineF_index_insensitive with (p1' := p11) (p2' := Some 0) in REFINE1; auto.
-    remember (Some 0) as o' in REFINE1. revert Heqo'.
-    remember (Vis e k1) as t2 in REFINE1. revert Heqt2.
-    induction REFINE1.
-    { intros; subst. cbv in LT2. destruct p2'0; lia. }
     { inversion 1. }
-    { inversion 1; subst; clear_sig.
-      intros; subst.
-      econstructor 3; eauto.
-      cbv [comp4]. eauto. }
-    { intros. econstructor 4; eauto. }
-    { intros. econstructor 5; eauto. }
     { inversion 1. }
-  - intros. eapply Refine_inv_zeroR; eauto.
-  - intros.
+    { intros. econstructor 4; eauto. }
+    { intros; subst. econstructor 5; eauto. }
+    { inversion 1; subst. intros. clear CHOICE.
+      apply POSTFIX23 in SIM.
+      eapply Refine_inv_choiceL with (c := c) in SIM; auto.
+      apply RefineF_index_insensitive with (p1' := p1') (p2' := p2) in SIM; eauto. }
+  - inversion 2.
+  - inversion 2.
+  - inversion 2.
+  - inversion 2; subst. clear CHOICE0.
     apply RefineF_index_insensitive with (p1' := p11) (p2' := Some 0) in REFINE1; auto.
-    remember (Some 0) as o' in REFINE1. revert Heqo'.
+    clear p12. remember (Some 0) as p12 in REFINE1. revert Heqp12.
     remember (Choice k) as t2' in REFINE1. revert Heqt2'.
     induction REFINE1.
     { intros; subst. cbv in LT2. destruct p2'; lia. }
@@ -734,7 +701,99 @@ Proof.
     { intros; subst. econstructor 4; eauto. }
     { intros; subst. econstructor 5; eauto. }
     { inversion 1; intros; subst. eauto. }
-  - intros. econstructor 6; eauto.
+  - intros; subst. econstructor 6; eauto.
+Qed.
+
+Lemma BisimF_trans'{R1 R2 R3 E}
+  (φ12 : R1 → R2 → Prop) (φ23 : R2 → R3 → Prop) sim12 sim23
+  (POSTFIX12 : sim12 <4= RefineF (E := E) φ12 sim12)
+  (POSTFIX23 : sim23 <4= RefineF (E := E) φ23 sim23) :
+  ∀ p11 p12 t1 t2 (REFINE1 : RefineF (E := E) φ12 sim12 p11 p12 t1 t2)
+    p21 p22 t3 (REFINE2 : RefineF (E := E) φ23 sim23 p21 p22 t2 t3),
+    RefineF (comp2 φ12 φ23) (comp4 sim12 sim23) p11 p22 t1 t3.
+Proof.
+  do 2 intro. revert p11. induction p12 using (well_founded_induction olt_wf).
+  rename H into IHp12. induction 1.
+  - intros. exploit IHp12; eauto.
+    intros. eapply RefineF_index_mono; eauto.
+    red. eauto.
+    apply ole_reflexive.
+  - intros; subst. eapply Refine_inv_retL; eauto.
+    cbv [comp2]. eauto.
+  - intros.
+    apply RefineF_index_insensitive with (p1' := Some 0) (p2' := p22) in REFINE2; auto.
+    remember (Some 0) as o' in REFINE2. revert Heqo'.
+    remember (Vis e k2) as t1 in REFINE2. revert Heqt1.
+    induction REFINE2.
+    { intros; subst. cbv in LT1. destruct p1'0; lia. }
+    { inversion 1. }
+    { inversion 1; subst; clear_sig.
+      intros; subst.
+      econstructor 3; cbv [comp4]; eauto. }
+    { inversion 1. }
+    { inversion 1. }
+    { intros. econstructor 6; eauto. }
+  - intros. econstructor 4; eauto.
+  - intros. econstructor 5; eauto.
+  - intros.
+    apply RefineF_index_insensitive with (p1' := Some 0) (p2' := p22) in REFINE2; auto.
+    clear p21. remember (Some 0) as p21 in REFINE2. revert Heqp21.
+    remember (Choice k) as t1' in REFINE2. revert Heqt1'.
+    induction REFINE2.
+    { intros; subst. cbv in LT1. destruct p1'; lia. }
+    { inversion 1. }
+    { inversion 1. }
+    { inversion 1. }
+    { inversion 1; intros; subst.
+      apply RefineF_index_insensitive with (p1' := p1) (p2' := Some 0) in REFINE1; auto.
+      eapply IHp12; eauto. admit. }
+    { intros; subst. econstructor 6; eauto. }
+Abort.
+
+Lemma BisimF_trans_choice {R1 R2 R3 E}
+  (φ12 : R1 → R2 → Prop) (φ23 : R2 → R3 → Prop)
+  sim12 sim23
+  (POSTFIX12 : sim12 <4= RefineF (E := E) φ12 sim12)
+  (POSTFIX23 : sim23 <4= RefineF (E := E) φ23 sim23) :
+  ∀ p11 p12 t1 t2 (REFINE1 : RefineF (E := E) φ12 sim12 p11 p12 t1 t2)
+    p21 p22 t3 (REFINE2 : RefineF (E := E) φ23 sim23 p21 p22 t2 t3)
+    k (CHOICE : t2 = Choice k),
+    RefineF (comp2 φ12 φ23) (comp4 sim12 sim23) p11 p22 t1 t3.
+Proof.
+  do 5 intro. induction REFINE1.
+  - intros. revert k CHOICE p1 LT1 t1 SIM. induction REFINE2.
+    { intros; econstructor 1; eauto. cbv [comp4]; eauto. }
+    { inversion 1. }
+    { inversion 1. }
+    { inversion 1. }
+    { inversion 1; intros; subst. apply POSTFIX12 in SIM. clear p2 LT2.
+      apply RefineF_index_insensitive with (p1' := p1) (p2' := Some 0) in SIM; auto.
+      remember (Some 0) as p2 in SIM. revert Heqp2.
+      remember (Choice k0) as t2' in SIM. revert Heqt2'.
+      induction SIM.
+      { intros; subst. cbv in LT2. destruct p2'0; lia. }
+      { inversion 1. }
+      { inversion 1. }
+      { intros; subst. econstructor 4; eauto. }
+      { intros; subst. econstructor 5; eauto. }
+      { inversion 1; intros; subst.
+        specialize (IHk c). specialize (CHOICE c).
+        apply RefineF_index_insensitive with (p1' := p3) (p2' := p2'0) in SIM; auto.
+        destruct (obs_ctree (k0 c)).
+        1,2,3: eapply BisimF_trans_not_choice; eauto; simpl; auto.
+        specialize (IHk _ eq_refl).
+        (* for any p1 such that p3 ≼ p1,
+          RefineF (comp2 φ12 φ23) (comp4 sim12 sim23) p1 p0 (Choice k ⊕ t1) t2 *)
+        admit. } }
+    { intros; subst. econstructor 6; eauto. }
+  - inversion 2.
+  - inversion 2.
+  - intros; subst. econstructor 4; eauto.
+  - intros; subst. econstructor 5; eauto.
+  - inversion 2; subst.
+    eapply Refine_inv_choiceL with (c := c) in REFINE2; eauto.
+    destruct (obs_ctree (k0 c)); eauto.
+    all: eapply BisimF_trans_not_choice; eauto; simpl; auto.
 Abort.
 
 Lemma BisimF_trans_choice {R1 R2 R3 E}
@@ -748,24 +807,25 @@ Lemma BisimF_trans_choice {R1 R2 R3 E}
     RefineF (comp2 φ12 φ23) (comp4 sim12 sim23) p11 p22 t1 t3.
 Proof.
   do 9 intro. revert p11 p12 t1 REFINE1. induction REFINE2.
-  - intros. revert k CHOICE t2 SIM. induction REFINE1.
+  - intros. clear LT1. revert k CHOICE t2 p1' SIM. induction REFINE1.
     { intros. econstructor 1; cbv [comp4]; eauto. }
     { inversion 1. }
     { inversion 1. }
     { intros. econstructor 4; eauto. }
     { intros; subst. econstructor 5; eauto. }
-    { inversion 1; subst; clear_sig. intros. apply POSTFIX23 in SIM.
+    { inversion 1; subst. intros. clear CHOICE.
+      apply POSTFIX23 in SIM.
       eapply Refine_inv_choiceL with (c := c) in SIM; auto.
       apply RefineF_index_insensitive with (p1' := p1') (p2' := p2) in SIM; auto.
-      destruct (obs_ctree (k0 c)) eqn:OBS.
+      destruct (obs_ctree (k0 c)).
       1,2,3: eapply BisimF_trans_not_choice; eauto; simpl; auto.
-      specialize (IHREFINE1 _ eq_refl). admit. }
+      specialize (IHREFINE1 _ eq_refl). clear k0. admit. }
   - inversion 2.
   - inversion 2.
   - inversion 2.
   - inversion 2; subst.
     apply RefineF_index_insensitive with (p1' := p11) (p2' := Some 0) in REFINE1; auto.
-    remember (Some 0) as o' in REFINE1. revert Heqo'.
+    clear p12. remember (Some 0) as p12 in REFINE1. revert Heqp12.
     remember (Choice k0) as t2' in REFINE1. revert Heqt2'.
     induction REFINE1.
     { intros; subst. cbv in LT2. destruct p2'; lia. }
@@ -773,7 +833,7 @@ Proof.
     { inversion 1. }
     { intros; subst. econstructor 4; eauto. }
     { intros; subst. econstructor 5; eauto. }
-    { inversion 1; intros; subst.
+    { inversion 1; intros; subst; clear_sig.
       specialize (CHOICE c). specialize (IHk c).
       destruct (obs_ctree (k0 c)) eqn:OBS; eauto.
       all: eapply BisimF_trans_not_choice; eauto; simpl; auto. }
