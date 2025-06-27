@@ -1,4 +1,5 @@
 From Coq Require Import Utf8 Lia Eqdep.
+From Coq Require Classical. (* don't import just yet *)
 From Paco Require Import paco.
 
 Set Primitive Projections.
@@ -556,6 +557,15 @@ Definition SimLTSF {E R1 R2} (φ : R1 → R2 → Prop)
     ∃ ℓ2 s2', RelLabel φ ℓ1 ℓ2 ∧ Step s2 ℓ2 s2' ∧ sim s1' s2'
 .
 
+Lemma SimLTSF_monotone R1 R2 E r : monotone2 (@SimLTSF E R1 R2 r).
+Proof.
+  repeat intro. specialize (IN ℓ1 s1' STEP1).
+  destruct IN as (? & ? & ? & ? & ?).
+  repeat (econstructor; eauto).
+Qed.
+
+Hint Resolve SimLTSF_monotone : paco.
+
 Variant lift_sim {E R1 R2 φ sim} : State E R1 → State E R2 → Prop :=
 | sim_Int p1 p2 t1 t2
   (SIM : SimF φ sim p1 p2 t1 t2)
@@ -569,10 +579,9 @@ Arguments lift_sim {_ _ _} _ _.
 
 Lemma SimF_SimLTSF {E R1 R2}
   (φ : R1 → R2 → Prop) sim (POSTFIX : sim <4= SimF (E := E) φ sim) :
-  ∀ p1 p2 t1 t2 (SIM : SimF φ sim p1 p2 t1 t2),
-    SimLTSF φ (lift_sim φ sim) (IntS t1) (IntS t2).
+  ∀ s1 s2 (SIM : lift_sim φ sim s1 s2), SimLTSF φ (lift_sim φ sim) s1 s2.
 Proof.
-  intros.
+  destruct 1. intros.
   apply SimF_index_insensitive with (p1' := Some 0) (p2' := p2) in SIM; auto.
   clear p1. remember (Some 0) as p1. revert Heqp1.
   induction SIM; intros; subst.
@@ -584,7 +593,7 @@ Proof.
     econstructor. econstructor 4.
   - red. inversion 1; subst; clear_sig.
     exists (QueL e), (ExtS k2).
-    repeat econstructor; eauto.
+    repeat (econstructor; eauto).
   - red. inversion 1.
   - repeat intro. clear IHk.
     remember (IntS (Choice k)) as s1 in STEP1.
@@ -647,8 +656,46 @@ Proof.
     constructor; eauto.
     constructor; eauto.
     econstructor 5; eauto.
+  - inversion 1; subst; clear_sig.
+    exists (AnsL a), (IntS (obs_ctree (k2 a))).
+    repeat (econstructor; eauto).
   Unshelve. all: exact None.
 Qed.
+
+Inductive conv {E R} : CTree' E R → Prop :=
+| conv_ret r : conv (Ret r)
+| conv_vis {A} (e : E A) k : conv (Vis e k)
+| conv_zero : conv Zero
+| conv_choice k (CONV : ∀ c, conv (obs_ctree (k c))) : conv (Choice k)
+.
+
+Scheme conv_ind := Induction for conv Sort Prop.
+
+Lemma conv_not_div {E R} (t : CTree' E R) (CONV : conv t) : ¬ div t.
+Proof.
+  induction CONV; intro.
+  punfold H. inversion H.
+  punfold H. inversion H.
+  punfold H. inversion H.
+  punfold H0. inversion H0; subst. pclearbot.
+  exploit H; eauto.
+Qed.
+
+Section classical.
+  Import Classical.
+
+  Lemma div_or_conv {E R} (t : CTree' E R) : conv t ∨ div t.
+  Proof.
+    destruct (classic (conv t)) as [?|NCONV]; eauto. right.
+    revert t NCONV. pcofix CIH.
+    intros. pfold.
+    destruct t.
+    1,2,3: exfalso; apply NCONV; constructor.
+    assert (∃ c, ¬ conv (obs_ctree (k c))) as (c & ?).
+    { apply not_all_ex_not. intro. apply NCONV. constructor; auto. }
+    econstructor; eauto.
+  Qed.
+End classical.
 
 (* why separate φ and sim when sim is enough to express the relation between return values? *)
 Lemma SimF_transL {R1 R2 R3 E}
