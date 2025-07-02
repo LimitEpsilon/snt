@@ -1,4 +1,4 @@
-From Coq Require Import Utf8 Lia Eqdep.
+From Coq Require Import Utf8 Lia Eqdep PeanoNat.
 From Coq Require Classical. (* don't import just yet *)
 From Paco Require Import paco.
 
@@ -30,9 +30,14 @@ CoInductive CTree {E : Type → Type} {R : Type} : Type :=
 
 Arguments CTree : clear implicits.
 
+Definition ret {E R} (r : R) : CTree E R := {| obs_ctree := Ret r |}.
+Definition vis {E R A} (e : E A) k : CTree E R := {| obs_ctree := Vis e k |}.
+Definition zero {E R} : CTree E R := {| obs_ctree := Zero |}.
+Definition choice {E R} k : CTree E R := {| obs_ctree := Choice k |}.
+
 Definition CTree' E R := CTreeF E R (CTree E R).
 
-(* order between extended natural numbers, with None meaning ∞ *)
+(*order between extended natural numbers, with None meaning ∞ *)
 Definition olt (x y : option nat) :=
   match x, y with
   | Some m, Some n => m < n
@@ -45,6 +50,19 @@ Infix "≺" := olt (at level 40).
 Definition ole x y := olt x y ∨ x = y.
 
 Infix "≼" := ole (at level 40).
+
+Definition omax (x y : option nat) :=
+  match x, y with
+  | Some m, Some n => Some (max m n)
+  | _, _ => None
+  end.
+
+Definition omin (x y : option nat) :=
+  match x, y with
+| Some m, Some n => Some (max m n)
+  | None, _ => y
+  | _, None => x
+  end.
 
 (* ≺ is a strict total order *)
 Lemma olt_irreflexive x : olt x x → False.
@@ -109,27 +127,28 @@ Qed.
 Lemma ole_top x : ole x None.
 Proof. destruct x; cbv; eauto. Qed.
 
+(* maybe omnisemantics will help in the definition also? *)
 (* from FreeSim (Stuttering for Free) *)
 (* infinite silent steps should be equivalent only to infinite silent steps *)
 Inductive SimF {R1 R2 E r sim}
   : option nat → option nat → CTree' E R1 → CTree' E R2 → Prop :=
-| refine_prog p1 p2 t1 t2 p1' p2'
+| sim_prog p1 p2 t1 t2 p1' p2'
   (* only rule that strictly decrements the progress indices*)
   (LT1 : p1' ≺ p1) (LT2 : p2' ≺ p2)
-  (SIM : sim p1' p2' t1 t2)
+  (SIM : sim p1' p2' t1 t2 : Prop)
 : SimF p1 p2 t1 t2
-| refine_ret p1 p2 x y
+| sim_ret p1 p2 x y
   (RET : r x y : Prop)
 : SimF p1 p2 (Ret x) (Ret y)
-| refine_vis p1 p2 p1' p2' {A} (e : E A) k1 k2
+| sim_vis p1 p2 p1' p2' {A} (e : E A) k1 k2
   (CONT : ∀ a, sim p1' p2' (obs_ctree (k1 a)) (obs_ctree (k2 a)))
 : SimF p1 p2 (Vis e k1) (Vis e k2)
-| refine_zero p1 p2 t2
+| sim_zero p1 p2 t2
 : SimF p1 p2 Zero t2
-| refine_choiceL p1 p2 p1' t2 k
+| sim_choiceL p1 p2 p1' t2 k
   (CHOICE : ∀ c, SimF p1' p2 (obs_ctree (k c)) t2)
 : SimF p1 p2 (Choice k) t2
-| refine_choiceR p1 p2 p2' t1 k
+| sim_choiceR p1 p2 p2' t1 k
   c (CHOICE : SimF p1 p2' t1 (obs_ctree (k c)))
 : SimF p1 p2 t1 (Choice k)
 .
@@ -139,12 +158,12 @@ Arguments SimF {_ _ _} _ _.
 Section IND.
   Context {R1 R2 E} (r : R1 → R2 → Prop) (sim : option nat → option nat → CTree' E R1 → CTree' E R2 → Prop).
   Context (P : ∀ p1 p2 t1 t2, SimF r sim p1 p2 t1 t2 → Prop).
-  Context (Pprog : ∀ p1 p2 t1 t2 p1' p2' LT1 LT2 SIM, P _ _ _ _ (refine_prog p1 p2 t1 t2 p1' p2' LT1 LT2 SIM))
-          (Pret : ∀ p1 p2 x y RET, P _ _ _ _ (refine_ret p1 p2 x y RET))
-          (Pvis : ∀ p1 p2 p1' p2' A (e : E A) k1 k2 CONT, P _ _ _ _ (refine_vis p1 p2 p1' p2' e k1 k2 CONT))
-          (Pzero : ∀ p1 p2 t2, P _ _ _ _ (refine_zero p1 p2 t2))
-          (PL : ∀ p1 p2 p1' t2 k CHOICE (IHk : ∀ c, P _ _ _ _ (CHOICE c)), P _ _ _ _ (refine_choiceL p1 p2 p1' t2 k CHOICE))
-          (PR : ∀ p1 p2 p2' t1 k c CHOICE (IHk : P _ _ _ _ CHOICE), P _ _ _ _ (refine_choiceR p1 p2 p2' t1 k c CHOICE)).
+  Context (Pprog : ∀ p1 p2 t1 t2 p1' p2' LT1 LT2 SIM, P _ _ _ _ (sim_prog p1 p2 t1 t2 p1' p2' LT1 LT2 SIM))
+          (Pret : ∀ p1 p2 x y RET, P _ _ _ _ (sim_ret p1 p2 x y RET))
+          (Pvis : ∀ p1 p2 p1' p2' A (e : E A) k1 k2 CONT, P _ _ _ _ (sim_vis p1 p2 p1' p2' e k1 k2 CONT))
+          (Pzero : ∀ p1 p2 t2, P _ _ _ _ (sim_zero p1 p2 t2))
+          (PL : ∀ p1 p2 p1' t2 k CHOICE (IHk : ∀ c, P _ _ _ _ (CHOICE c)), P _ _ _ _ (sim_choiceL p1 p2 p1' t2 k CHOICE))
+          (PR : ∀ p1 p2 p2' t1 k c CHOICE (IHk : P _ _ _ _ CHOICE), P _ _ _ _ (sim_choiceR p1 p2 p2' t1 k c CHOICE)).
   Fixpoint SimF_ind p1 p2 t1 t2 pf : P p1 p2 t1 t2 pf.
   Proof.
     destruct pf.
@@ -190,6 +209,18 @@ Proof.
 Qed.
 
 Hint Resolve SimF_monotone : paco.
+
+Lemma SimF_monotone_ret R1 R2 E φ φ' (LE : φ <2= φ') :
+  @SimF R1 R2 E φ <5= @SimF R1 R2 E φ'.
+Proof.
+  repeat intro. induction PR.
+  - econstructor 1; eauto.
+  - econstructor 2; eauto.
+  - econstructor 3; eauto.
+  - econstructor 4; eauto.
+  - econstructor 5; eauto.
+  - econstructor 6; eauto.
+Qed.
 
 Lemma BisimF_monotone R1 R2 E φ : monotone4 (@BisimF R1 R2 E φ).
 Proof.
@@ -290,7 +321,7 @@ Proof.
     econstructor 2; eauto.
   - econstructor 6; eauto. rewrite <- BR.
     econstructor 3; eauto.
-  - econstructor 4; eauto.
+  - constructor.
   - econstructor 6; eauto. instantiate (1 := c2).
     econstructor 5; eauto.
   - econstructor 6; eauto.
@@ -359,7 +390,7 @@ Proof.
   - econstructor 4; eauto.
   - econstructor 5; eauto. intros.
     econstructor 6; eauto. instantiate (1 := c).
-    apply refine_prog with (p1' := Some 0) (p2' := Some 0); cbv; eauto.
+    apply sim_prog with (p1' := Some 0) (p2' := Some 0); cbv; eauto.
     all: instantiate (1 := None); simpl; auto.
   Unshelve. all: exact None.
 Qed.
@@ -374,16 +405,41 @@ Proof.
   - split; econstructor 4; eauto.
   - split; econstructor 5; eauto; intros;
     econstructor 6; eauto; instantiate (1 := c);
-    apply refine_prog with (p1' := Some 0) (p2' := Some 0); cbv; eauto.
+    apply sim_prog with (p1' := Some 0) (p2' := Some 0); cbv; eauto.
     all: instantiate (1 := None); simpl; auto.
   Unshelve. all: exact None.
 Qed.
 
+Lemma Bisim_monotone_ret {R E} φ φ' (R_IMPL : ∀ r1 r2, φ r1 r2 → φ' r1 r2) :
+  ∀ p1 p2 (t1 t2 : CTree' E R) (BISIM : Bisim φ p1 p2 t1 t2),
+    Bisim φ' p1 p2 t1 t2.
+Proof.
+  pcofix CIH.
+  intros. punfold BISIM.
+  pfold. destruct BISIM.
+  split. eapply SimF_monotone_ret; eauto.
+  eapply SimF_monotone; eauto.
+  intros. pclearbot. right. eauto.
+  eapply SimF_monotone_ret; eauto.
+  instantiate (1 := fun r2 r1 => φ r1 r2).
+  eauto.
+  eapply SimF_monotone; eauto.
+  simpl. intros. pclearbot. right. eauto.
+Qed.
+
+Lemma Bisim_sym {R1 R2 E} φ :
+  ∀ p1 p2 (t1 : CTree' E R1) (t2 : CTree' E R2) (BISIM : Bisim φ p1 p2 t1 t2),
+    Bisim (fun r2 r1 => φ r1 r2) p2 p1 t2 t1.
+Proof.
+  pcofix CIH.
+  intros. punfold BISIM. destruct BISIM.
+  pfold.
+  split; eapply SimF_monotone; eauto; intros; pclearbot; right; eauto.
+Qed.
+
 Lemma Sim_inv_retL E R0 R1 R2
-  (φ0 : R0 → R2 → Prop) (φ1 : R1 → R2 → Prop)
-  (sim0 : _ → _ → _ → _ → Prop)
-  (POSTFIX : sim0 <4= SimF φ0 sim0)
-  (sim1 : _ → _ → _ → _ → Prop) :
+  (φ0 : R0 → R2 → Prop) (φ1 : R1 → R2 → Prop) sim0 sim1
+  (POSTFIX : sim0 <4= SimF φ0 sim0) :
   ∀ p0' p1' t0 t1 (REFINE : SimF (E := E) φ0 sim0 p0' p1' t0 t1) t0' r0 r1
     (IMPLφ : ∀ r2, φ0 r0 r2 → φ1 r1 r2)
     (OBS0 : t0 = Ret r0) (OBS0' : t0' = Ret r1)
@@ -405,10 +461,8 @@ Proof.
 Qed.
 
 Lemma Sim_inv_retR E R0 R1 R2
-  (φ0 : R0 → R1 → Prop) (φ1 : R0 → R2 → Prop)
-  (sim0 : _ → _ → _ → _ → Prop)
-  (POSTFIX : sim0 <4= SimF φ0 sim0)
-  (sim1 : _ → _ → _ → _ → Prop) :
+  (φ0 : R0 → R1 → Prop) (φ1 : R0 → R2 → Prop) sim0 sim1
+  (POSTFIX : sim0 <4= SimF φ0 sim0) :
   ∀ p0' p1' t0 t1 (REFINE : SimF (E := E) φ0 sim0 p0' p1' t0 t1) t1' r1 r2
     (IMPLφ : ∀ r0, φ0 r0 r1 → φ1 r0 r2)
     (OBS0 : t1 = Ret r1) (OBS0' : t1' = Ret r2)
@@ -429,8 +483,8 @@ Proof.
   Unshelve. exact None.
 Qed.
 
-Lemma Sim_inv_zeroR E R0 R1 R2 sim (sim' : _ → _ → _ → _ → Prop)
-  (φ : R0 → R1 → Prop) (φ' : R0 → R2 → Prop)
+Lemma Sim_inv_zeroR E R0 R1 R2
+  (φ : R0 → R1 → Prop) (φ' : R0 → R2 → Prop) sim sim'
   (POSTFIX : sim <4= SimF φ sim) :
   ∀ p0 p1 t0 t1 (REFINE : SimF (E := E) φ sim p0 p1 t0 t1)
     (OBS0 : t1 = Zero)
@@ -451,7 +505,7 @@ Proof.
   Unshelve. all:exact None.
 Qed.
 
-Lemma Sim_inv_choiceL E R0 R1 sim (φ : R0 → R1 → Prop)
+Lemma Sim_inv_choiceL E R0 R1 (φ : R0 → R1 → Prop) sim
   (POSTFIX : sim <4= SimF φ sim) :
   ∀ p0 p1 t0 t1 (REFINE : SimF (E := E) φ sim p0 p1 t0 t1)
     k (OBS0 : t0 = Choice k)
@@ -477,7 +531,7 @@ Proof.
     econstructor 6; eauto.
 Qed.
 
-Lemma Sim_inv_divL E R0 R1 sim (φ : R0 → R1 → Prop)
+Lemma Sim_inv_divL E R0 R1 (φ : R0 → R1 → Prop) sim
   (POSTFIX : sim <4= SimF φ sim) :
   ∀ p0 p1 t0 t1 (REFINE : SimF (E := E) φ sim p0 p1 t0 t1)
     (DIV0 : div t0),
@@ -491,6 +545,59 @@ Proof.
   - cbv in LT2. destruct p2'; lia.
   - punfold DIV0; inversion DIV0; subst; pclearbot; eauto.
   - pfold. econstructor; eauto.
+Qed.
+
+#[local] Ltac step :=
+  lazymatch goal with
+  | |- SimF _ _ _ _ ?t1 ?t2 =>
+    lazymatch t1 with
+    | Ret _ => lazymatch t2 with Ret _ => apply sim_ret end
+    | Vis _ _ =>
+      lazymatch t2 with Vis _ _ =>
+        apply sim_vis with (p1' := None) (p2' := None); intros; left; pfold
+      end
+    | Zero => apply sim_zero
+    | Choice _ => apply sim_choiceL with (p1' := None); intros
+    end; simpl
+  end.
+
+#[local] Ltac choose n :=
+  apply sim_choiceR with (c := n) (p2' := None); simpl
+.
+
+Example gradual_commitment :
+  let t1 : CTree' id nat := Choice (fun c =>
+    match c with
+    | 0 => choice (fun c =>
+      match c with
+      | 0 => vis 0 ret
+      | 1 => vis 1 ret
+      | _ => zero
+      end)
+    | 1 => vis 2 ret
+    | _ => zero
+    end)
+  in
+  let t2 : CTree' id nat := Choice (fun c =>
+    match c with
+    | 0 => vis 0 ret
+    | 1 => vis 1 ret
+    | 2 => vis 2 ret
+    | _ => zero
+    end)
+  in
+  Bisim eq None None t1 t2.
+Proof.
+  cbn zeta. pfold. split; step.
+  - destruct c as [|[|]]; simpl; try step.
+    destruct c as [|[|]]; simpl; try step.
+    choose 0. step. split; step; auto.
+    choose 1. step. split; step; auto.
+    choose 2. step. split; step; auto.
+  - destruct c as [|[|[|]]]; simpl; try step.
+    choose 0. choose 0. step. split; step; auto.
+    choose 0. choose 1. step. split; step; auto.
+    choose 1. step. split; step; auto.
 Qed.
 
 Variant State {E : Type → Type} {R : Type} :=
@@ -509,8 +616,7 @@ Variant Label {E : Type → Type} {R : Type} :=
 
 Arguments Label : clear implicits.
 
-(* we emit a τ only when the path taken may diverge *)
-Inductive Step {E : Type → Type} {R : Type}
+Variant Step {E : Type → Type} {R : Type}
 : State E R → Label E R → State E R → Prop :=
 | RetStep r
 : Step (IntS (Ret r)) (RetL r) (IntS Zero)
@@ -518,28 +624,26 @@ Inductive Step {E : Type → Type} {R : Type}
 : Step (IntS (Vis e k)) (QueL e) (ExtS k)
 | AnsStep {A} k (a : A)
 : Step (ExtS k) (AnsL a) (IntS (obs_ctree (k a)))
-| DivStep k (DIV : div (Choice k))
-: Step (IntS (Choice k)) TauL (IntS (Choice k))
-| ChoiceStep k c ℓ s' (STEP : Step (IntS (obs_ctree (k c))) ℓ s')
-: Step (IntS (Choice k)) ℓ s'
+| ChoiceStep k c
+: Step (IntS (Choice k)) TauL (IntS (obs_ctree (k c)))
+.
+
+Inductive Steps {E : Type → Type} {R : Type}
+: State E R → Label E R → State E R → Prop :=
+| OneStep s ℓ s' (STEP : Step s ℓ s') : Steps s ℓ s'
+| MoreStep s τs ℓ s' (TAU : Step s TauL τs) (STEPS : Steps τs ℓ s') : Steps s ℓ s'
 .
 
 Section IND.
   Context {R : Type} {E : Type → Type}.
-  Context (P : ∀ s ℓ s', @Step E R s ℓ s' → Prop).
-  Context (PRetStep : ∀ r, P _ _ _ (RetStep r))
-          (PVisStep : ∀ {A} (e : E A) k, P _ _ _ (VisStep e k))
-          (PAnsStep : ∀ {A} k (a : A), P _ _ _ (AnsStep k a))
-          (PDivStep : ∀ k DIV, P _ _ _ (DivStep k DIV))
-          (PChoiceStep : ∀ k c ℓ s' STEP (IHSTEPk : P _ _ _ STEP), P _ _ _ (ChoiceStep k c ℓ s' STEP)).
-  Fixpoint Step_ind s ℓ s' pf : P s ℓ s' pf.
+  Context (P : ∀ s ℓ s', @Steps E R s ℓ s' → Prop).
+  Context (POneStep : ∀ s ℓ s' STEP, P _ _ _ (OneStep s ℓ s' STEP))
+          (PMoreStep : ∀ s τs ℓ s' TAU STEPS (IHSTEPS : P _ _ _ STEPS), P _ _ _ (MoreStep s τs ℓ s' TAU STEPS)).
+  Fixpoint Steps_ind s ℓ s' pf : P s ℓ s' pf.
   Proof.
     destruct pf.
-    - apply PRetStep.
-    - apply PVisStep.
-    - apply PAnsStep.
-    - apply PDivStep.
-    - apply PChoiceStep. apply Step_ind.
+    - apply POneStep.
+    - apply PMoreStep. apply Steps_ind.
   Qed.
 End IND.
 
@@ -551,116 +655,25 @@ Definition RelLabel {E R1 R2} (φ : R1 → R2 → Prop) (ℓ1 : Label E R1) (ℓ
   | TauL => match ℓ2 with TauL => True | _ => False end
   end.
 
-Definition SimLTSF {E R1 R2} (φ : R1 → R2 → Prop)
-  (sim : State E R1 → State E R2 → Prop) s1 s2 :=
+Definition SimLTSF {E R1 R2} φ sim (i : option nat) (s1 : State E R1) (s2 : State E R2) : Prop :=
   ∀ ℓ1 s1' (STEP1 : Step s1 ℓ1 s1'),
-    ∃ ℓ2 s2', RelLabel φ ℓ1 ℓ2 ∧ Step s2 ℓ2 s2' ∧ sim s1' s2'
+    match ℓ1 with
+    | TauL => ∃ i', i' ≺ i ∧ sim i' s1' s2
+    | _ => False
+    end ∨
+    ∃ ℓ2 s2', RelLabel φ ℓ1 ℓ2 ∧ Steps s2 ℓ2 s2' ∧ sim None s1' s2'
 .
 
-Lemma SimLTSF_monotone R1 R2 E r : monotone2 (@SimLTSF E R1 R2 r).
+Lemma SimLTSF_monotone R1 R2 E r : monotone3 (@SimLTSF E R1 R2 r).
 Proof.
   repeat intro. specialize (IN ℓ1 s1' STEP1).
+  destruct IN as [IN|IN].
+  { destruct ℓ1; eauto. destruct IN as (? & ? & ?); eauto. }
   destruct IN as (? & ? & ? & ? & ?).
-  repeat (econstructor; eauto).
+  right. repeat (econstructor; eauto).
 Qed.
 
 Hint Resolve SimLTSF_monotone : paco.
-
-Variant lift_sim {E R1 R2 φ sim} : State E R1 → State E R2 → Prop :=
-| sim_Int p1 p2 t1 t2
-  (SIM : SimF φ sim p1 p2 t1 t2)
-: lift_sim (IntS t1) (IntS t2)
-| sim_Ext {A} (p1 p2 : option nat) k1 k2
-  (SIM : ∀ a : A, sim p1 p2 (obs_ctree (k1 a)) (obs_ctree (k2 a)))
-: lift_sim (ExtS k1) (ExtS k2)
-.
-
-Arguments lift_sim {_ _ _} _ _.
-
-Lemma SimF_SimLTSF {E R1 R2}
-  (φ : R1 → R2 → Prop) sim (POSTFIX : sim <4= SimF (E := E) φ sim) :
-  ∀ s1 s2 (SIM : lift_sim φ sim s1 s2), SimLTSF φ (lift_sim φ sim) s1 s2.
-Proof.
-  destruct 1. intros.
-  apply SimF_index_insensitive with (p1' := Some 0) (p2' := p2) in SIM; auto.
-  clear p1. remember (Some 0) as p1. revert Heqp1.
-  induction SIM; intros; subst.
-  - cbv in LT1. destruct p1'; lia.
-  - red. inversion 1; subst.
-    exists (RetL y), (IntS Zero).
-    constructor. eauto.
-    constructor. repeat constructor.
-    econstructor. econstructor 4.
-  - red. inversion 1; subst; clear_sig.
-    exists (QueL e), (ExtS k2).
-    repeat (econstructor; eauto).
-  - red. inversion 1.
-  - repeat intro. clear IHk.
-    remember (IntS (Choice k)) as s1 in STEP1.
-    assert match s1 with
-    | IntS (Choice k) => ∀ n, SimF φ sim p1' p2 (obs_ctree (k n)) t2
-    | _ => False
-    end by (subst; auto).
-    clear Heqs1 CHOICE k.
-    rename H into CHOICE.
-    revert CHOICE.
-    induction STEP1; try solve [destruct 1]; intros.
-    { punfold DIV. inversion DIV; subst. pclearbot.
-      specialize (CHOICE c) as CHOICE'.
-      eapply Sim_inv_divL in CHOICE' as DIV'; eauto.
-      punfold DIV'. inversion DIV'; subst. pclearbot. clear DIV'.
-      exists TauL, (IntS (Choice k0)).
-      split. cbv; auto.
-      split. constructor. pfold; econstructor; eauto.
-      econstructor. econstructor 5; eauto. }
-    { specialize (CHOICE c). destruct (obs_ctree (k c)).
-      { inversion STEP1; subst. clear STEP1 IHSTEP1.
-        remember (Ret v) as t1 in CHOICE.
-        apply SimF_index_insensitive with (p1' := Some 0) (p2' := p2) in CHOICE; auto.
-        clear p1'.
-        remember (Some 0) as p1. revert Heqt1 Heqp1.
-        induction CHOICE; try solve [inversion 1].
-        { intros; subst. cbv in LT1. destruct p1'; lia. }
-        { inversion 1; intros; subst.
-          exists (RetL y), (IntS Zero).
-          constructor; eauto.
-          constructor. repeat econstructor; eauto.
-          econstructor. econstructor 4; eauto. }
-        { intros; subst.
-          destruct (IHCHOICE eq_refl eq_refl) as (ℓ2 & s2' & ? & ? & ?).
-          exists ℓ2, s2'.
-          constructor; eauto.
-          constructor; eauto.
-          econstructor 5; eauto. } }
-      { inversion STEP1; subst; clear_sig. clear STEP1 IHSTEP1.
-        remember (Vis e k0) as t1 in CHOICE.
-        apply SimF_index_insensitive with (p1' := Some 0) (p2' := p2) in CHOICE; auto.
-        clear p1'.
-        remember (Some 0) as p1. revert Heqt1 Heqp1.
-        induction CHOICE; try solve [inversion 1].
-        { intros; subst. cbv in LT1. destruct p1'; lia. }
-        { inversion 1; intros; subst; clear_sig.
-          exists (QueL e), (ExtS k2).
-          repeat econstructor; eauto. }
-        { intros; subst.
-          destruct (IHCHOICE eq_refl eq_refl) as (ℓ2 & s2' & ? & ? & ?).
-          exists ℓ2, s2'.
-          constructor; eauto.
-          constructor; eauto.
-          econstructor 5; eauto. } }
-      { inversion STEP1. }
-      { apply IHSTEP1. intros. eapply Sim_inv_choiceL; eauto. } }
-  - red. intros. specialize (IHSIM eq_refl _ _ STEP1).
-    destruct IHSIM as (ℓ2 & s2' & ? & ? & ?).
-    exists ℓ2, s2'.
-    constructor; eauto.
-    constructor; eauto.
-    econstructor 5; eauto.
-  - inversion 1; subst; clear_sig.
-    exists (AnsL a), (IntS (obs_ctree (k2 a))).
-    repeat (econstructor; eauto).
-  Unshelve. all: exact None.
-Qed.
 
 Inductive conv {E R} : CTree' E R → Prop :=
 | conv_ret r : conv (Ret r)
@@ -671,22 +684,18 @@ Inductive conv {E R} : CTree' E R → Prop :=
 
 Scheme conv_ind := Induction for conv Sort Prop.
 
-Lemma conv_not_div {E R} (t : CTree' E R) (CONV : conv t) : ¬ div t.
+Lemma conv_not_div {E R} (t : CTree' E R) (CONV : conv t) (DIV : div t) : False.
 Proof.
-  induction CONV; intro.
-  punfold H. inversion H.
-  punfold H. inversion H.
-  punfold H. inversion H.
-  punfold H0. inversion H0; subst. pclearbot.
-  exploit H; eauto.
+  induction CONV; punfold DIV; inversion DIV; subst.
+  pclearbot. eauto.
 Qed.
 
 Section classical.
   Import Classical.
 
-  Lemma div_or_conv {E R} (t : CTree' E R) : conv t ∨ div t.
+  Lemma div_or_conv {E R} (t : CTree' E R) : div t ∨ conv t.
   Proof.
-    destruct (classic (conv t)) as [?|NCONV]; eauto. right.
+    destruct (classic (conv t)) as [?|NCONV]; eauto. left.
     revert t NCONV. pcofix CIH.
     intros. pfold.
     destruct t.
@@ -698,6 +707,7 @@ Section classical.
 End classical.
 
 (* why separate φ and sim when sim is enough to express the relation between return values? *)
+(* because sim is the argument to the functor *)
 Lemma SimF_transL {R1 R2 R3 E}
   (φ12 : R1 → R2 → Prop) (φ23 : R2 → R3 → Prop) sim12 sim23
   (POSTFIX12 : sim12 <4= SimF (E := E) φ12 sim12)
@@ -713,7 +723,7 @@ Proof.
       eapply Sim_inv_retR; first [eassumption | reflexivity | idtac].
       cbv [comp2]; eauto. }
     { intros.
-      apply SimF_index_insensitive with (p1' := Some 0) (p2' := Some 0) in SIM; auto.
+      apply SimF_index_insensitive with (p1' := p0) (p2' := Some 0) in SIM; auto.
       remember (Some 0) as o' in SIM. revert Heqo'.
       remember (Vis e k1) as t2 in SIM. revert Heqt2.
       induction SIM.
@@ -727,7 +737,7 @@ Proof.
       { inversion 1. } }
     { intros. eapply Sim_inv_zeroR; eauto. }
     { intros.
-      apply SimF_index_insensitive with (p1' := Some 0) (p2' := Some 0) in SIM; auto.
+      apply SimF_index_insensitive with (p1' := p0) (p2' := Some 0) in SIM; auto.
       remember (Some 0) as o' in SIM. revert Heqo'.
       remember (Choice k) as t2' in SIM. revert Heqt2'.
       induction SIM.
@@ -736,7 +746,7 @@ Proof.
       { inversion 1. }
       { intros. subst. econstructor 4; eauto. }
       { intros. subst. econstructor 5; eauto. }
-      { inversion 1; intros; subst. clear_sig. apply (IHk c).
+      { inversion 1; intros; subst. apply (IHk c).
         eapply SimF_index_insensitive; eauto. } }
     { intros. econstructor 6; eauto. }
   - intros; subst.
@@ -839,9 +849,8 @@ Proof.
     { intros. eapply Sim_inv_retL; eauto.
       cbv [comp2]; eauto. }
     { intros. clear LT1 LT2 p1 p3. apply POSTFIX23 in SIM.
-      apply SimF_index_insensitive with (p1' := Some 0) (p2' := Some 1) in SIM; auto.
+      apply SimF_index_insensitive with (p1' := Some 0) (p2' := p2') in SIM; auto.
       remember (Some 0) as o' in SIM. revert Heqo'.
-      remember (Some 1) as o'' in SIM. clear Heqo''.
       remember (Vis e k2) as t1 in SIM. revert Heqt1.
       induction SIM.
       { intros; subst. cbv in LT1. destruct p1'1; lia. }
@@ -876,55 +885,38 @@ Proof.
   - intros. econstructor 6; eauto.
 Qed.
 
-Lemma BisimF_trans {R1 R2 R3 E}
+Lemma BisimF_trans_conv {R1 R2 R3 E}
   (φ12 : R1 → R2 → Prop) (φ23 : R2 → R3 → Prop) sim12 sim23
   (POSTFIX12 : sim12 <4= SimF (E := E) φ12 sim12)
   (POSTFIX23 : sim23 <4= SimF (E := E) φ23 sim23) :
   ∀ p11 p12 t1 t2 (REFINE1 : SimF (E := E) φ12 sim12 p11 p12 t1 t2)
-    p21 p22 t3 (REFINE2 : SimF (E := E) φ23 sim23 p21 p22 t2 t3),
+    p21 p22 t3 (REFINE2 : SimF (E := E) φ23 sim23 p21 p22 t2 t3)
+    (CONV : conv t2),
     SimF (comp2 φ12 φ23) (comp4 sim12 sim23) p11 p22 t1 t3.
 Proof.
-  do 9 intro. revert p11 p12 t1 REFINE1. induction REFINE2.
-  - do 4 intro. revert t2 SIM. induction REFINE1.
+  intros. revert p11 p12 t1 REFINE1 p21 p22 t3 REFINE2. induction CONV.
+  { intros. eapply BisimF_trans_not_choice; eauto; simpl; auto. }
+  { intros. eapply BisimF_trans_not_choice; eauto; simpl; auto. }
+  { intros. eapply BisimF_trans_not_choice; eauto; simpl; auto. }
+  rename H into IHt2. clear CONV.
+  remember (Choice k) as t2 eqn:CHOICE.
+  intros. revert p11 p12 t1 REFINE1 CHOICE. induction REFINE2.
+  - intros. clear LT1. revert CHOICE t2 p1' SIM. induction REFINE1.
     { intros. econstructor 1; cbv [comp4]; eauto. }
-    { intros. eapply Sim_inv_retL; eauto.
-      cbv [comp2]; eauto. }
-    { intros. clear LT1 LT2 p1 p3. apply POSTFIX23 in SIM.
-      apply SimF_index_insensitive with (p1' := Some 0) (p2' := p2') in SIM; auto.
-      remember (Some 0) as o' in SIM. revert Heqo'.
-      remember (Vis e k2) as t1 in SIM. revert Heqt1.
-      induction SIM.
-      { intros; subst. cbv in LT1. destruct p1'1; lia. }
-      { inversion 1. }
-      { inversion 1. intros; subst. clear_sig.
-        intros. econstructor 3; eauto.
-        cbv [comp4]; eauto. }
-      { inversion 1. }
-      { inversion 1. }
-      { intros. subst. econstructor 6; eauto. } }
-    { intros. econstructor 4; eauto. }
-    { intros. econstructor 5; eauto. }
-    { admit. }
-  - intros; subst. eapply Sim_inv_retR; eauto. 
-    cbv [comp2]. eauto.
-  - intros.
-    apply SimF_index_insensitive with (p1' := p11) (p2' := Some 0) in REFINE1; auto.
-    remember (Some 0) as o' in REFINE1. revert Heqo'.
-    remember (Vis e k1) as t2 in REFINE1. revert Heqt2.
-    induction REFINE1.
-    { intros; subst. cbv in LT2. destruct p2'0; lia. }
     { inversion 1. }
-    { inversion 1; subst; clear_sig.
-      intros; subst.
-      econstructor 3; eauto.
-      cbv [comp4]. eauto. }
-    { intros. econstructor 4; eauto. }
-    { intros. econstructor 5; eauto. }
     { inversion 1. }
-  - intros. eapply Sim_inv_zeroR; eauto.
-  - intros.
+    { intros. econstructor 4; eauto. }
+    { intros; subst. econstructor 5; eauto. }
+    { inversion 1; subst. intros. clear CHOICE.
+      apply POSTFIX23 in SIM.
+      eapply Sim_inv_choiceL with (c := c) in SIM; auto.
+      apply SimF_index_insensitive with (p1' := p1') (p2' := p2) in SIM; eauto. }
+  - inversion 2.
+  - inversion 2.
+  - inversion 2.
+  - inversion 2; subst. clear CHOICE0.
     apply SimF_index_insensitive with (p1' := p11) (p2' := Some 0) in REFINE1; auto.
-    remember (Some 0) as o' in REFINE1. revert Heqo'.
+    clear p12. remember (Some 0) as p12 in REFINE1. revert Heqp12.
     remember (Choice k) as t2' in REFINE1. revert Heqt2'.
     induction REFINE1.
     { intros; subst. cbv in LT2. destruct p2'; lia. }
@@ -933,102 +925,295 @@ Proof.
     { intros; subst. econstructor 4; eauto. }
     { intros; subst. econstructor 5; eauto. }
     { inversion 1; intros; subst. eauto. }
-  - intros. econstructor 6; eauto.
-Abort.
-
-Lemma BisimF_trans_choice {R1 R2 R3 E}
-  (φ12 : R1 → R2 → Prop) (φ23 : R2 → R3 → Prop)
-  sim12 sim23
-  (POSTFIX12 : sim12 <4= SimF (E := E) φ12 sim12)
-  (POSTFIX23 : sim23 <4= SimF (E := E) φ23 sim23) :
-  ∀ p11 p12 t1 t2 (REFINE1 : SimF (E := E) φ12 sim12 p11 p12 t1 t2)
-    p21 p22 t3 (REFINE2 : SimF (E := E) φ23 sim23 p21 p22 t2 t3)
-    k (CHOICE : t2 = Choice k),
-    SimF (comp2 φ12 φ23) (comp4 sim12 sim23) p11 p22 t1 t3.
-Proof.
-  do 9 intro. revert p11 p12 t1 REFINE1. induction REFINE2.
-  - intros. revert k CHOICE t2 SIM. induction REFINE1.
-    { intros. econstructor 1; cbv [comp4]; eauto. }
-    { inversion 1. }
-    { inversion 1. }
-    { intros. econstructor 4; eauto. }
-    { intros; subst. econstructor 5; eauto. }
-    { inversion 1; subst. clear CHOICE. intros. apply POSTFIX23 in SIM as REFINE2.
-      eapply Sim_inv_choiceL with (c := c) in REFINE2; auto.
-      apply SimF_index_insensitive with (p1' := p1') (p2' := p2) in REFINE2; auto.
-      destruct (obs_ctree (k0 c)) eqn:OBS.
-      1,2,3: eapply BisimF_trans_not_choice; eauto; simpl; auto.
-      specialize (IHREFINE1 _ eq_refl). admit. }
-  - inversion 2.
-  - inversion 2.
-  - inversion 2.
-  - inversion 2; subst.
-    apply SimF_index_insensitive with (p1' := p11) (p2' := Some 0) in REFINE1; auto.
-    remember (Some 0) as o' in REFINE1. revert Heqo'.
-    remember (Choice k0) as t2' in REFINE1. revert Heqt2'.
-    induction REFINE1.
-    { intros; subst. cbv in LT2. destruct p2'; lia. }
-    { inversion 1. }
-    { inversion 1. }
-    { intros; subst. econstructor 4; eauto. }
-    { intros; subst. econstructor 5; eauto. }
-    { inversion 1; intros; subst.
-      specialize (CHOICE c). specialize (IHk c).
-      destruct (obs_ctree (k0 c)) eqn:OBS; eauto.
-      all: eapply BisimF_trans_not_choice; eauto; simpl; auto. }
   - intros; subst. econstructor 6; eauto.
-Abort.
+Qed.
 
-Lemma BisimF_trans_choice {R1 R2 R3 E}
-  (φ12 : R1 → R2 → Prop) (φ23 : R2 → R3 → Prop)
-  sim12 sim23
-  (POSTFIX12 : sim12 <4= SimF (E := E) φ12 sim12)
-  (POSTFIX23 : sim23 <4= SimF (E := E) φ23 sim23) :
-  ∀ p11 p12 t1 t2 (REFINE1 : SimF (E := E) φ12 sim12 p11 p12 t1 t2)
-    p21 p22 t3 (REFINE2 : SimF (E := E) φ23 sim23 p21 p22 t2 t3)
-    k (CHOICE : t2 = Choice k),
-    SimF (comp2 φ12 φ23) (comp4 sim12 sim23) p11 p22 t1 t3.
+Inductive observable {R E} : CTree' E R → {A & E A} → Prop :=
+| obs_vis {A} (e : E A) k
+: observable (Vis e k) (existT _ _ e)
+| obs_choice k c ev
+  (OBS : observable (obs_ctree (k c)) ev)
+: observable (Choice k) ev
+.
+
+Scheme observable_ind := Induction for observable Sort Prop.
+
+Lemma SimF_observable {R1 R2 E} (φ : R1 → R2 → Prop) sim
+  (POSTFIX : sim <4= SimF (E := E) φ sim) :
+  ∀ t1 ev (OBS : observable t1 ev)
+    p1 p2 t2 (REFINE : SimF φ sim p1 p2 t1 t2),
+    observable t2 ev.
 Proof.
-  do 5 intro. induction REFINE1.
-  - intros. revert k CHOICE t1 SIM. induction REFINE2.
-    { intros. econstructor 1; cbv [comp4]; eauto. }
+  induction 1.
+  - intros.
+    apply SimF_index_insensitive with (p1' := Some 0) (p2' := p2) in REFINE; auto.
+    clear p1. remember (Some 0) as p1 in REFINE. revert Heqp1.
+    remember (Vis e k) as t1 in REFINE. revert Heqt1.
+    induction REFINE.
+    { intros; subst. cbv in LT1. destruct p1'; lia. }
+    { inversion 1. }
+    { inversion 1; intros; subst; clear_sig. constructor. }
     { inversion 1. }
     { inversion 1. }
-    { inversion 1. }
-    { inversion 1; subst. intros. apply POSTFIX12 in SIM.
-      apply SimF_index_insensitive with (p1' := p2) (p2' := Some 0) in SIM; auto.
-      clear LT2.
-      remember (Some 0) as p' in SIM. revert Heqp'.
-      remember (Choice k0) as t2' in SIM. revert Heqt2'.
-      induction SIM.
-      { intros; subst. cbv in LT2. destruct p2'0; lia. }
-      { inversion 1. }
-      { inversion 1. }
-      { intros; econstructor 4; eauto. }
-      { intros; subst. econstructor 5; eauto. }
-      { inversion 1; intros; subst. specialize (CHOICE c). specialize (IHk c).
-        apply SimF_index_insensitive with (p1' := p1) (p2' := p2') in SIM; auto.
-        destruct (obs_ctree (k0 c)).
-        1,2,3: eapply BisimF_trans_not_choice; eauto; simpl; auto.
-        specialize (IHk _ eq_refl). admit. } }
-    { intros; subst. econstructor 6; eauto. }
-  - inversion 2.
-  - inversion 2.
-  - inversion 2. econstructor 4; eauto.
-  - intros. econstructor 5; eauto.
-  - inversion 2; subst.
-    apply SimF_index_insensitive with (p1' := Some 0) (p2' := p22) in REFINE2; auto.
-    remember (Some 0) as p' in REFINE2.
-    remember (Choice k0) as t1' in REFINE2.
-    revert Heqt1' Heqp'.
-    induction REFINE2.
+    { intros; subst. econstructor 2; eauto. }
+  - intros.
+    apply SimF_index_insensitive with (p1' := Some 0) (p2' := p2) in REFINE; auto.
+    clear p1. remember (Some 0) as p1 in REFINE. revert Heqp1.
+    remember (Choice k) as t1 in REFINE. revert Heqt1.
+    induction REFINE.
     { intros; subst. cbv in LT1. destruct p1'; lia. }
     { inversion 1. }
     { inversion 1. }
     { inversion 1. }
-    { inversion 1; subst. intros; subst. specialize (CHOICE0 c).
-      destruct (obs_ctree (k0 c)); eauto.
-      all: eapply BisimF_trans_not_choice; eauto; simpl; auto. }
-    { intros; econstructor 6; eauto. }
-Abort.
+    { inversion 1; intros; subst. eauto. }
+    { intros; subst. econstructor 2; eauto. }
+Qed.
+
+CoFixpoint s1 n : CTree id nat := choice (fun c =>
+  match c with
+  | 0 => vis n ret
+  | 1 => s1 (S n)
+  | _ => zero
+  end).
+
+CoFixpoint s2 n : CTree id nat := choice (fun c =>
+  match c with
+  | 0 => vis n ret
+  | 1 => vis (S n) ret
+  | 2 => s2 (S (S n))
+  | _ => zero
+  end).
+
+Lemma observable_s2n :
+  ∀ n ev (OBS : observable (obs_ctree (s2 n)) ev),
+    ∃ m, n ≤ m ∧ ev = existT _ _ m.
+Proof.
+  intros.
+  remember (obs_ctree (s2 n)) as t in OBS.
+  assert (∃ k, n ≤ k ∧ t = obs_ctree (s2 k)). { eauto. }
+  clear Heqt. rename H into Heqt.
+  revert Heqt.
+  induction OBS; intros (o & LE & EQ).
+  - inversion EQ.
+  - simpl in EQ. inversion EQ; subst.
+    destruct c as [|[|[|]]].
+    { simpl in *. inversion OBS; subst; clear_sig. eauto. }
+    { simpl in *. inversion OBS; subst; clear_sig. eauto. }
+    { eapply IHOBS. eauto. }
+    { simpl in *. inversion OBS. }
+Qed.
+
+Lemma s1n_bisim_s2n
+  : ∀ n p1 p2, Bisim eq p1 p2 (obs_ctree (s1 n)) (obs_ctree (s2 n)).
+Proof.
+  pcofix CIH.
+  intros. simpl. pfold. split.
+  - step.
+    destruct c as [|[|]]; simpl. 3: step.
+    choose 0. step. split; step; auto.
+    step.
+    destruct c as [|[|]]; simpl. 3: step.
+    choose 1. step. split; step; auto.
+    choose 2. econstructor 1.
+    1,2: instantiate (1 := Some 0); simpl; auto.
+    right. apply (CIH (S (S n))).
+  - step.
+    destruct c as [|[|[|]]]; simpl. 4: step.
+    choose 0. step. split; step; auto.
+    choose 1. choose 0. step. split; step; auto.
+    choose 1. choose 1. econstructor 1.
+    1,2: instantiate (1 := Some 0); simpl; auto.
+    right. apply (CIH (S (S n))).
+Qed.
+
+(*
+    1   3   5
+---/---/---/--- ... is the first process
+       \   \
+        2   4
+    1      3
+---/------/--- ... is the second process
+       \      \
+        2      4
+    1   3   5
+---/---/---/--- ... is the third process
+   \   \   \
+    2   4   6
+*)
+Lemma s2_different_parity : ∀ p1 p2 t1 t2,
+  SimF eq (upaco4 (BisimF eq) bot4) p1 p2 t1 t2 →
+  ∀ m n (PARITY : (Nat.Even m ∧ Nat.Odd n) ∨ (Nat.Odd m ∧ Nat.Even n)),
+  t1 = obs_ctree (s2 m) →
+  t2 = obs_ctree (s2 n) →
+  False.
+Proof.
+  assert (upaco4 (BisimF eq) bot4 <4=
+    @SimF nat nat id eq (upaco4 (BisimF eq) bot4))
+    as POSTFIX.
+  { intros. pclearbot. punfold PR. eapply PR. }
+  induction 1; intros; subst.
+  - pclearbot. (* either m < n or n < m, which makes Bisim impossible *)
+    punfold SIM. destruct SIM.
+    assert (observable (obs_ctree (s2 m)) (existT _ _ m)) as OBSm.
+    { simpl. econstructor 2. instantiate (1 := 0). simpl. constructor. }
+    assert (observable (obs_ctree (s2 n)) (existT _ _ n)) as OBSn.
+    { simpl. econstructor 2. instantiate (1 := 0). simpl. constructor. }
+    assert (m ≠ n).
+    { destruct (Nat.eq_dec m n); eauto. subst.
+      destruct PARITY as [(? & ?)|(? & ?)]; intro;
+      eapply Nat.Even_Odd_False; eauto. }
+    assert (m < n ∨ n < m) as [LT | LT] by lia.
+    { eapply SimF_observable in OBSm; eauto.
+      eapply observable_s2n in OBSm.
+      destruct OBSm as (? & ? & ?). clear_sig. lia. }
+    { eapply SimF_observable in OBSn.
+      3: exact H0.
+      eapply observable_s2n in OBSn.
+      destruct OBSn as (? & ? & ?). clear_sig. lia.
+      simpl. intros. pclearbot. eapply Bisim_sym in PR.
+      punfold PR. destruct PR.
+      eapply SimF_monotone; try eassumption.
+      intros. pclearbot.
+      left. apply Bisim_sym in PR. eauto. }
+  - inversion H.
+  - inversion H.
+  - inversion H.
+  - simpl in H. inversion H; subst.
+    specialize (IHk 2 (S (S m)) n).
+    eapply IHk; eauto.
+    destruct PARITY as [(? & ?)|(? & ?)].
+    left. split; auto. destruct H0; subst. exists (S x). simpl. lia.
+    right. split; auto. destruct H0; subst. exists (S x). simpl. lia.
+  - simpl in *. inversion H1; subst.
+    destruct c as [|[|[|]]]; simpl in H.
+    { eapply Sim_inv_choiceL with (c := 0) in H; eauto.
+      eapply SimF_index_insensitive with (p1' := Some 0) (p2' := p2') in H; auto.
+      inversion H; subst; clear_sig.
+      cbv in LT1. destruct p1'; lia.
+      destruct PARITY as [(? & ?)|(? & ?)].
+      eapply Nat.Even_Odd_False; eauto.
+      eapply Nat.Even_Odd_False; eauto. }
+    { eapply Sim_inv_choiceL with (c := 1) in H; eauto.
+      apply SimF_index_insensitive with (p1' := Some 0) (p2' := p2') in H; auto.
+      inversion H; subst; clear_sig.
+      cbv in LT1. destruct p1'; lia.
+      inversion H5; subst.
+      destruct PARITY as [(? & ?)|(? & ?)].
+      eapply Nat.Even_Odd_False; eauto.
+      eapply Nat.Even_Odd_False; eauto. }
+    specialize (IHSimF m (S (S n))).
+    eapply IHSimF; eauto.
+    destruct PARITY as [(? & ?)|(? & ?)].
+    left. split; auto. destruct H2; subst. exists (S x). simpl. lia.
+    right. split; auto. destruct H2; subst. exists (S x). simpl. lia.
+    eapply Sim_inv_choiceL in H; eauto.
+    instantiate (1 := 0) in H. simpl in H.
+    eapply SimF_index_insensitive with (p1' := Some 0) (p2' := p2') in H; auto.
+    inversion H; subst. cbv in LT1. destruct p1'; lia.
+Qed.
+
+Lemma not_trans_aux : ∀ p1 p2 t1 t2,
+  SimF eq (upaco4 (BisimF eq) bot4) p1 p2 t1 t2 →
+  ∀ n,
+    p1 = Some 0 →
+    t1 = Choice (fun c =>
+      match c with
+      | 0 => vis n ret
+      | 1 => s2 (S n)
+      | _ => zero
+      end) →
+    t2 = obs_ctree (s2 n) →
+    False.
+Proof.
+  assert (upaco4 (BisimF eq) bot4 <4=
+    @SimF nat nat id eq (upaco4 (BisimF eq) bot4))
+    as POSTFIX.
+  { intros. pclearbot. punfold PR. eapply PR. }
+  induction 1; intros; subst.
+  - cbv in LT1. destruct p1'; lia.
+  - inversion H0.
+  - inversion H0.
+  - inversion H0.
+  - inversion H0; subst.
+    specialize (CHOICE 1). cbn match in CHOICE.
+    eapply s2_different_parity; eauto.
+    destruct (Nat.Even_Odd_dec n).
+    right. split; auto. destruct e; subst. exists x; lia.
+    left. split; auto. destruct o; subst. exists (S x); lia.
+  - simpl in *. inversion H2; subst.
+    destruct c as [|[|[|]]]; simpl in *.
+    { eapply Sim_inv_choiceL with (c := 1) in H; eauto.
+      simpl in H.
+      eapply Sim_inv_choiceL with (c := 0) in H; eauto.
+      simpl in H.
+      inversion H; subst; clear_sig.
+      cbv in LT1. destruct p1'; lia.
+      lia. }
+    { eapply Sim_inv_choiceL with (c := 1) in H; eauto.
+      simpl in H.
+      eapply Sim_inv_choiceL with (c := 1) in H; eauto.
+      simpl in H.
+      inversion H; subst; clear_sig.
+      cbv in LT1. destruct p1'; lia.
+      lia. }
+    { eapply Sim_inv_choiceL with (c := 1) in H; eauto.
+      simpl in H.
+      eapply s2_different_parity; eauto.
+      2: instantiate (1 := S n); auto.
+      2: instantiate (1 := S (S n)); auto.
+      destruct (Nat.Even_Odd_dec (S n)).
+      left. split; auto. destruct e as (? & ->). exists x; lia.
+      right. split; auto. destruct o as (? & ->). exists (S x); lia. }
+    { eapply Sim_inv_choiceL with (c := 0) in H; eauto.
+      simpl in H.
+      inversion H.
+      cbv in LT1. destruct p1'; lia. }
+Qed.
+
+Example not_trans :
+  let t1 := Choice (fun c =>
+    match c with
+    | 0 => vis 1 ret
+    | 1 => s2 2
+    | _ => zero
+    end) in
+  let t2 := obs_ctree (s1 1) in
+  let t3 := obs_ctree (s2 1) in
+  Bisim eq None None t1 t2 ∧
+  Bisim eq None None t2 t3 ∧
+  ¬ Bisim eq None None t1 t3.
+Proof.
+  cbn zeta.
+  split. { pfold. split.
+    { step. destruct c as [|[|]]; simpl.
+      choose 0. step. split; step; auto.
+      choose 1. pose proof (s1n_bisim_s2n 2 None None). punfold H.
+      destruct H; simpl in *.
+      eapply SimF_monotone_ret.
+      instantiate (1 := (fun r2 r1 => r1 = r2)). eauto.
+      eapply SimF_monotone; try eassumption. simpl.
+      intros. pclearbot. left.
+      eapply Bisim_sym in PR.
+      eapply Bisim_monotone_ret; try eassumption.
+      eauto.
+      econstructor 4; eauto. }
+    { simpl. step. destruct c as [|[|]]; simpl.
+      choose 0. step. split; step; auto.
+      choose 1. pose proof (s1n_bisim_s2n 2 None None). punfold H.
+      destruct H; simpl in *.
+      eapply SimF_monotone_ret.
+      instantiate (1 := eq). eauto.
+      eapply SimF_monotone; try eassumption. simpl.
+      intros. pclearbot. left.
+      eapply Bisim_sym in PR.
+      eapply Bisim_monotone_ret; try eassumption.
+      eauto.
+      econstructor 4; eauto. } }
+  split. { apply s1n_bisim_s2n. }
+  repeat intro.
+  apply Bisim_index_insensitive with (p1' := Some 0) (p2' := None) in H.
+  punfold H.
+  destruct H as (CONTRA & _).
+  eapply not_trans_aux; eauto.
+Qed.
 

@@ -390,8 +390,8 @@ Lemma RefineF_trans {R1 R2 R3 E}
   (φ12 : R1 → R2 → Prop) (φ23 : R2 → R3 → Prop) sim12 sim23
   (POSTFIX12 : sim12 <2= RefineF (E := E) φ12 sim12)
   (POSTFIX23 : sim23 <2= RefineF (E := E) φ23 sim23)
-  (TAUL : ∀ t1 t2, sim23 (Tau t1) t2 → sim23 (obs_ctree t1) t2)
-  (TAUR : ∀ t1 t2, sim23 t1 (Tau t2) → sim23 t1 (obs_ctree t2)) :
+  (* TAUL : ∀ t1 t2, sim23 (Tau t1) t2 → sim23 (obs_ctree t1) t2 *)
+  (* TAUR : ∀ t1 t2, sim23 t1 (Tau t2) → sim23 t1 (obs_ctree t2) *) :
   ∀ t1 t2 (REFINE1 : RefineF φ12 sim12 t1 t2)
     t3 (REFINE2 : RefineF φ23 sim23 t2 t3),
     RefineF (comp φ12 φ23) (comp sim12 sim23) t1 t3.
@@ -418,8 +418,8 @@ Abort.
 
 Lemma RefineF_trans_tau {R1 R2 R3 E}
   (φ12 : R1 → R2 → Prop) (φ23 : R2 → R3 → Prop) sim12 sim23
-  (POSTFIX12 : sim12 <4= RefineF (E := E) φ12 sim12)
-  (POSTFIX23 : sim23 <4= RefineF (E := E) φ23 sim23)
+  (POSTFIX12 : sim12 <2= RefineF (E := E) φ12 sim12)
+  (POSTFIX23 : sim23 <2= RefineF (E := E) φ23 sim23)
   (TAUL : ∀ p1 p2 t1 t2, sim23 p1 p2 (Tau t1) t2 → sim23 p1 p2 (obs_ctree t1) t2)
   (TAUR : ∀ p1 p2 t1 t2, sim23 p1 p2 t1 (Tau t2) → sim23 p1 p2 t1 (obs_ctree t2)) :
   ∀ p11 p12 t1 t2 (REFINE1 : RefineF (E := E) φ12 sim12 p11 p12 t1 t2)
