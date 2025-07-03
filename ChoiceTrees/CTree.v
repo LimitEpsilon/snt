@@ -51,19 +51,6 @@ Definition ole x y := olt x y ∨ x = y.
 
 Infix "≼" := ole (at level 40).
 
-Definition omax (x y : option nat) :=
-  match x, y with
-  | Some m, Some n => Some (max m n)
-  | _, _ => None
-  end.
-
-Definition omin (x y : option nat) :=
-  match x, y with
-| Some m, Some n => Some (max m n)
-  | None, _ => y
-  | _, None => x
-  end.
-
 (* ≺ is a strict total order *)
 Lemma olt_irreflexive x : olt x x → False.
 Proof. destruct x; simpl; lia. Qed.
@@ -192,6 +179,30 @@ Variant divF {E R sim} : CTree' E R → Prop :=
 
 Arguments divF {_ _} _ _.
 
+Variant TraceF {E : Type → Type} {R : Type} {Trace : Type} :=
+| RetTrace (r : R)
+| VisTrace {A} (e : E A) (t : A → Trace)
+| DivTrace
+| Rollback
+.
+
+Arguments TraceF : clear implicits.
+
+CoInductive Trace {E R} := mkTrace { obs_trace : TraceF E R Trace }.
+
+Arguments Trace : clear implicits.
+
+Definition Trace' E R := TraceF E R (Trace E R).
+
+Inductive conv {E R} : CTree' E R → Prop :=
+| conv_ret r : conv (Ret r)
+| conv_vis {A} (e : E A) k : conv (Vis e k)
+| conv_zero : conv Zero
+| conv_choice k (CONV : ∀ c, conv (obs_ctree (k c))) : conv (Choice k)
+.
+
+Scheme conv_ind := Induction for conv Sort Prop.
+
 Lemma divF_monotone {E R} : monotone1 (@divF E R).
 Proof. repeat intro. destruct IN. econstructor; eauto. Qed.
 
@@ -236,6 +247,78 @@ Definition Sim {R1 R2 E} r := paco4 (@SimF R1 R2 E r) bot4.
 Definition Bisim {R1 R2 E} r := paco4 (@BisimF R1 R2 E r) bot4.
 
 Definition div {E R} := paco1 (@divF E R) bot1.
+
+Lemma conv_not_div {E R} (t : CTree' E R) (CONV : conv t) (DIV : div t) : False.
+Proof.
+  induction CONV; punfold DIV; inversion DIV; subst.
+  pclearbot. eauto.
+Qed.
+
+Section classical.
+  Import Classical.
+
+  Lemma div_or_conv {E R} (t : CTree' E R) : div t ∨ conv t.
+  Proof.
+    destruct (classic (conv t)) as [?|NCONV]; eauto. left.
+    revert t NCONV. pcofix CIH.
+    intros. pfold.
+    destruct t.
+    1,2,3: exfalso; apply NCONV; constructor.
+    assert (∃ c, ¬ conv (obs_ctree (k c))) as (c & ?).
+    { apply not_all_ex_not. intro. apply NCONV. constructor; auto. }
+    econstructor; eauto.
+  Qed.
+End classical.
+
+Inductive BehF {E R sim} : CTree' E R → (Trace' E R → Prop) :=
+| beh_ret v
+: BehF (Ret v) (RetTrace v)
+| beh_vis {A} (e : E A) k ktr
+  (BEH : ∀ a, sim (obs_ctree (k a)) (obs_trace (ktr a)))
+: BehF (Vis e k) (VisTrace e ktr)
+| beh_zero
+: BehF Zero Rollback
+| beh_choice k c tr (BEH : BehF (obs_ctree (k c)) tr)
+  (NROLLBACK : match tr with Rollback => False | _ => True end)
+: BehF (Choice k) tr
+| beh_div k c (BEH : sim (obs_ctree (k c)) DivTrace)
+: BehF (Choice k) DivTrace
+.
+
+Arguments BehF {_ _} _.
+
+Scheme BehF_ind := Induction for BehF Sort Prop.
+
+Lemma BehF_monotone E R : monotone2 (@BehF E R).
+Proof.
+  repeat intro. induction IN.
+  - econstructor 1; eauto.
+  - econstructor 2; eauto.
+  - econstructor 3; eauto.
+  - econstructor 4; eauto.
+  - econstructor 5; eauto.
+Qed.
+
+Hint Resolve BehF_monotone : paco.
+
+Definition Beh {E R} := paco2 (@BehF E R) bot2.
+
+Lemma Beh_div E R : ∀ t : CTree' E R, Beh t DivTrace → div t.
+Proof.
+  pcofix CIH.
+  intros t BEH. punfold BEH.
+  remember DivTrace as tr in BEH. revert Heqtr.
+  induction BEH; inversion 1; subst.
+  - pfold. econstructor; eauto.
+  - pclearbot. pfold. econstructor; eauto.
+Qed.
+
+Lemma div_Beh E R : ∀ t : CTree' E R, div t → Beh t DivTrace.
+Proof.
+  pcofix CIH. intros t DIV. pfold.
+  punfold DIV. inversion DIV; subst. pclearbot.
+  econstructor 5; eauto.
+Qed.
 
 Lemma Sim_postfix {R1 R2 E} (φ : R1 → R2 → Prop) :
   Sim (E := E) φ <4= SimF φ (Sim φ).
@@ -600,112 +683,6 @@ Proof.
     choose 1. step. split; step; auto.
 Qed.
 
-Variant State {E : Type → Type} {R : Type} :=
-| IntS (t : CTree' E R) (* internal activity *)
-| ExtS {A} (k : A → CTree E R) (* waiting for external response *)
-.
-
-Arguments State : clear implicits.
-
-Variant Label {E : Type → Type} {R : Type} :=
-| RetL (r : R)
-| QueL {A} (e : E A)
-| AnsL {A} (a : A)
-| TauL
-.
-
-Arguments Label : clear implicits.
-
-Variant Step {E : Type → Type} {R : Type}
-: State E R → Label E R → State E R → Prop :=
-| RetStep r
-: Step (IntS (Ret r)) (RetL r) (IntS Zero)
-| VisStep {A} (e : E A) k
-: Step (IntS (Vis e k)) (QueL e) (ExtS k)
-| AnsStep {A} k (a : A)
-: Step (ExtS k) (AnsL a) (IntS (obs_ctree (k a)))
-| ChoiceStep k c
-: Step (IntS (Choice k)) TauL (IntS (obs_ctree (k c)))
-.
-
-Inductive Steps {E : Type → Type} {R : Type}
-: State E R → Label E R → State E R → Prop :=
-| OneStep s ℓ s' (STEP : Step s ℓ s') : Steps s ℓ s'
-| MoreStep s τs ℓ s' (TAU : Step s TauL τs) (STEPS : Steps τs ℓ s') : Steps s ℓ s'
-.
-
-Section IND.
-  Context {R : Type} {E : Type → Type}.
-  Context (P : ∀ s ℓ s', @Steps E R s ℓ s' → Prop).
-  Context (POneStep : ∀ s ℓ s' STEP, P _ _ _ (OneStep s ℓ s' STEP))
-          (PMoreStep : ∀ s τs ℓ s' TAU STEPS (IHSTEPS : P _ _ _ STEPS), P _ _ _ (MoreStep s τs ℓ s' TAU STEPS)).
-  Fixpoint Steps_ind s ℓ s' pf : P s ℓ s' pf.
-  Proof.
-    destruct pf.
-    - apply POneStep.
-    - apply PMoreStep. apply Steps_ind.
-  Qed.
-End IND.
-
-Definition RelLabel {E R1 R2} (φ : R1 → R2 → Prop) (ℓ1 : Label E R1) (ℓ2 : Label E R2) :=
-  match ℓ1 with
-  | RetL r1 => match ℓ2 with RetL r2 => φ r1 r2 | _ => False end
-  | QueL e1 => match ℓ2 with QueL e2 => existT _ _ e1 = existT _ _ e2 | _ => False end
-  | AnsL a1 => match ℓ2 with AnsL a2 => existT _ _  a1 = existT _ _ a2 | _ => False end
-  | TauL => match ℓ2 with TauL => True | _ => False end
-  end.
-
-Definition SimLTSF {E R1 R2} φ sim (i : option nat) (s1 : State E R1) (s2 : State E R2) : Prop :=
-  ∀ ℓ1 s1' (STEP1 : Step s1 ℓ1 s1'),
-    match ℓ1 with
-    | TauL => ∃ i', i' ≺ i ∧ sim i' s1' s2
-    | _ => False
-    end ∨
-    ∃ ℓ2 s2', RelLabel φ ℓ1 ℓ2 ∧ Steps s2 ℓ2 s2' ∧ sim None s1' s2'
-.
-
-Lemma SimLTSF_monotone R1 R2 E r : monotone3 (@SimLTSF E R1 R2 r).
-Proof.
-  repeat intro. specialize (IN ℓ1 s1' STEP1).
-  destruct IN as [IN|IN].
-  { destruct ℓ1; eauto. destruct IN as (? & ? & ?); eauto. }
-  destruct IN as (? & ? & ? & ? & ?).
-  right. repeat (econstructor; eauto).
-Qed.
-
-Hint Resolve SimLTSF_monotone : paco.
-
-Inductive conv {E R} : CTree' E R → Prop :=
-| conv_ret r : conv (Ret r)
-| conv_vis {A} (e : E A) k : conv (Vis e k)
-| conv_zero : conv Zero
-| conv_choice k (CONV : ∀ c, conv (obs_ctree (k c))) : conv (Choice k)
-.
-
-Scheme conv_ind := Induction for conv Sort Prop.
-
-Lemma conv_not_div {E R} (t : CTree' E R) (CONV : conv t) (DIV : div t) : False.
-Proof.
-  induction CONV; punfold DIV; inversion DIV; subst.
-  pclearbot. eauto.
-Qed.
-
-Section classical.
-  Import Classical.
-
-  Lemma div_or_conv {E R} (t : CTree' E R) : div t ∨ conv t.
-  Proof.
-    destruct (classic (conv t)) as [?|NCONV]; eauto. left.
-    revert t NCONV. pcofix CIH.
-    intros. pfold.
-    destruct t.
-    1,2,3: exfalso; apply NCONV; constructor.
-    assert (∃ c, ¬ conv (obs_ctree (k c))) as (c & ?).
-    { apply not_all_ex_not. intro. apply NCONV. constructor; auto. }
-    econstructor; eauto.
-  Qed.
-End classical.
-
 (* why separate φ and sim when sim is enough to express the relation between return values? *)
 (* because sim is the argument to the functor *)
 Lemma SimF_transL {R1 R2 R3 E}
@@ -1026,20 +1003,6 @@ Proof.
     right. apply (CIH (S (S n))).
 Qed.
 
-(*
-    1   3   5
----/---/---/--- ... is the first process
-       \   \
-        2   4
-    1      3
----/------/--- ... is the second process
-       \      \
-        2      4
-    1   3   5
----/---/---/--- ... is the third process
-   \   \   \
-    2   4   6
-*)
 Lemma s2_different_parity : ∀ p1 p2 t1 t2,
   SimF eq (upaco4 (BisimF eq) bot4) p1 p2 t1 t2 →
   ∀ m n (PARITY : (Nat.Even m ∧ Nat.Odd n) ∨ (Nat.Odd m ∧ Nat.Even n)),
@@ -1170,6 +1133,12 @@ Proof.
       cbv in LT1. destruct p1'; lia. }
 Qed.
 
+(*
+         1   3   5                1      3                1   3   5
+t1 = ---/---/---/--- ... t2 = ---/------/--- ... t3 = ---/---/---/--- ...
+            \   \                    \      \            \   \   \
+             2   4                    2      4            2   4   6
+*)
 Example not_trans :
   let t1 := Choice (fun c =>
     match c with
