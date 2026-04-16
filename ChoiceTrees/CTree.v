@@ -1186,3 +1186,5 @@ Proof.
   eapply not_trans_aux; eauto.
 Qed.
 
+Print Assumptions not_trans.
+
