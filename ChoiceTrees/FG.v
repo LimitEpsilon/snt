@@ -1,4 +1,4 @@
-From Stdlib Require Import Utf8 List Lia Eqdep NArith.
+From Stdlib Require Import Utf8 List NArith.
 From Paco Require Import paco.
 
 Import ListNotations.
@@ -30,7 +30,7 @@ Section Correct.
   Lemma base_case : flush [] [] [] [].
   Proof. eauto using base_case'. Qed.
 
-Lemma doF_case : ∀ x f0 f1 f2 fi,
+  Lemma doF_case : ∀ x f0 f1 f2 fi,
     flush (x :: f0) f1 f2 fi →
     flush f0 (f1 ++ [f x]) f2 fi.
   Proof.
